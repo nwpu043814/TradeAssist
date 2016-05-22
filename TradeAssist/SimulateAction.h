@@ -14,4 +14,6 @@ public:
 	// 通过键盘Ctrl+V模拟粘贴
 	int KeyboardPaste(void);
 	int MoveCursor(int dx, int dy, bool b = false);
+	// 选中所有内容。
+	int SelectAll(void);
 };

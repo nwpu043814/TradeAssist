@@ -11,12 +11,14 @@ Logger::~Logger(void)
 
 CString Logger::sContent = "";
 
-int Logger::SaveLog(CString fileName)
+int Logger::SaveLog()
 {
 
 	SYSTEMTIME st;
 	GetLocalTime(&st);
-	fileName.Format("%s_%d_%d_%d.txt", fileName, st.wYear, st.wMonth, st.wDay);
+	CString fileName;
+
+	fileName.Format(".\\log_%d_%d_%d.txt", st.wYear, st.wMonth, st.wDay);
 
 	CStdioFile out;
 	if (out.Open(fileName, CFile::modeCreate|CFile::modeWrite|CFile::modeNoTruncate))
@@ -36,7 +38,7 @@ int Logger::Add(CString text)
 	CString time;
 	SYSTEMTIME st;
 	GetLocalTime(&st);
-	time.Format("%d:%d_%d:%d:%d\t", st.wMonth, st.wDay, st.wHour, st.wMinute,st.wSecond);
+	time.Format("%d:%d_%2d:%2d:%2d\t", st.wMonth, st.wDay, st.wHour, st.wMinute,st.wSecond);
 
 	text += _T("\r\n");
 	sContent += time;

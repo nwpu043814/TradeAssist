@@ -5,7 +5,7 @@ class Logger
 public:
 	Logger(void);
 	~Logger(void);
-	static int SaveLog(CString fileName);
+	static int SaveLog();
 public:
 	static CString sContent;
 

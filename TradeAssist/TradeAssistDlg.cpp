@@ -77,6 +77,9 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mIntDelete2ConfirmDx(0)
 	, mIntDelete2ConfirmDy(0)
 	, mIntMsgDelayMilliSeconds(100)
+	, mIntHour(0)
+	, mIntMinute(0)
+	, mIntSecond(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new SimulateAction();
@@ -134,6 +137,9 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxInt(pDX, mIntDelete2ConfirmDy, -500, 500);
 	DDX_Text(pDX, IDC_EDIT_MSG_DELAY, mIntMsgDelayMilliSeconds);
 	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 100, 500);
+	DDX_Text(pDX, IDC_EDIT_HOUR, mIntHour);
+	DDX_Text(pDX, IDC_EDIT_MINUTE, mIntMinute);
+	DDX_Text(pDX, IDC_EDIT_SECOND, mIntSecond);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -147,6 +153,8 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CTradeAssistDlg::OnBnClickedOk)
 	ON_WM_CLOSE()
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON_START_TIMER, &CTradeAssistDlg::OnBnClickedButtonStartTimer)
 END_MESSAGE_MAP()
 
 
@@ -237,11 +245,12 @@ HCURSOR CTradeAssistDlg::OnQueryDragIcon()
 
 void CTradeAssistDlg::InstallHotKey()
 {
-
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_LOW, MOD_WIN, VK_Z);
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_HIGH, MOD_WIN, VK_X);
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_COUNT, MOD_WIN, VK_C);
 	::RegisterHotKey(m_hWnd, HOT_KEY_FLASH_COMPLETE, MOD_WIN, VK_A);
+	::RegisterHotKey(m_hWnd, HOT_KEY_DECREASE_PRICE, MOD_SHIFT, VK_Z);
+	::RegisterHotKey(m_hWnd, HOT_KEY_INCREASE_PRICE, MOD_SHIFT, VK_X);
 
 }
 void CTradeAssistDlg::OnBnClickedCancel()
@@ -292,6 +301,16 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			OnFlashComplete();
 			break;;
 		}
+		case HOT_KEY_DECREASE_PRICE:
+		{
+			UpdatePrice(false);
+			break;
+		}
+		case HOT_KEY_INCREASE_PRICE:
+		{
+			UpdatePrice(true);
+			break;
+		}
 
 	}
 
@@ -324,7 +343,17 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 		{
 			return HOT_KEY_FLASH_COMPLETE;
 		}
-
+	}
+	else if (mode == MOD_SHIFT)
+	{
+		if (virKey == VK_Z)
+		{
+			return HOT_KEY_DECREASE_PRICE;
+		}
+		else if (virKey == VK_X)
+		{
+			return HOT_KEY_INCREASE_PRICE;
+		}
 	}
 
 	return VK_INVALID;
@@ -332,18 +361,13 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 
 int CTradeAssistDlg::dispatchLowAction(void)
 {
-
-	TRACE("dispatchLowAction time=%d\r\n", GetMilliseconds() - mLastTime);
 	PostMessage(WM_DO_TRADE, DO_LOW, MSG_DELAY_YES);
-	//OnDoTradeMsg(DO_LOW, MSG_DELAY_YES);
-
 	return 0;
 }
 
 int CTradeAssistDlg::dispatchHighAction(void)
 {
 	PostMessage(WM_DO_TRADE, DO_HIGH, MSG_DELAY_YES);
-	//OnDoTradeMsg(DO_HIGH, MSG_DELAY_YES);
 	return 0;
 }
 
@@ -383,16 +407,12 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	mAction->MoveCursor(mIntStart2TabDx,mIntStart2TabDy);
 	mAction->MouseClick();
 
-#ifdef _DEBUG
-	TRACE("OnDoTradeMsg start2tab time=%d\r\n", GetMilliseconds() - startTime);
-#endif
+
 	//指价委托到方向
 	POINT tab2Direction = GetTab2Direction(direction);
 	mAction->MoveCursor(tab2Direction.x,tab2Direction.y);
 	mAction->MouseClick();
-#ifdef _DEBUG
-	TRACE("OnDoTradeMsg tab2Direction time=%d\r\n", GetMilliseconds() - startTime);
-#endif
+
 	//从方向移到价格控件
 	POINT direction2PriceVector = GetDirection2PriceVector(direction);
 	mAction->MoveCursor(direction2PriceVector.x,direction2PriceVector.y);
@@ -421,14 +441,11 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	//设置剪贴板内容并粘贴到窗口
 	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
-#ifdef _DEBUG
-		TRACE("OnDoTradeMsg pricePasted time=%d\r\n", GetMilliseconds() - startTime);
-#endif // _DEBUG
-	CheckEditPasteResult();
 
-#ifdef _DEBUG
-	TRACE("OnDoTradeMsg priceChecked time=%d\r\n", GetMilliseconds() - startTime);
-#endif // _DEBUG
+	if(!CheckEditPasteResult())
+	{
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
+	}
 
 	//移动到设置手数的控件
 	POINT price2CountVector = GetPrice2CountVector(direction);
@@ -436,14 +453,9 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 
 	//更新交易手数
 	mAction->MouseDoubleClick();
-	EmptyClipboard(); 
 	outText.Format("%d", mIntOrderCount);
 	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
-
-#ifdef _DEBUG
-	TRACE("OnDoTradeMsg countUpdated time=%d\r\n", GetMilliseconds() - startTime);
-#endif // _DEBUG
 
 	//移动到确定按钮上
 	mAction->MoveCursor(mIntCount2ConfirmDx,mIntCount2ConfirmDy);
@@ -495,6 +507,8 @@ BOOL CTradeAssistDlg::SetClipboardContent(CString source)
 	}
 	return 0;
 }
+
+
 
 CTradeAssistDlg::~CTradeAssistDlg()
 {
@@ -551,6 +565,10 @@ int CTradeAssistDlg::InitialSetting(void)
 
 	mIntMsgDelayMilliSeconds = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, 100);
 
+	mIntHour = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_HOUR, 0);
+	mIntMinute = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_MINUTE, 0);
+	mIntSecond = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_SECOND, 0);
+
 	UpdateData(FALSE);
 
 	return 0;
@@ -596,6 +614,11 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DY, mIntDelete2ConfirmDy);
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, mIntMsgDelayMilliSeconds);
+	
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_HOUR, mIntHour);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_MINUTE, mIntMinute);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_SECOND, mIntSecond);
+
 	return 0;
 }
 
@@ -728,6 +751,9 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_HIGH);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_COUNT);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_FLASH_COMPLETE);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DECREASE_PRICE);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_INCREASE_PRICE);
+	
 	SaveSetting();
 	if (mAction != NULL)
 	{
@@ -764,6 +790,10 @@ int CTradeAssistDlg::OnFlashComplete(void)
 			mAction->MouseClick();
 			result = SemicAutoTrade(DO_LOW);
 		}
+
+		CString log;
+		log.Format("OnFlashComplete low time1=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+		Logger::Add(log);
 	}
 
 	//2.延时下单间隔
@@ -792,6 +822,10 @@ int CTradeAssistDlg::OnFlashComplete(void)
 			mAction->MouseClick();
 			result = SemicAutoTrade(DO_HIGH);
 		}
+
+		CString log;
+		log.Format("OnFlashComplete high time2=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+		Logger::Add(log);
 	}
 
 #ifdef _DEBUG
@@ -813,7 +847,7 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 		{
 
 			CString log;
-			log.Format("SemicAutoTrade direct=%d, count=%d", direct, searchCount);
+			log.Format("SemicAutoTrade direct=%d, dialogSearchCount=%d", direct, searchCount);
 			Logger::Add(log);
 
 			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
@@ -832,19 +866,20 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 }
 
 // 通过双击复制获得编辑框内容。
-CString CTradeAssistDlg::GetEditText(void)
+CString CTradeAssistDlg::GetEditText(BOOL needDoubleClick)
 {
 	CString text;
-	mAction->MouseDoubleClick();
+
+	mAction->SelectAll();
 	
 #ifdef _DEBUG
 	WORD	start = GetMilliseconds();
 #endif // _DEBUG
-
+	SetClipboardContent("");
 	int copyCount = 0;
 	while(copyCount++  < GET_EDIT_CONTENT_MAX_TIMES)
 	{
-		EmptyClipboard();
+		
 		mAction->KeyboardCopy();
 		Sleep((copyCount-1)*GET_CLIPBOARD_CONTENT_DELAY);
 		text = GetContentFromClipboard();
@@ -859,35 +894,45 @@ CString CTradeAssistDlg::GetEditText(void)
 		}
 	}
 #ifdef _DEBUG
-	TRACE("GetEditText time=%d, copycount=%d\r\n", GetMilliseconds() - start, copyCount);
+	TRACE("GetEditText time=%d, copycount=%d, text=%s\r\n", GetMilliseconds() - start, copyCount, text);
 #endif
 
 	return text;
 }
 
-void CTradeAssistDlg::CheckEditPasteResult()
+BOOL CTradeAssistDlg::CheckEditPasteResult()
 {
 
 #ifdef _DEBUG
 	WORD	start = GetMilliseconds();
 #endif // _DEBUG
 
-	//check是否粘贴成功。
+	BOOL	result = TRUE;
+
 	int priceCheckCount = 0;
 	while(priceCheckCount++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
 	{
-		//双击全选
 		CString toCheckPrice = GetEditText();
+
 		if (toCheckPrice.Compare(mLastClipboardContent) == 0)
 		{
 			//通过检查，设置正确。
+			result = TRUE;
 			break;
 		}
 		else
 		{
+#ifdef _DEBUG
+			CString log;
+			log.Format("CheckEditPasteResult failed Good=%s, Bad=%s",mLastClipboardContent, toCheckPrice);
+			Logger::Add(log);
+			TRACE(log+"\r\n");
+#endif
+
 			//未设置正确，需要重新设置
 			SetClipboardContent(mLastClipboardContent);
 			mAction->KeyboardPaste();
+			result = FALSE;
 		}
 	}
 
@@ -895,6 +940,7 @@ void CTradeAssistDlg::CheckEditPasteResult()
 	TRACE("CheckEditPasteResult time=%d, checkCount=%d\r\n", GetMilliseconds() - start, priceCheckCount);
 #endif
 
+	return result;
 }
 
 WORD CTradeAssistDlg::GetMilliseconds(void)
@@ -903,4 +949,86 @@ WORD CTradeAssistDlg::GetMilliseconds(void)
 	SYSTEMTIME time;
 	GetSystemTime(&time);
 	return time.wSecond * 1000 + time.wMilliseconds;
+}
+
+// 清空剪贴板
+BOOL CTradeAssistDlg::GlearClipboard(void)
+{
+	if( OpenClipboard() ) 
+	{  
+		if (EmptyClipboard())
+		{
+			CloseClipboard();
+			TRACE("GlearClipboard return 1\r\n");
+			return 1;
+		}
+		else
+		{
+			CloseClipboard();
+		}
+	}
+
+	TRACE("GlearClipboard return 0\r\n");
+	return 0;
+}
+
+int CTradeAssistDlg::UpdatePrice(bool isAdd)
+{
+	Sleep(mIntMsgDelayMilliSeconds);
+	//取得当前价格。
+	CString text = GetEditText();
+	if(text.Find(_T("."))  == -1)
+	{
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
+	}
+
+	CString outText;
+	float diff = 10.0f;
+
+	float newCount = isAdd?atof(text) + diff : atof(text) - diff ;
+	outText.Format("%.2f",newCount);
+
+	//设置剪贴板内容并粘贴到窗口
+	SetClipboardContent(outText);
+	mAction->KeyboardPaste();
+	return 0;
+}
+
+void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
+{
+
+	if (nIDEvent == TIMER_ID)
+	{
+		SYSTEMTIME time;
+		GetLocalTime(&time);
+
+		if (mIntHour == time.wHour && mIntMinute == time.wMinute && mIntSecond == time.wSecond)
+		{
+
+			KillTimer(nIDEvent);	
+			GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(TRUE);
+			OnFlashComplete();
+		}
+	}
+
+	CDialog::OnTimer(nIDEvent);
+}
+
+void CTradeAssistDlg::OnBnClickedButtonStartTimer()
+{
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	UpdateData(TRUE);
+	if (mIntHour * 3600 + mIntMinute * 60 + mIntSecond > time.wHour  * 3600 +  time.wMinute * 60 + time.wSecond)
+	{
+		GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(FALSE);
+		SetTimer(TIMER_ID, 50, NULL);
+	}
+	else
+	{
+
+		CString text;
+		text.LoadString(IDS_INVALID_TIMER);
+		MessageBox(text);
+	}
 }

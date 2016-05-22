@@ -74,3 +74,15 @@ int SimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 }
 
 
+
+// 选中所有内容。
+int SimulateAction::SelectAll(void)
+{
+	MouseClick();
+	keybd_event(VK_CONTROL ,0,0,0);
+	keybd_event(VK_A ,0,0,0);
+	Sleep(KEYBD_DELAY);
+	keybd_event(VK_A,0,KEYEVENTF_KEYUP,0); 
+	keybd_event(VK_CONTROL,0,KEYEVENTF_KEYUP,0); 
+	return 0;
+}

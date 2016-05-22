@@ -51,7 +51,7 @@ private:
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
 	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
 
-	void CheckEditPasteResult();
+	BOOL CheckEditPasteResult();
 
 	// 获得剪贴板的内容
 	CString GetContentFromClipboard(void);
@@ -84,7 +84,7 @@ protected:
 	UINT mAutoCompleteInterval;
 public:
 	// 通过双击复制获得编辑框内容。
-	CString GetEditText(void);
+	CString GetEditText(BOOL needDoubleClick = TRUE);
 protected:
 	// 保存剪贴板上次内容。
 	CString mLastClipboardContent;
@@ -116,4 +116,15 @@ private:
 	int mIntDelete2ConfirmDy;
 	// 消息延时 单位毫秒
 	UINT mIntMsgDelayMilliSeconds;
+public:
+	// 清空剪贴板
+	BOOL GlearClipboard(void);
+	int UpdatePrice(bool isAdd);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+private:
+	UINT mIntHour;
+	UINT mIntMinute;
+	UINT mIntSecond;
+public:
+	afx_msg void OnBnClickedButtonStartTimer();
 };

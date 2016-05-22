@@ -4,7 +4,8 @@
 #define HOT_KEY_CODE_HIGH 1001
 #define HOT_KEY_CODE_COUNT 1002
 #define HOT_KEY_FLASH_COMPLETE 1003
-
+#define HOT_KEY_INCREASE_PRICE 1004
+#define HOT_KEY_DECREASE_PRICE 1005
 
 #define VK_Z  'Z'
 #define VK_X  'X'
@@ -78,6 +79,10 @@
 //消息延时，单位毫秒
 #define	STRING_EDIT_MSG_DELAY_TIME	 _T("STRING_EDIT_MSG_DELAY_TIME")
 
+#define	STRING_EDIT_HOUR	 _T("STRING_EDIT_HOUR")
+#define	STRING_EDIT_MINUTE	 _T("STRING_EDIT_MINUTE")
+#define	STRING_EDIT_SECOND	 _T("STRING_EDIT_SECOND")
+
 #define		DO_LOW	1
 #define		DO_HIGH	2
 #define		DO_COUNT 3
@@ -90,10 +95,10 @@
 #define		DELETE_ORDER_DELAY	300
 
 //检查粘贴有效的最大次数
-#define  CHECK_EDIT_PASTE_RESULT_MAX_TIMES 7
+#define  CHECK_EDIT_PASTE_RESULT_MAX_TIMES 2
 
 //尝试获取edit内容的最大重试次数
-#define	 GET_EDIT_CONTENT_MAX_TIMES 7
+#define	 GET_EDIT_CONTENT_MAX_TIMES 4
 
 //寻找sundialog的最大重试次数
 #define	 FIND_SUN_DIALOG_MAX_RETRY_TIMES 12
@@ -107,6 +112,9 @@
 //未正确获得价格
 #define DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE 2 
 
+//未通过价格正确检查
+#define DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED 3
+
 //正常返回
 #define DO_TRADE_MSG_RESULT_TYPE_SUCCESS 3
 
@@ -115,3 +123,5 @@
 
 //半自动交易重试次数
 #define SEMIC_AUTO_TRADE_RETRY_TIMES 3
+
+#define  TIMER_ID 123
