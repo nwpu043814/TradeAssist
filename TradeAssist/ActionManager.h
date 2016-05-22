@@ -8,6 +8,8 @@
 #define  WM_DO_HAIJIAO_GUADAN	WM_USER + 252
 #define  WM_DO_KUNJIAO_GUADAN	WM_USER + 253
 #define  WM_DO_LUOGE_GUADAN	WM_USER + 254
+#define  WM_DO_ZHONGXIN_GUADAN	WM_USER + 255
+#define  WM_DO_INPUT_PRICE	WM_USER + 256
 
 class CActionManager :
 	public CWinThread
@@ -33,7 +35,7 @@ private:
 	// 1 for low 2 for high
 	int DoHFSingleSide(int diff,int direct,int count,int windowDelay, int softwareType);
 	int DoTianTongSingleSideAction(int diff,int direct, int count,int windowDelay);
-	const CPoint & GetHFDialogPos(void) const;
+	const CPoint & GetDialogPosByTitle(CString title) const;
 	void DoHop(int x, int y)  const;
 	const CPoint& GetHFConfirmDialogPos(void) const;
 	void CloseHFConfirmDialog(int top, int left);
@@ -44,6 +46,8 @@ protected:
 	afx_msg void OnDoTianTongGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoKunJiaoGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoLuoGeGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoZhongXinGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoInputPrice(WPARAM wParam,LPARAM lParam);
 public:
 	void SetWindowOwner(HWND owner);
 	virtual BOOL InitInstance();
@@ -53,6 +57,7 @@ public:
 	CPoint GetKunJiaoDialogPos(void);
 	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
 	int DoLuoGeSingleSideAction(int diff, int direct, int count, int windowDelay);
+	int DoZhongXinSingleSideAction(int diff, int direct, int count, int windowDelay);
 };
 
 typedef CActionManager * CActionManagerP;

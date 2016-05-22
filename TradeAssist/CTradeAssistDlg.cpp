@@ -365,7 +365,9 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_CODE_HIGH:
 		{
-			dispatchHighAction();
+			//dispatchHighAction();
+			
+			//mActionManager->PostThreadMessage(WM_DO_INPUT_PRICE, NULL, NULL);
 			break;
 		}
 		case HOT_KEY_CODE_COUNT:
@@ -380,7 +382,9 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_DECREASE_PRICE:
 		{
-			mActionManager->UpdatePrice(false, 10);
+			UpdateData();
+			mActionManager->PostThreadMessage(WM_DO_ZHONGXIN_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+			//mActionManager->UpdatePrice(false, 10);
 			break;
 		}
 		case HOT_KEY_INCREASE_PRICE:

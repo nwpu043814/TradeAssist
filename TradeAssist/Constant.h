@@ -137,6 +137,7 @@
 #define		HUIFENG_DIALOG_TITLE_NAME _T("建仓单")
 #define		HUIFENG_CONFIRM_DIALOG_TITLE_NAME _T("提示")
 #define		KUNJIAO_CONFIRM_DIALOG_TITLE_NAME _T("定单")
+#define		KUNJIAO_CONFIRM_TITLE_NAME _T("关闭这个窗口并不保证可以取消您的定单.")
 
 #define		DELETE_ORDER_DELAY	450
 
@@ -147,7 +148,7 @@
 #define		GET_EDIT_CONTENT_MAX_TIMES 4
 
 //寻找sundialog的最大重试次数
-#define		FIND_SUN_DIALOG_MAX_RETRY_TIMES 12
+#define		FIND_SUN_DIALOG_MAX_RETRY_TIMES 6
 
 //有效价格的位数
 #define		PRICE_LENGTH	7
@@ -269,7 +270,7 @@
 #define 	NETWORK_KEY_CAPTURE_TIME "CAPTURE_TIME"
 #define 	NETWORK_KEY_CHASE_DIRECT "CHASE_DIRECT"
 
-#define     VALID_PRICE		4000
+#define     VALID_PRICE		3000
 #define     ON_TIMER_ZHONXIN 1
 #define     ON_TIMER_HUIFENG 2
 #define     ON_TIMER_TIANTONG 3

@@ -24,6 +24,7 @@ public:
 	int SelectAll4HF(void);
 	int GetContentFromClipboard(void);
 	void ContinuesClick(int clickTimes);
+	void InputPrice(CString price);
 };
 
 typedef CSimulateAction * CSimulateActionP;

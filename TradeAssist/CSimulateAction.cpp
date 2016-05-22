@@ -123,3 +123,30 @@ void CSimulateAction::ContinuesClick(int clickTimes)
 		MouseClick();
 	}
 }
+
+void CSimulateAction::InputPrice(CString price)
+{
+	price = price.Trim();
+	int size = price.GetLength();
+	if (price.GetLength() == 0)
+	{
+		return;
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		BYTE ch = price.GetAt(i);
+
+		if (ch == '.')
+		{
+			ch = VK_DECIMAL;
+		}
+		else if ('0' > ch || ch > '9')
+		{
+			continue;
+		}
+
+		keybd_event(ch ,0,0,0);
+		keybd_event(ch,0,KEYEVENTF_KEYUP,0); 
+	}
+}

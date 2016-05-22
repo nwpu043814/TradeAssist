@@ -222,10 +222,10 @@ end
 function getStopGainDiff(direct)
 	if direct == 1 then
 		--做空止盈
-		return 75
+		return 80
 	else
 		--做多止盈
-		return 75
+		return 80
 	end
 end
 
@@ -268,7 +268,7 @@ end
 
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 10;
+	return 3000;
 end
 
 function getLuoGeStopLoseDiff()

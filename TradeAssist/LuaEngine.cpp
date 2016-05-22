@@ -1887,3 +1887,44 @@ int CLuaEngine::GetLuoGeStopGainDiff(void)
 
 	return diff;		
 }
+
+CPoint CLuaEngine::GetZhongXinOrigin2Entrust(int direct)
+{
+	return CPoint(364,58);
+}
+
+CPoint CLuaEngine::GetZhongXinEntrust2Direction(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(-257, 90);
+	} 
+	else
+	{
+		return CPoint(-208, 90);
+	}
+}
+
+CPoint CLuaEngine::GetZhongXinDirection2Price(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(30,25);
+	} 
+	else
+	{
+		return CPoint(-19, 25);
+	}
+}
+
+CPoint CLuaEngine::GetZhongXinPrice2Count(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(-22,50);
+	} 
+	else
+	{
+		return CPoint(-22, 50);
+	}
+}

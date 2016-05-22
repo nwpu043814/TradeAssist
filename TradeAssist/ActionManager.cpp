@@ -8,6 +8,8 @@ BEGIN_MESSAGE_MAP(CActionManager, CWinThread)
 	ON_THREAD_MESSAGE(WM_DO_TIANTONG_GUADAN,OnDoTianTongGuadan)
 	ON_THREAD_MESSAGE(WM_DO_KUNJIAO_GUADAN,OnDoKunJiaoGuadan)
 	ON_THREAD_MESSAGE(WM_DO_LUOGE_GUADAN,OnDoLuoGeGuadan)
+	ON_THREAD_MESSAGE(WM_DO_ZHONGXIN_GUADAN,OnDoZhongXinGuadan)
+	ON_THREAD_MESSAGE(WM_DO_INPUT_PRICE,OnDoInputPrice) 
 END_MESSAGE_MAP()
 IMPLEMENT_DYNCREATE(CActionManager, CWinThread)
 
@@ -46,6 +48,20 @@ void CActionManager::OnDoTianTongGuadan(WPARAM wParam,LPARAM lParam)
 	CHuifengGuadanParamP param = (CHuifengGuadanParamP) wParam;
 	DoHFDoubleSide(param->mLowDiff,param->mHighDiff, param->mTradeCount, param->mWindowDelay, param->mDirect, ON_TIMER_TIANTONG);
 	TRACE("OnDoHuifengGuadan, w=%d, l=%d\r\n", wParam, lParam);
+	delete param;
+	param = NULL;
+}
+
+void CActionManager::OnDoZhongXinGuadan(WPARAM wParam,LPARAM lParam)
+{
+	if(wParam == NULL)
+	{
+		return;
+	}
+
+	CHuifengGuadanParamP param = (CHuifengGuadanParamP) wParam;
+	DoHFDoubleSide(param->mLowDiff,param->mHighDiff, param->mTradeCount, param->mWindowDelay, param->mDirect, ON_TIMER_ZHONXIN);
+	TRACE("OnDoLuoGeGuadan, w=%d, l=%d\r\n", wParam, lParam);
 	delete param;
 	param = NULL;
 }
@@ -515,7 +531,7 @@ int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDe
 		{
 			wnd = ::FindWindow(NULL,KUNJIAO_CONFIRM_DIALOG_TITLE_NAME );
 		} 
-		else if (softwareType == ON_TIMER_LUOGE)
+		else if (softwareType == ON_TIMER_LUOGE || softwareType == ON_TIMER_ZHONXIN)
 		{
 			wnd = ::FindWindow(SUN_DIALOG_NAME,_T("定单窗口"));
 		} 
@@ -575,6 +591,17 @@ int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDe
 					return SEMIC_AUTO_TRADE_CALL_SUCCESS;
 				}
 			}
+			else if (ON_TIMER_ZHONXIN == softwareType)
+			{
+				if (DoZhongXinSingleSideAction(diff, direct, count, windowDelay) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
+				{
+					return SEMIC_AUTO_TRADE_CALL_FAILED;
+				}
+				else
+				{
+					return SEMIC_AUTO_TRADE_CALL_SUCCESS;
+				}
+			}
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL*searchCount);
 	}
@@ -584,7 +611,7 @@ int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDe
 
 int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, int windowDelay)
 {
-	CPoint dialogPos = GetHFDialogPos();
+	CPoint dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME);
 	if (dialogPos.x + dialogPos.y  == 0)
 	{
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
@@ -621,6 +648,7 @@ int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, 
 	//点击价格范围值
 	mAction->MoveCursor(mLuaEngine.GetPriceAdjustButton(direct).x, mLuaEngine.GetPriceAdjustButton(direct).y);
 	float newPrice = 0.0f;
+	float originalPrice = 0.0F;
 	int i = 0;
 	while (i++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
 	{
@@ -630,10 +658,10 @@ int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, 
 		Sleep(50*i);
 		CString strPrice = GetContentFromClipboard();
 		
-		float price = atof(strPrice);
-		if (price > VALID_PRICE)
+		originalPrice = atof(strPrice);
+		if (originalPrice > VALID_PRICE)
 		{
-			newPrice = direct == DO_LOW?price - diff: price + diff;
+			newPrice = direct == DO_LOW?originalPrice - diff: originalPrice + diff;
 
 			break;
 		}
@@ -677,31 +705,29 @@ int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, 
 	float price = direct == DO_LOW?newPrice + stoploseDiff: newPrice - stoploseDiff;
 	
 	//计算止损价格
-	price = direct == DO_LOW?price + diff: price - diff;
+	price = direct == DO_LOW?price + diff+1: price - diff-1;
 
 	//达到止损阈值上按钮
-	DoHop( pos.x,  pos.y);
+	mAction->MoveCursor( pos.x,  pos.y);
 	Sleep(time);
-	buffer.Format(_T("%.1f"), price);
+	buffer.Format(_T("%.0f"), price);
 	CLogger::Add("止损价" +buffer);
+	mAction->InputPrice(buffer);
 
-	if (direct == DO_LOW)
+	int stopGainDiff = mLuaEngine.getStopGainDiff(direct); 
+	if (stopGainDiff == 0)
 	{
-		for (int i =0 ; i < diff+1 ; i++)
+		//从止损上箭头到确定按钮。
+		DoHop(-65, 99);
+		pos = GetHFConfirmDialogPos();
+		if (pos.x + pos.y != 0)
 		{
-			mAction->MouseClick(0);
+			CloseHFConfirmDialog(pos.x, pos.y);
 		}
+
+		return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 	}
-	else
-	{
-		mAction->MoveCursor(0, 12);
-		for (int i =0 ; i < diff+1 ; i++)
-		{
-			mAction->MouseClick(0);
-		}
-		mAction->MoveCursor(0, -12);
-	}
-	
+
 	//点击止盈按钮
 	pos = mLuaEngine.GetPrice2StopCheckbox();
 	TRACE("GetPrice2StopCheckbox.x=%d,GetPrice2StopCheckbox.y=%d", pos);
@@ -709,29 +735,13 @@ int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, 
 	Sleep(time);
 
 	//止盈按钮到止盈价格输入上箭头
-	DoHop(mLuaEngine.GetInitialStopPriceButton(direct).x,mLuaEngine.GetInitialStopPriceButton(direct).y);
-	int stopGainDiff = mLuaEngine.getStopGainDiff(direct); 
-	if (direct == DO_HIGH)
-	{
-		for (int i =0 ; i < stopGainDiff; i++)
-		{
-			mAction->MouseClick(0);
-		}
-	}
-	else
-	{
-		mAction->MoveCursor(0, 12);
-		for (int i =0 ; i < stopGainDiff ; i++)
-		{
-			mAction->MouseClick(0);
-		}
-		mAction->MoveCursor(0, -12);
-	}
+	mAction->MoveCursor(mLuaEngine.GetInitialStopPriceButton(direct).x,mLuaEngine.GetInitialStopPriceButton(direct).y);
 	
 	//止盈价格
 	price = direct == DO_LOW?newPrice - stopGainDiff - stopThreshold : newPrice + stopGainDiff +stopThreshold;
-	buffer.Format(_T("%.1f"), price);
+	buffer.Format(_T("%.0f"), price);
 	CLogger::Add("止盈价" +buffer);
+	mAction->InputPrice(buffer);
 	Sleep(time);
 	DoHop(mLuaEngine.GetConfirmButton(direct).x, mLuaEngine.GetConfirmButton(direct).y);
 	Sleep(time);
@@ -745,7 +755,7 @@ int CActionManager::DoTianTongSingleSideAction(int diff, int direct, int count, 
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
-const CPoint & CActionManager::GetHFDialogPos(void) const
+const CPoint & CActionManager::GetDialogPosByTitle(CString title) const
 {
 	CPoint pos;
 	pos.x = 0;
@@ -753,7 +763,7 @@ const CPoint & CActionManager::GetHFDialogPos(void) const
 	int searchCount = 0;
 	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
 	{
-		HWND wnd=::FindWindow(NULL, HUIFENG_DIALOG_TITLE_NAME);
+		HWND wnd=::FindWindow(NULL, title);
 		if (wnd)
 		{
 			CRect rect;
@@ -823,7 +833,7 @@ void CActionManager::SetWindowOwner(HWND owner)
 int CActionManager::DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay)
 {
 
-	CPoint dialogPos = GetHFDialogPos();
+	CPoint dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME);
 	if (dialogPos.x + dialogPos.y  == 0)
 	{
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
@@ -1075,12 +1085,122 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 		mAction->ContinuesClick(stopGainDiff+20+diff);
 		mAction->MoveCursor(-179, 130);
 	}
-
+	Sleep(time);
 	DoHop(100,0);
+	Sleep(200);
+	DoHop(-222,72);
+	
+	CPoint confirmDlgPos = GetDialogPosByTitle(KUNJIAO_CONFIRM_TITLE_NAME);
+	if (confirmDlgPos.x + confirmDlgPos.y != 0)
+	{
+		mAction->MoveCursor(confirmDlgPos.x, confirmDlgPos.y, true);
+		DoHop(108,97);
+	}
 
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
+int CActionManager::DoZhongXinSingleSideAction(int diff, int isHigh, int mIntOrderCount, int windowDelay)
+{
+
+	POINT dialogPos = GetSunAwtDialogPos(_T("定单窗口"));
+	if (dialogPos.x == 0 && dialogPos.y == 0)
+	{
+		CLogger::Add(_T("not find sunawtdialog"));
+		TRACE("not find sunawtdialog, return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG\r\n");
+		//未能找到sun对话框
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG;
+	}
+
+	diff += 20;
+
+	int sleepTime = mLuaEngine.GetDebugSleepInterval();
+	TRACE("sleepTime=%d\r\n", sleepTime);
+	mAction->MoveCursor(dialogPos.x,dialogPos.y, true);
+	TRACE("dialogPos.x=%d, dialogPos.y=%d\r\n", dialogPos.x, dialogPos.y);
+	Sleep(100);
+	//从原点移动到指价委托tab。
+	CPoint p = mLuaEngine.GetZhongXinOrigin2Entrust(isHigh);
+	DoHop(p.x,p.y);
+	TRACE("start2Tab.x=%d, start2Tab.y=%d\r\n", p.x, p.y);
+	Sleep(sleepTime);
+	//指价委托到方向
+	p = mLuaEngine.GetZhongXinEntrust2Direction(isHigh);
+	mAction->MoveCursor(p.x,p.y);
+	mAction->MouseClick();
+	Sleep(sleepTime);
+
+	//从方向移到价格控件
+	p = mLuaEngine.GetZhongXinDirection2Price(isHigh);
+	mAction->MoveCursor(p.x,p.y);
+	TRACE("direction2Price.x=%d, direction2Price.y=%d\r\n", p.x, p.y);
+	Sleep(sleepTime);
+	//获得预制的点差
+	CString outText;
+
+	//取得当前价格。
+	CString text = GetEditText();
+	if(text.Find(_T("."))  == -1)
+	{
+		TRACE("text.Find(_T(\".\"))== -1, text=%s, return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE\r\n", text);
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
+	}
+
+	double newCount = isHigh==DO_HIGH?atof(text) + diff : atof(text) - diff ;
+	outText.Format(_T("%.2f"),newCount);
+
+	CString log;
+	log.Format(_T("originalprice=%s, hiDiff=%d, lowDiff=%d newPrice=%s, direction=%d"), text, diff, diff ,outText, isHigh);
+	CLogger::Add(log);
+	TRACE("%s\r\n",log);
+
+	//保存以备检查
+	CString mLastClipboardContent = outText;
+
+	//设置剪贴板内容并粘贴到窗口
+	SetClipboardContent(outText);
+	mAction->SelectAll();
+	mAction->KeyboardPaste();
+	Sleep(sleepTime);
+	if(!CheckEditPasteResult(mLastClipboardContent))
+	{
+		TRACE("CheckEditPasteResult , return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED\r\n");
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
+	}
+
+	//移动到设置手数的控件
+	p = mLuaEngine.GetZhongXinPrice2Count(isHigh);
+	mAction->MoveCursor(p.x,p.y);
+	TRACE("price2CountVector.x=%d, price2CountVector.y=%d\r\n", p.x, p.y);
+	Sleep(sleepTime);
+	//更新交易手数
+	mAction->MouseDoubleClick();
+	outText.Format(_T("%d"), mIntOrderCount);
+	SetClipboardContent(outText);
+	mAction->KeyboardPaste();
+
+	DoHop(-84, 135);
+	DoHop(84, 0);
+	Sleep(sleepTime);
+	newCount = isHigh==DO_HIGH?newCount - diff : newCount + diff ;
+	outText.Format(_T("%.2f"),newCount);
+	SetClipboardContent(outText);
+	mAction->SelectAll();
+	mAction->KeyboardPaste();
+	Sleep(sleepTime);
+	mAction->MoveCursor(-84,0);
+	mAction->MoveCursor(84,-135);
+
+	//移动到确定按钮上
+	mAction->MoveCursor(mLuaEngine.getCount2Confirm().x,mLuaEngine.getCount2Confirm().y);
+	Sleep(sleepTime);
+	//自动提交
+	mAction->MouseClick();
+	Sleep(100);
+	mAction->MouseClick();
+
+	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
+}
 int CActionManager::DoLuoGeSingleSideAction(int diff, int isHigh, int mIntOrderCount, int windowDelay)
 {
 	POINT dialogPos = 	GetSunAwtDialogPos(_T("定单窗口"));
@@ -1187,4 +1307,11 @@ int CActionManager::DoLuoGeSingleSideAction(int diff, int isHigh, int mIntOrderC
 	mAction->MouseClick();
 
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
+}
+
+
+void CActionManager::OnDoInputPrice(WPARAM wParam,LPARAM lParam)
+{
+	Sleep(100);
+	mAction->InputPrice(_T("5.8"));
 }

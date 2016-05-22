@@ -158,4 +158,8 @@ public:
 	CPoint GetLuoGePrice2Count(int direct);
 	int GetLuoGeStopLoseDiff(void);
 	int GetLuoGeStopGainDiff(void);
+	CPoint GetZhongXinOrigin2Entrust(int direct);
+	CPoint GetZhongXinEntrust2Direction(int direct);
+	CPoint GetZhongXinDirection2Price(int direct);
+	CPoint GetZhongXinPrice2Count(int direct);
 };
