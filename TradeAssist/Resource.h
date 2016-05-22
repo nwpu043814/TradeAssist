@@ -34,6 +34,10 @@
 #define IDC_EDIT1                       1020
 #define IDC_EDIT_AUTO_COMPLETE_INTERVAL 1020
 #define IDC_EDIT_START_DELETE_ORDER_DY  1021
+#define IDC_EDIT_DELETE_CONFIRM_DX      1022
+#define IDC_EDIT_DELETE_CONFIRM_DY      1023
+#define IDC_EDIT_DELETE_CONFIRM_DX2     1024
+#define IDC_EDIT_MSG_DELAY              1024
 
 // Next default values for new objects
 // 

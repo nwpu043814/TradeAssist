@@ -98,7 +98,7 @@ private:
 	UINT mIntLowTab2DirectDy;
 	UINT mIntLowDirect2PriceDx;
 	UINT mIntLowDirect2PriceDy;
-	UINT mIntLowPrice2CountDx;
+	INT mIntLowPrice2CountDx;
 	UINT mIntLowPrice2CountDy;
 	int mIntHighTab2DirectDx;
 	UINT mIntHighTab2DirectDy;
@@ -112,4 +112,8 @@ private:
 	int mIntHighPrice2CountDy;
 	UINT mIntStart2DeleteOrderDx;
 	UINT mIntStart2DeleteOrderDy;
+	int mIntDelete2ConfirmDx;
+	int mIntDelete2ConfirmDy;
+	// 消息延时 单位毫秒
+	UINT mIntMsgDelayMilliSeconds;
 };

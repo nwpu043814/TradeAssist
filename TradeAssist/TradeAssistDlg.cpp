@@ -73,6 +73,9 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mIntHighPrice2CountDy(0)
 	, mIntStart2DeleteOrderDx(0)
 	, mIntStart2DeleteOrderDy(0)
+	, mIntDelete2ConfirmDx(0)
+	, mIntDelete2ConfirmDy(0)
+	, mIntMsgDelayMilliSeconds(100)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new SimulateAction();
@@ -97,7 +100,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DY, mIntLowDirect2PriceDy);
 	DDV_MinMaxUInt(pDX, mIntLowDirect2PriceDy, 0, 1000);
 	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DX, mIntLowPrice2CountDx);
-	DDV_MinMaxUInt(pDX, mIntLowPrice2CountDx, 0, 1000);
+	DDV_MinMaxInt(pDX, mIntLowPrice2CountDx, -500, 500);
 	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DY, mIntLowPrice2CountDy);
 	DDV_MinMaxUInt(pDX, mIntLowPrice2CountDy, 0, 1000);
 	DDX_Text(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DX, mIntHighTab2DirectDx);
@@ -124,6 +127,12 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDx, 0, 1000);
 	DDX_Text(pDX, IDC_EDIT_START_DELETE_ORDER_DY, mIntStart2DeleteOrderDy);
 	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDy, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_DELETE_CONFIRM_DX, mIntDelete2ConfirmDx);
+	DDV_MinMaxInt(pDX, mIntDelete2ConfirmDx, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_DELETE_CONFIRM_DY, mIntDelete2ConfirmDy);
+	DDV_MinMaxInt(pDX, mIntDelete2ConfirmDy, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_MSG_DELAY, mIntMsgDelayMilliSeconds);
+	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 100, 500);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -357,7 +366,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 
 	if (isDelay)
 	{
-		Sleep(MSG_DELAY);
+		Sleep(mIntMsgDelayMilliSeconds);
 	}
 	UpdateData(TRUE);
 
@@ -524,8 +533,15 @@ int CTradeAssistDlg::InitialSetting(void)
 	mIntStart2DeleteOrderDx =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DX, 0);
 	mIntStart2DeleteOrderDy =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DY, 0);
 
+	//删除到确定
+	mIntDelete2ConfirmDx =theApp.GetProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DX, 0);
+	mIntDelete2ConfirmDy =theApp.GetProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DY, 0);
+
 	mIsAutoSubmits = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, FALSE);
 	mAutoCompleteInterval = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, 2);
+
+	mIntMsgDelayMilliSeconds = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, 100);
+
 	UpdateData(FALSE);
 
 	return 0;
@@ -566,6 +582,11 @@ int CTradeAssistDlg::SaveSetting(void)
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, mIsAutoSubmits);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
+
+	theApp.WriteProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DX, mIntDelete2ConfirmDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DY, mIntDelete2ConfirmDy);
+
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, mIntMsgDelayMilliSeconds);
 	return 0;
 }
 
@@ -611,8 +632,12 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 
 LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 {
-	mAction->MouseDoubleClick();
+	mAction->MouseClick();
 	UpdateData(TRUE);
+	Sleep(DELETE_ORDER_DELAY);
+
+	POINT lpPoint;
+	GetCursorPos(&lpPoint);
 
 	//1.当前位置双击弹出下单对话框。
 	int searchCount = 10;
@@ -623,11 +648,17 @@ LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 		{
 			mAction->MoveCursor(pos.x, pos.y, true);
 			mAction->MoveCursor(mIntStart2DeleteOrderDx,mIntStart2DeleteOrderDy);
+			Sleep(DELETE_ORDER_DELAY);
+			mAction->MouseClick();
+			mAction->MoveCursor(mIntDelete2ConfirmDx, mIntDelete2ConfirmDy);
+			Sleep(DELETE_ORDER_DELAY);
 			mAction->MouseClick();
 			break;
 		}
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
+
+	mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
 
 	return LRESULT();
 }
@@ -652,6 +683,10 @@ POINT CTradeAssistDlg::GetSunAwtDialogPos(void)
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
+
+#ifdef _DEBUG
+	TRACE("GetSunAwtDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
+#endif // _DEBUG
 
 	return pos;
 }
@@ -702,7 +737,7 @@ int CTradeAssistDlg::OnFlashComplete(void)
 #endif // _DEBUG
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
-	mAction->MouseDoubleClick();
+	mAction->MouseClick();
 	UpdateData(TRUE);
 	mIsAutoSubmits = TRUE;	
 	UpdateData(FALSE);
@@ -720,7 +755,7 @@ int CTradeAssistDlg::OnFlashComplete(void)
 
 	//3.移动鼠标到双击位置。
 	SetCursorPos(lpPoint.x, lpPoint.y);
-	mAction->MouseDoubleClick();
+	mAction->MouseClick();
 	SemicAutoTrade(DO_HIGH);
 
 #ifdef _DEBUG
@@ -740,7 +775,7 @@ void CTradeAssistDlg::SemicAutoTrade(int direct)
 		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
 		if (wnd)
 		{
-			OnDoTradeMsg(direct, MSG_DELAY_NO);
+			OnDoTradeMsg(direct, MSG_DELAY_YES);
 			break;;
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL);
