@@ -241,3 +241,8 @@ end
 function getNonfarmerWorkerParam()
 		return "" , "+18", "http://www.fx678.com/indexs/Datadetails.aspx?tid=1547&id=9899&fid=3772"  
 end
+
+--返回调试sleep间隔 单位毫秒
+function getDebugSleepInterval()
+	return 1000;
+end

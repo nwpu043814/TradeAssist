@@ -1,11 +1,35 @@
 #include "StdAfx.h"
 #include "ActionManager.h"
 #include "Logger.h"
+#include "HuifengGuadanParam.h"
 
-CActionManager::CActionManager(__in HWND hWndNewOwner, CLuaEngine &  lua):mLuaEngine(lua)
+BEGIN_MESSAGE_MAP(CActionManager, CWinThread)
+	ON_THREAD_MESSAGE(WM_DO_HUIFENG_GUADAN,OnDoHuifengGuadan)
+END_MESSAGE_MAP()
+IMPLEMENT_DYNCREATE(CActionManager, CWinThread)
+
+CActionManager::CActionManager()
 {
 	mAction = new CSimulateAction();
-	mWndNewOwner = hWndNewOwner;
+}
+
+BOOL CActionManager::InitInstance()
+{
+	return TRUE;
+}
+
+void CActionManager::OnDoHuifengGuadan(WPARAM wParam,LPARAM lParam)
+{
+	if(wParam == NULL)
+	{
+		return;
+	}
+
+	CHuifengGuadanParamP param = (CHuifengGuadanParamP) wParam;
+	DoHFDoubleSide(param->mLowDiff,param->mHighDiff, param->mTradeCount, param->mWindowDelay, param->mDirect);
+	TRACE("OnDoHuifengGuadan, w=%d, l=%d\r\n", wParam, lParam);
+	delete param;
+	param = NULL;
 }
 
 CActionManager::~CActionManager(void)
@@ -210,10 +234,6 @@ int CActionManager::DoTrade(const POINT &dialogPos,const POINT &	direction2Price
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
-LRESULT CActionManager::OnDoTradeMsg(UINT w , UINT l)
-{
-	return LRESULT();
-}
 
 int CActionManager::UpdatePrice(bool isAdd, float diff)
 {
@@ -234,36 +254,6 @@ int CActionManager::UpdatePrice(bool isAdd, float diff)
 	mAction->KeyboardPaste();
 
 	return 0;
-}
-
-LRESULT CActionManager::SemicAutoTrade(int direct) 
-{
-
-	//1.当前位置双击弹出下单对话框。
-	int searchCount = 0;
-	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
-	{
-		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
-		if (wnd)
-		{
-
-			CString log;
-			log.Format(_T("SemicAutoTrade direct=%d, dialogSearchCount=%d"), direct, searchCount);
-			CLogger::Add(log);
-
-			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
-			{
-				return SEMIC_AUTO_TRADE_CALL_FAILED;
-			}
-			else
-			{
-				return SEMIC_AUTO_TRADE_CALL_SUCCESS;
-			}
-		} 
-		Sleep(WINDOW_CHECK_INTERVAL);
-	}
-
-	return SEMIC_AUTO_TRADE_CALL_FAILED;
 }
 
 BOOL CActionManager::CheckEditPasteResult(const CString & mLastClipboardContent)
@@ -404,7 +394,7 @@ POINT CActionManager::GetSunAwtDialogPos(void)
 }
 
 //direct : 0表示两边都做 1 表示做空 2 表示做多
-int CActionManager::DoHFDoubleSide(int lowDiff, int highDiff, int count, int windowDelay,  int direct) const
+int CActionManager::DoHFDoubleSide(int lowDiff, int highDiff, int count, int windowDelay,  int direct)
 {
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
@@ -451,7 +441,7 @@ int CActionManager::DoHFDoubleSide(int lowDiff, int highDiff, int count, int win
 }
 
 // 1 for low 2 for high
-int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDelay) const
+int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDelay)
 {
 
 	//1.当前位置双击弹出下单对话框。
@@ -481,14 +471,14 @@ int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDe
 	return SEMIC_AUTO_TRADE_CALL_FAILED;
 }
 
-int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int windowDelay) const
+int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int windowDelay)
 {
 	CPoint dialogPos = GetHFDialogPos();
 	if (dialogPos.x + dialogPos.y  == 0)
 	{
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
 	}
-	const int time = 0;
+	int time = mLuaEngine.GetDebugSleepInterval();
 
 	CPoint pos = mLuaEngine.GetOrigin2DropListButton();
 
@@ -501,7 +491,7 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 
 	//选择委托单
 	DoHop(mLuaEngine.GetOrderTypeButton().x, mLuaEngine.GetOrderTypeButton().y);
-
+	Sleep(time);
 	//到手数
 	pos = mLuaEngine.GetTradeCount();
 	mAction->MoveCursor(pos.x, pos.y);
@@ -515,7 +505,7 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 
 	//点击方向
 	DoHop(mLuaEngine.GetDirectionButton(direct).x -pos.x, mLuaEngine.GetDirectionButton(direct).y -pos.y);
-
+	Sleep(time);
 
 	//点击价格范围值
 	mAction->MoveCursor(mLuaEngine.GetPriceAdjustButton(direct).x, mLuaEngine.GetPriceAdjustButton(direct).y);
@@ -586,7 +576,7 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 
 	if (direct == DO_LOW)
 	{
-		for (int i =0 ; i < diff ; i++)
+		for (int i =0 ; i < diff+1 ; i++)
 		{
 			mAction->MouseClick(0);
 		}
@@ -594,7 +584,7 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 	else
 	{
 		mAction->MoveCursor(0, 12);
-		for (int i =0 ; i < diff ; i++)
+		for (int i =0 ; i < diff+1 ; i++)
 		{
 			mAction->MouseClick(0);
 		}
@@ -629,9 +619,9 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 	
 	//止盈价格
 	price = direct == DO_LOW?newPrice - stopGainDiff - stopThreshold : newPrice + stopGainDiff +stopThreshold;
-
 	buffer.Format(_T("%.1f"), price);
 	CLogger::Add("止盈价" +buffer);
+	Sleep(time);
 	DoHop(mLuaEngine.GetConfirmButton(direct).x, mLuaEngine.GetConfirmButton(direct).y);
 	Sleep(time);
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
@@ -699,10 +689,15 @@ const CPoint& CActionManager::GetHFConfirmDialogPos(void) const
 	return pos;
 }
 
-void CActionManager::CloseHFConfirmDialog(int left, int top) const
+void CActionManager::CloseHFConfirmDialog(int left, int top)
 {
 	CPoint pos = mLuaEngine.GetHFConfirDialogOK();
 
 	mAction->MoveCursor(left+pos.x, top + pos.y,true);
 	mAction->MouseClick();
+}
+
+void CActionManager::SetWindowOwner(HWND owner)
+{
+	mWndNewOwner = owner;
 }

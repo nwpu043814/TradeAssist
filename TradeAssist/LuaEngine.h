@@ -142,4 +142,5 @@ public:
 	// ÷π”Ø◊Ó–°æ‡¿Î
 	int GetStopGainThreshold(void);
 	int GetStopLoseDiff(int direct);
+	int GetDebugSleepInterval(void);
 };

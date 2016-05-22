@@ -86,7 +86,6 @@ private:
 	CHttpWorkerP mHttpWorker;
 private:
 	CDataKP mDataK;
-	CHttpThreadP mHttpThread;
 	// 是否允许检测自动平仓时机
 	BOOL mEnableCheckAutoCloseDepot;
 	CString mStrLowPriceDiff;

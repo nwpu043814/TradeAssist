@@ -34,8 +34,6 @@ void CHttpThread::OnDoHttpGet(WPARAM wParam,LPARAM lParam)
 	
 	if (!::PostMessage((HWND)(GetMainWnd()->GetSafeHwnd()),WM_HTTP_GET_FINISH,(WPARAM)packet,NULL))
 	{
-		
-
 		this->PostThreadMessage(WM_DO_HTTP_GET_PRICE, NULL, NULL);
 	}
 	Sleep(SLEEP_TIME);

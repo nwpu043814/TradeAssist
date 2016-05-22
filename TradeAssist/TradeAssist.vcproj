@@ -330,6 +330,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HuifengGuadanParam.h"
+				>
+			</File>
+			<File
 				RelativePath=".\lauxlib.h"
 				>
 			</File>
