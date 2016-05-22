@@ -19,11 +19,12 @@ struct CDataPacket
 	CString mPriceTime;
 	CString mUpdateTime;
 	CString mNickName;
-	INT		mPrice;
+	double	mPrice;
 	INT		mUpDrop;
 	BOOL	mIsGood;
 	LONG	mMillionSecond;
-	UINT	mQueryPriceUseTime;
+	float	mQueryPriceUseTime;
+	float	mCapturePriceUseTime;
 };
 
 typedef CDataPacket * CDataPacketP;

@@ -48,12 +48,12 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mIntSecond(_T(""))
 	, mEnableCheckAutoCloseDepot(FALSE)
 	, mStrLowPriceDiff(_T(""))
-	, mDataKClose(0)
-	, mDataKOpen(0)
+	, mDataKClose(0.0F)
+	, mDataKOpen(0.0F)
 	, mDataKCloseTime(_T(""))
 	, mDataKOpenTime(_T(""))
-	, mDataKHighPrice(0)
-	, mDataKLowPrice(0)
+	, mDataKHighPrice(0.0F)
+	, mDataKLowPrice(0.0F)
 	, mUintAutoCloseThreshold(0)
 	, mDataKStatisticsUpdrop(0)
 	, mDataKDayUpdrop(0)
@@ -74,7 +74,10 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mEnableChaseTimer(FALSE)
 	, mTotalConclution(_T(""))
 	, mPullPriceCount(0)
-	, mQueryPriceUseTime(0)
+	, mQueryPriceUseTime(0.0F)
+	, mCapturePriceUseTime(0)
+	, mUILastUpdateTime(0)
+	, mEnableWindowMostTop(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mHttpWorker = new CHttpWorker();
@@ -160,17 +163,13 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_DIFF, mStrLowPriceDiff);
 	DDV_MaxChars(pDX, mStrLowPriceDiff, 4);
 	DDX_Text(pDX, IDC_EDIT_DATAK_CURRENT_PRICE, mDataKClose);
-	DDV_MinMaxUInt(pDX, mDataKClose, 0, 10000);
 	DDX_Text(pDX, IDC_EDIT_DATAK_OPEN_PRICE, mDataKOpen);
-	DDV_MinMaxUInt(pDX, mDataKOpen, 0, 10000);
 	DDX_Text(pDX, IDC_EDIT_CURRENT_TIME, mDataKCloseTime);
 	DDV_MaxChars(pDX, mDataKCloseTime, 10);
 	DDX_Text(pDX, IDC_EDIT_DATAK_OPEN_TIME, mDataKOpenTime);
 	DDV_MaxChars(pDX, mDataKOpenTime, 10);
 	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE, mDataKHighPrice);
-	DDV_MinMaxUInt(pDX, mDataKHighPrice, 0, 10000);
 	DDX_Text(pDX, IDC_EDIT_DATAK_LOW_PRICE, mDataKLowPrice);
-	DDV_MinMaxUInt(pDX, mDataKLowPrice, 0, 10000);
 	DDX_Text(pDX, IDC_EDIT_AUTO_CLOSE_THRESHOLD, mUintAutoCloseThreshold);
 	DDV_MinMaxUInt(pDX, mUintAutoCloseThreshold, THRESHOLD_MIN, THRESHOLD_MAX);
 	DDX_Text(pDX, IDC_EDIT_DATAK_STATISTICS_UPDROP, mDataKStatisticsUpdrop);
@@ -195,6 +194,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_AOTO_CHASE, mEnableChaseTimer);
 	DDX_Text(pDX, IDC_EDIT_TOTAL_CONCLUTION, mTotalConclution);
 	DDX_Text(pDX, IDC_EDIT_QURERY_PRICE_USE_TIME, mQueryPriceUseTime);
+	DDX_Text(pDX, IDC_EDIT_CAPTURE_PRICE_USE_TIME, mCapturePriceUseTime);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -213,6 +213,7 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON_START_TIMER, &CTradeAssistDlg::OnBnClickedButtonStartTimer)
+	ON_BN_CLICKED(IDC_CHECK_SET_MOST_TOP, &CTradeAssistDlg::OnBnClickedCheckSetMostTop)
 END_MESSAGE_MAP()
 
 
@@ -248,6 +249,7 @@ BOOL CTradeAssistDlg::OnInitDialog()
 	// TODO: 在此添加额外的初始化代码
 	InstallHotKey();
 	InitialSetting();
+	EnableWindowMostTop(mEnableWindowMostTop);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -626,6 +628,7 @@ int CTradeAssistDlg::InitialSetting(void)
 	mUintDoHttpInterval = theApp.GetProfileInt(STRING_SETTING,STRING_EDIT_DO_HTTP_INTERVAL, 0) ;
 	mBoolEnableAutoThreshold = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, 1);
 	mEnableChaseTimer = theApp.GetProfileInt(  STRING_SETTING, STRING_EDIT_ENABLE_CHASE_TIMER, 1);
+	mEnableWindowMostTop =  theApp.GetProfileInt(  STRING_SETTING, STRING_CHECK_ENABLE_MOST_TOP, 1);
 	UpdateData(FALSE);
 
 	return 0;
@@ -653,6 +656,7 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_DO_HTTP_INTERVAL, mUintDoHttpInterval);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, mBoolEnableAutoThreshold);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_ENABLE_CHASE_TIMER, mEnableChaseTimer);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_MOST_TOP, mEnableWindowMostTop);
 	return 0;
 }
 
@@ -948,11 +952,28 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 
 	PEcnomicData data = (PEcnomicData)l;
 	bool	updateUI  = true;
+	bool	sendCycleMsg = false;
 	if (w != NULL &&& l != NULL)
 	{
 		CDataPacketP packet = (CDataPacketP)w;
 		mPullPriceCount++;
-		updateUI = mPullPriceCount==DO_PULL_PRICE_TIMES_PER_MSG;
+		sendCycleMsg = mPullPriceCount==DO_PULL_PRICE_TIMES_PER_MSG;
+
+		if (sendCycleMsg)
+		{
+			mPullPriceCount = 0;
+		}
+
+		long current =GetTickCount();
+		if (current - mUILastUpdateTime > 500)
+		{
+			mUILastUpdateTime = current;
+			updateUI = true;
+		}
+		else
+		{
+			updateUI = false;
+		}
 
 		if (packet->mIsGood)
 		{
@@ -960,7 +981,6 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 
 			if (updateUI)
 			{
-
 				if( CheckAutoCloseDepot(packet, data) != 0)
 				{
 					PostMessage(WM_DISPLAY_DATAK);	
@@ -970,7 +990,7 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 	}
 
 	//发送消息最多尝试三次
-	if (updateUI)
+	if (sendCycleMsg)
 	{
 		mPullPriceCount = 0;
 		int i = 0;
@@ -1003,6 +1023,7 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	mDataKCurrent2ExtremeDiff = mDataK->GetCurrent2ExtremeDiff();
 	mDataKStatisticsUpdrop = mDataK->GetAmplitude();
 	mQueryPriceUseTime = mDataK->GetQueryPriceUseTime();
+	mCapturePriceUseTime = mDataK->GetCapturePriceUseTime();
 	mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
 	
 	//更新进度条范围
@@ -1221,7 +1242,7 @@ void CTradeAssistDlg::CheckChaseMoment(CDataPacketP packet)
 		return;
 	}
 
-	if (mLuaEngine.GetStartPrice() == 0)
+	if (mLuaEngine.GetStartPrice() < 0.1F)
 	{
 		mLuaEngine.SetStartPrice(packet->mPrice);
 		mLuaEngine.GetStartTime() = CTime::GetCurrentTime();
@@ -1232,8 +1253,8 @@ void CTradeAssistDlg::CheckChaseMoment(CDataPacketP packet)
 	if (!mLuaEngine.GetHasChased() && span.GetTotalSeconds() < mLuaEngine.GetChaseMaxTime())
 	{
 
-		int diff = packet->mPrice - mLuaEngine.GetStartPrice();
-		TRACE("diff=%d, priceThreshold=%d\r\n",diff,  mLuaEngine.GetChasePriceThreshold());
+		double diff = packet->mPrice - mLuaEngine.GetStartPrice();
+		TRACE("diff=%f, priceThreshold=%d\r\n",diff,  mLuaEngine.GetChasePriceThreshold());
 		if (diff > 0 && diff >= mLuaEngine.GetChasePriceThreshold()
 			&& mLuaEngine.GetChasePriceMax() >= diff)
 		{
@@ -1267,15 +1288,17 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 	//更新价格
 	mDataK->SetClose(packet->mPrice, packet->mPriceTime);
 	mDataK->SetQueryPriceUseTime(packet->mQueryPriceUseTime);
+	mDataK->SetCapturePriceUseTime(packet->mCapturePriceUseTime);
+
 	//这里判读是否回调
 	if (mDataK->IsPositive())
 	{
-		mDataK->SetCurrent2ExtremeDiff(mDataK->GetHigh() - mDataK->GetClose()) ;
+		mDataK->SetCurrent2ExtremeDiff(static_cast<int>( mDataK->GetHigh() - mDataK->GetClose())) ;
 		mOpenDirection = 0;
 		UpdateData(FALSE);
 
 		//做多分支
-		if(mDataK->GetCurrent2ExtremeDiff() >= GetDynamicThreshold(mDataK->GetAmplitude()))
+		if(mDataK->GetCurrent2ExtremeDiff() >= GetDynamicThreshold(static_cast<int>(mDataK->GetAmplitude())))
 		{
 			mActionManager->GetAction()->MouseClick();
 			CloseHttpThread(data);
@@ -1287,11 +1310,11 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 	else if(mDataK->IsNegtive() )
 	{
 
-		mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );
+		mDataK->SetCurrent2ExtremeDiff( static_cast<int>(mDataK->GetClose() - mDataK->GetLow()) );
 		mOpenDirection = 1;
 		UpdateData(FALSE);
 		//做空分支
-		if(mDataK->GetCurrent2ExtremeDiff() >=  GetDynamicThreshold(mDataK->GetAmplitude()))
+		if(mDataK->GetCurrent2ExtremeDiff() >=  GetDynamicThreshold(static_cast<int>(mDataK->GetAmplitude())))
 		{
 			mActionManager->GetAction()->MouseClick();
 			CloseHttpThread(data);
@@ -1421,4 +1444,28 @@ void CTradeAssistDlg::DoEcnomicDataAction( PEcnomicData data)
 				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, FALSE);
 		}
 	}
+}
+void CTradeAssistDlg::OnBnClickedCheckSetMostTop()
+{
+	CButton* pBtn = (CButton*)GetDlgItem(IDC_CHECK_SET_MOST_TOP);
+	mEnableWindowMostTop = pBtn->GetCheck();
+	//当state == 1时表示该复选框没有被选中；
+	//当state == 0时表示该复选框被选中；
+
+	EnableWindowMostTop(mEnableWindowMostTop);
+}
+
+void CTradeAssistDlg::EnableWindowMostTop(bool isTop)
+{
+	if (isTop)
+	{
+		::SetWindowPos(m_hWnd, HWND_TOPMOST, 0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+	} 
+	else
+	{
+		::SetWindowPos(m_hWnd, HWND_NOTOPMOST, 0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+	}
+
+		CButton* pBtn = (CButton*)GetDlgItem(IDC_CHECK_SET_MOST_TOP);
+		pBtn->SetCheck(isTop?1:0);
 }

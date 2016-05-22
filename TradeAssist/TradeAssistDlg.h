@@ -90,16 +90,16 @@ private:
 	// 是否允许检测自动平仓时机
 	BOOL mEnableCheckAutoCloseDepot;
 	CString mStrLowPriceDiff;
-	UINT mDataKClose;
-	UINT mDataKOpen;
+	double mDataKClose;
+	double mDataKOpen;
 	CString mDataKCloseTime;
 	CString mDataKOpenTime;
-	UINT mDataKHighPrice;
-	UINT mDataKLowPrice;
+	double mDataKHighPrice;
+	double mDataKLowPrice;
 	LRESULT OnDisplayDataK(WPARAM w, LPARAM l);
 	// 自动平仓阈值
 	UINT mUintAutoCloseThreshold;
-	int mDataKStatisticsUpdrop;
+	double mDataKStatisticsUpdrop;
 	int mDataKDayUpdrop;
 	// 当前回调幅度
 	int mDataKCurrent2ExtremeDiff;
@@ -161,5 +161,13 @@ private:
 	unsigned int mPullPriceCount;
 	private:
 	void CheckChaseMoment(CDataPacketP packet);
-	UINT mQueryPriceUseTime;
+	float mQueryPriceUseTime;
+	float mCapturePriceUseTime;
+	long mUILastUpdateTime;
+public:
+	afx_msg void OnBnClickedCheckSetMostTop();
+private:
+	int mEnableWindowMostTop;
+public:
+	void EnableWindowMostTop(bool isTop);
 };

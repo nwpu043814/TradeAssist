@@ -164,7 +164,7 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 		int colPos = text.Find(OWN_SERVER_SPLITER);
 		if (colPos != -1)
 		{
-			result.mPrice = atoi(text.Left(colPos));
+			result.mPrice = atof(text.Left(colPos));
 			text = text.Right(text.GetLength() - colPos - 1);
 		} 
 		else
@@ -175,7 +175,7 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 		colPos = text.Find(OWN_SERVER_SPLITER);
 		if (colPos != -1)
 		{
-			//result.mMillionSecond = atol(text.Left(colPos));
+			//milliseconds
 			text = text.Right(text.GetLength() - colPos - 1);
 		} 
 		else
@@ -187,12 +187,33 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 		if (colPos != -1)
 		{
 			result.mPriceTime = text.Left(colPos);
-			result.mQueryPriceUseTime= atoi(text.Right(text.GetLength() - colPos - 1));
+			text = text.Right(text.GetLength() - colPos - 1);
 		} 
 		else
 		{
 			result.mIsGood = FALSE;
 		}
+
+		colPos = text.Find(OWN_SERVER_SPLITER);
+		if (colPos != -1)
+		{
+			result.mQueryPriceUseTime= atof(text.Left(colPos));
+			text = text.Right(text.GetLength() - colPos - 1);
+		} 
+		else
+		{
+			result.mIsGood = FALSE;
+		}
+
+		/*colPos = text.Find(OWN_SERVER_SPLITER);
+		if (colPos != -1)
+		{*/
+			result.mCapturePriceUseTime =atof( text);
+		/*} 
+		else
+		{
+			result.mIsGood = FALSE;
+		}*/
 	}
 	else
 	{

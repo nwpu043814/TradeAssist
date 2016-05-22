@@ -9,7 +9,6 @@ CDataK::CDataK(void)
 , mLow(0)
 , mOpenTime(_T(""))
 , mCloseTime(_T(""))
-, mIntDayUpDrop(0)
 , mIntCurrent2ExtremeDiff(0)
 {
 }
@@ -18,8 +17,7 @@ CDataK::~CDataK(void)
 {
 }
 
-//
-void CDataK::SetClose(UINT close, CString time)
+void CDataK::SetClose(double close, CString time)
 {
 	mClose = close;
 	InitialHighLow(close);
@@ -33,12 +31,12 @@ void CDataK::SetClose(UINT close, CString time)
 	mCloseTime = time;
 }
 
-UINT CDataK::GetHigh(void)
+double CDataK::GetHigh(void)
 {
 	return mHigh;
 }
 
-UINT CDataK::GetLow(void)
+double CDataK::GetLow(void)
 {
 	return mLow;
 }
@@ -65,7 +63,7 @@ CString CDataK::GetCloseTime(void)
 }
 
 // maintain  the high price and the low price.
-void CDataK::UpdateRange(UINT latestPrice)
+void CDataK::UpdateRange(double latestPrice)
 {
 	//update the highest price
 	if (latestPrice > mHigh)
@@ -89,12 +87,12 @@ BOOL CDataK::IsNegtive(void)
 	return GetAmplitude() <  0;
 }
 
-INT CDataK::GetAmplitude(void)
+double CDataK::GetAmplitude(void)
 {
 	return mClose - mOpen;
 }
 
-void CDataK::InitialHighLow(UINT price)
+void CDataK::InitialHighLow(double price)
 {
 	if (mOpen == 0)
 	{
@@ -112,31 +110,19 @@ void CDataK::InitialHighLow(UINT price)
 	}
 }
 
-float CDataK::GetAmplitudeRate(void)
+double CDataK::GetAmplitudeRate(void)
 {
 	return (GetAmplitude() + 0.000F)/mOpen;
 }
 
-UINT CDataK::GetClose(void)
+double CDataK::GetClose(void)
 {
 	return mClose;
 }
 
-UINT CDataK::GetOpen(void)
+double CDataK::GetOpen(void)
 {
 	return mOpen;
-}
-
-// 获得拉取到的全天涨跌值
-int CDataK::GetDayUpDrop(void)
-{
-	return mIntDayUpDrop;
-}
-
-// 设置全天涨跌值
-void CDataK::SetDayUpDrop(int updrop)
-{
-	mIntDayUpDrop = updrop;
 }
 
 int CDataK::GetCurrent2ExtremeDiff(void)
@@ -160,12 +146,22 @@ LONG CDataK::GetMillionSecond(void)
 	return mMillionSecond;
 }
 
-UINT CDataK::GetQueryPriceUseTime(void)
+float CDataK::GetQueryPriceUseTime(void)
 {
 	return mQueryPriceUseTime;
 }
 
-void CDataK::SetQueryPriceUseTime(UINT time)
+void CDataK::SetQueryPriceUseTime(float time)
 {
 	mQueryPriceUseTime = time;
+}
+
+float CDataK::GetCapturePriceUseTime(void)
+{
+	return mCapturePriceUseTime;
+}
+
+void CDataK::SetCapturePriceUseTime(float time)
+{
+	mCapturePriceUseTime = time;
 }

@@ -7,54 +7,49 @@ public:
 	virtual ~CDataK(void);
 private:
 	// open price
-	UINT mOpen;
+	double mOpen;
 	// close price
-	UINT mClose;
+	double mClose;
 	// highest price
-	UINT mHigh;
+	double mHigh;
 	// lowest price
-	UINT mLow;
+	double mLow;
 	CString mOpenTime;
 	CString mCloseTime;
 	LONG mMillionSecond;
 public:
-	void SetClose(UINT close, CString time);
-	UINT GetHigh(void);
-	UINT GetLow(void);
+	void SetClose(double close, CString time);
+	double GetHigh(void);
+	double GetLow(void);
 	CString GetOpenTime(void);
 	void SetCloseTime(CString closeTime);
 	CString GetCloseTime(void);
 	// maintain  the high price and the low price.
-	void UpdateRange(UINT latestPrice);
+	void UpdateRange(double latestPrice);
 	BOOL IsPositive(void);
 	BOOL IsNegtive(void);
-	INT GetAmplitude(void);
-	void InitialHighLow(UINT price);
-	float GetAmplitudeRate(void);
-	UINT GetClose(void);
-	UINT GetOpen(void);
-private:
-	// 全天涨跌值
-	int mIntDayUpDrop;
-public:
-	// 获得拉取到的全天涨跌值
-	int GetDayUpDrop(void);
-	// 设置全天涨跌值
-	void SetDayUpDrop(int updrop);
+	double GetAmplitude(void);
+	void InitialHighLow(double price);
+	double GetAmplitudeRate(void);
+	double GetClose(void);
+	double GetOpen(void);
 private:
 	// 回调幅度
 	int mIntCurrent2ExtremeDiff;
 
 private:
-	UINT	mQueryPriceUseTime;
+	float	mQueryPriceUseTime;
+	float	mCapturePriceUseTime;
 public:
 	int GetCurrent2ExtremeDiff(void);
 	// 设置回调幅度
 	void SetCurrent2ExtremeDiff(int diff);
 	void SetMillionSecond(long ms);
 	LONG GetMillionSecond(void);
-	UINT GetQueryPriceUseTime(void);
-	void SetQueryPriceUseTime(UINT time);
+	float GetQueryPriceUseTime(void);
+	void SetQueryPriceUseTime(float time);
+	float GetCapturePriceUseTime(void);
+	void SetCapturePriceUseTime(float time);
 };
 
 

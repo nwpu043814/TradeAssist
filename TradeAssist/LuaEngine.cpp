@@ -732,12 +732,12 @@ CString CLuaEngine::GetJoblessTitle(void)
 	return mJoblessTitle;
 }
 
-UINT CLuaEngine::GetStartPrice(void)
+double CLuaEngine::GetStartPrice(void)
 {
 	return mStartPrice;
 }
 
-void CLuaEngine::SetStartPrice(UINT startPrice)
+void CLuaEngine::SetStartPrice(double startPrice)
 {
 	mStartPrice = startPrice;
 }

@@ -74,13 +74,13 @@ private:
 	CString mNonfarmerTitle;
 	CString mJoblessTitle;
 	CString mDailyFxUrl;
-	UINT mStartPrice;
+	double mStartPrice;
 public:
 	CString GetDailyFxUrl(void);
 	CString GetNonfarmerTitle(void);
 	CString GetJoblessTitle(void);
-	UINT GetStartPrice(void);
-	void SetStartPrice(UINT startPrice);
+	double GetStartPrice(void);
+	void SetStartPrice(double startPrice);
 	INT GetChasePriceThreshold(void);
 private:
 	int mChasePriceThreshold;
