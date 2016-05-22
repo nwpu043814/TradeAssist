@@ -34,6 +34,20 @@ CLuaEngine::CLuaEngine(void)
 , mHasChased(false)
 , mChaseMaxTime(0)
 , mChasePriceMax(0)
+, mHFOrigin2DropListButton(0)
+, mHFOrderTypeButton(0)
+, mHFDirectionButtonLow(0)
+, mHFDirectionButtonHigh(0)
+, mHFPriceAdjustButtonLow(0)
+, mHFPriceAdjustButtonHigh(0)
+, mHFEnableStopButtonLow(0)
+, mHFEnableStopButtonHigh(0)
+, mHFInitialStopPriceButtonLow(0)
+, mHFInitialStopPriceButtonHigh(0)
+, mHFAdjustStopPriceButtonLow(0)
+, mHFAdjustStopPriceButtonHigh(0)
+, mHFConfirmButtonLow(0)
+, mHFConfirmButtonHigh(0)
 {
 	mLua = InitLuaState();
 	GetNonfarmerWorkerUrl(0);
@@ -845,4 +859,424 @@ int CLuaEngine::GetChasePriceMax(void)
 	lua_pop(m_plua,1); 
 
 	return mChasePriceMax;		
+}
+
+const CPoint& CLuaEngine::getOrigin2DropListButton(void)
+{
+	if (!(mHFOrigin2DropListButton.x == 0 || mHFOrigin2DropListButton.y == 0))
+	{
+		return mHFOrigin2DropListButton;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetOrigin2DropListButton);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mHFOrigin2DropListButton.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mHFOrigin2DropListButton.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mHFOrigin2DropListButton;	
+}
+
+const CPoint& CLuaEngine::getOrderTypeButton(void)
+{
+	if (!(mHFOrderTypeButton.x == 0 || mHFOrderTypeButton.y == 0))
+	{
+		return mHFOrderTypeButton;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetOrderTypeButton);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mHFOrderTypeButton.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mHFOrderTypeButton.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mHFOrderTypeButton;	
+}
+
+const CPoint& CLuaEngine::getDirectionButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFDirectionButtonLow.x == 0 || mHFDirectionButtonLow.y == 0))
+		{
+			return mHFDirectionButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFDirectionButtonHigh.x == 0 || mHFDirectionButtonHigh.y == 0))
+		{
+			return mHFDirectionButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetDirectionButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFDirectionButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFDirectionButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFDirectionButtonLow;		
+	} 
+	else
+	{
+		mHFDirectionButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFDirectionButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFDirectionButtonHigh;		
+	}
+}
+
+const CPoint& CLuaEngine::getPriceAdjustButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFPriceAdjustButtonLow.x == 0 || mHFPriceAdjustButtonLow.y == 0))
+		{
+			return mHFPriceAdjustButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFPriceAdjustButtonHigh.x == 0 || mHFPriceAdjustButtonHigh.y == 0))
+		{
+			return mHFPriceAdjustButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetPriceAdjustButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFPriceAdjustButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFPriceAdjustButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFPriceAdjustButtonLow;		
+	} 
+	else
+	{
+		mHFPriceAdjustButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFPriceAdjustButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFPriceAdjustButtonHigh;		
+	}
+}
+
+const CPoint & CLuaEngine::getEnableStopButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFEnableStopButtonLow.x == 0 || mHFEnableStopButtonLow.y == 0))
+		{
+			return mHFEnableStopButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFEnableStopButtonHigh.x == 0 || mHFEnableStopButtonHigh.y == 0))
+		{
+			return mHFEnableStopButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetEnableStopButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFEnableStopButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFEnableStopButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFEnableStopButtonLow;		
+	} 
+	else
+	{
+		mHFEnableStopButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFEnableStopButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFEnableStopButtonHigh;		
+	}
+}
+
+const CPoint & CLuaEngine::getInitialStopPriceButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFInitialStopPriceButtonLow.x == 0 || mHFInitialStopPriceButtonLow.y == 0))
+		{
+			return mHFInitialStopPriceButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFInitialStopPriceButtonHigh.x == 0 || mHFInitialStopPriceButtonHigh.y == 0))
+		{
+			return mHFInitialStopPriceButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetInitialStopPriceButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFInitialStopPriceButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFInitialStopPriceButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFInitialStopPriceButtonLow;		
+	} 
+	else
+	{
+		mHFInitialStopPriceButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFInitialStopPriceButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFInitialStopPriceButtonHigh;		
+	}
+}
+
+const CPoint & CLuaEngine::getAdjustStopPriceButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFAdjustStopPriceButtonLow.x == 0 || mHFAdjustStopPriceButtonLow.y == 0))
+		{
+			return mHFAdjustStopPriceButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFAdjustStopPriceButtonHigh.x == 0 || mHFAdjustStopPriceButtonHigh.y == 0))
+		{
+			return mHFAdjustStopPriceButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetAdjustStopPriceButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFAdjustStopPriceButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFAdjustStopPriceButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFAdjustStopPriceButtonLow;		
+	} 
+	else
+	{
+		mHFAdjustStopPriceButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFAdjustStopPriceButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFAdjustStopPriceButtonHigh;		
+	}
+}
+
+const CPoint& CLuaEngine::getConfirmButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		if (!(mHFConfirmButtonLow.x == 0 || mHFConfirmButtonLow.y == 0))
+		{
+			return mHFConfirmButtonLow;
+		}
+
+	}
+	else
+	{
+		if (!(mHFConfirmButtonHigh.x == 0 || mHFConfirmButtonHigh.y == 0))
+		{
+			return mHFConfirmButtonHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetConfirmButton);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mHFConfirmButtonLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFConfirmButtonLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFConfirmButtonLow;		
+	} 
+	else
+	{
+		mHFConfirmButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mHFConfirmButtonHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mHFConfirmButtonHigh;		
+	}
 }

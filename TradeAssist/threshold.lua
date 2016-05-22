@@ -100,6 +100,7 @@ function getOrigin2Count()
 	return 110,120
 end
 
+--1 is do low
 function getCount2OrderButton(direct)
 	if direct == 1 then
 		return 1,2
@@ -109,7 +110,6 @@ function getCount2OrderButton(direct)
 end
 
 function getDailyFxUrl()
-	--"http://www.dailyfx.com.hk/calendar/index.html"
 	return "http://www.dailyfx.com.hk/calendar/index.html";
 end
 
@@ -124,6 +124,62 @@ end
 --返回时间阈值，单位秒
 function getChaseMaxTime()
 		return 600;
+end
+
+--点击下拉列表 公共
+function getOrigin2DropListButton()
+		return 342, 68;
+end
+
+--切到市价建单 公共
+function getOrderTypeButton()
+		return 0 , 28;
+end
+
+--1 is do low 方向按钮 
+function getDirectionButton(direct)
+	if direct == 1 then
+		return 220,134
+	else
+		return 282,134
+	end
+end
+
+--价格设置按钮
+function getPriceAdjustButton(direct)
+	if direct == 1 then
+		return 236,86
+	else
+		return 298,86
+	end
+end
+
+--启用止损 
+function getEnableStopButton(direct)
+		return -314,56
+end
+
+--初始化止损价格
+function getInitialStopPriceButton(direct)
+		return 156,-6
+end
+
+--调整止损价格
+function getAdjustStopPriceButton(direct)
+	if direct == 1 then
+		return 0,0
+	else
+		return 0,12
+	end
+end
+
+--确定
+function getConfirmButton(direct)
+	if direct == 1 then
+		return -65,113
+	else
+		return -65,101
+	end
 end
 
 function getJoblessParam()

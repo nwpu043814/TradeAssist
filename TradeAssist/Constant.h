@@ -213,6 +213,15 @@
 #define		LUA_FUNCTION_GetChaseMaxTime _T("getChaseMaxTime")
 #define		LUA_FUNCTION_GetChasePriceMax _T("getChasePriceMax")
 
+//»ã·á²ÎÊý
+#define		LUA_FUNCTION_GetOrigin2DropListButton _T("getOrigin2DropListButton")
+#define		LUA_FUNCTION_GetOrderTypeButton _T("getOrderTypeButton")
+#define		LUA_FUNCTION_GetDirectionButton _T("getDirectionButton")
+#define		LUA_FUNCTION_GetPriceAdjustButton _T("getPriceAdjustButton")
+#define		LUA_FUNCTION_GetEnableStopButton _T("getEnableStopButton")
+#define		LUA_FUNCTION_GetInitialStopPriceButton _T("getInitialStopPriceButton")
+#define		LUA_FUNCTION_GetAdjustStopPriceButton _T("getAdjustStopPriceButton")
+#define		LUA_FUNCTION_GetConfirmButton _T("getConfirmButton")
 
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")
 #define		HTTP_URL_TIANTONG_HOST _T("jry.baidao.com")

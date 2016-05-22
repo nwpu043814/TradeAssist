@@ -100,4 +100,27 @@ private:
 	int mChasePriceMax;
 public:
 	int GetChasePriceMax(void);
+	const CPoint& getOrigin2DropListButton(void);
+	const CPoint& getOrderTypeButton(void);
+	const CPoint& getDirectionButton(int direct);
+	const CPoint& getPriceAdjustButton(int direct);
+	const CPoint & getEnableStopButton(int direct);
+	const CPoint & getInitialStopPriceButton(int direct);
+	const CPoint & getAdjustStopPriceButton(int direct);
+	const CPoint& getConfirmButton(int direct);
+private:
+	CPoint mHFOrigin2DropListButton;
+	CPoint mHFOrderTypeButton;
+	CPoint mHFDirectionButtonLow;
+	CPoint mHFDirectionButtonHigh;
+	CPoint mHFPriceAdjustButtonLow;
+	CPoint mHFPriceAdjustButtonHigh;
+	CPoint mHFEnableStopButtonLow;
+	CPoint mHFEnableStopButtonHigh;
+	CPoint mHFInitialStopPriceButtonLow;
+	CPoint mHFInitialStopPriceButtonHigh;
+	CPoint mHFAdjustStopPriceButtonLow;
+	CPoint mHFAdjustStopPriceButtonHigh;
+	CPoint mHFConfirmButtonLow;
+	CPoint mHFConfirmButtonHigh;
 };
