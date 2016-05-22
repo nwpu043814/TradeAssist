@@ -138,7 +138,7 @@ end
 
 --切到交易手数窗口
 function getTradeCount()
-		return -159,31
+		return 182,122 -- win7 26 , xp 31
 end
 
 function getScaleList()
@@ -256,16 +256,17 @@ end
 -- 返回5代表柯予
 -- 返回6代表更新非农
 -- 返回7代表更新中新
+-- 返回8代表拉取本地数据服务器
 function getDoubleSideType()
 	return 6;
 end
 
 function getJoblessParam()
-		return "","7.4%","http://www.fx678.com/indexs/Datadetails.aspx?tid=1552&id=9959&fid=3782";
+		return "","5.6%","http://rl.fx678.com/Datadetails.aspx?tid=1552&id=32901&fid=3782";
 end
 --
 function getNonfarmerWorkerParam()
-		return "" , "+18", "http://www.fx678.com/indexs/Datadetails.aspx?tid=1547&id=9899&fid=3772"  
+		return "" , "23.4", "http://rl.fx678.com/Datadetails.aspx?tid=1547&id=29180&fid=3772"  
 end
 
 function getTianTongRetryTimes()
@@ -274,7 +275,7 @@ end
 
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 20;
+	return 0;
 end
 
 function getLuoGeStopLoseDiff()

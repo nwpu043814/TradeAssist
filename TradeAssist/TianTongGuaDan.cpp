@@ -3,6 +3,7 @@
 #include "Logger.h"
 
 CTianTongGuaDan::CTianTongGuaDan(CLuaEngineP lua, CSimulateActionP action,HWND wndNewOwner):CBaseGuaDan(lua, action, wndNewOwner)
+, mInitialCursorPos(0)
 {
 }
 
@@ -25,13 +26,13 @@ void CTianTongGuaDan::CloseHFConfirmDialog(int left, int top)
 }
 
 
-const CPoint& CTianTongGuaDan::GetHFConfirmDialogPos(void) const
+const CPoint& CTianTongGuaDan::GetHFConfirmDialogPos(int retryTimes) const
 {
 	CPoint pos;
 	pos.x = 0;
 	pos.y = 0;
 	int searchCount = 0;
-	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
+	while (searchCount++ < retryTimes)
 	{
 		HWND wnd=::FindWindow("WindowsForms10.Window.8.app.0.33c0d9d", HUIFENG_CONFIRM_DIALOG_TITLE_NAME);
 		if (wnd)
@@ -125,7 +126,7 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 			mAction->MouseClick(0);
 		}
 	}
-	else
+	else if(direct == DO_LOW)
 	{
 		mAction->MoveCursor(0, 23);
 		for (int i =0 ; i < diff ; i++)
@@ -191,14 +192,14 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	DoHop(mLuaEngine->GetConfirmButton(direct).x, mLuaEngine->GetConfirmButton(direct).y);
 	Sleep(time);
 
-	pos = GetHFConfirmDialogPos();
+	pos = GetHFConfirmDialogPos(FIND_SUN_DIALOG_MAX_RETRY_TIMES*2);
 	if (pos.x + pos.y != 0)
 	{
 		CloseHFConfirmDialog(pos.x, pos.y);
 	}
 
 	Sleep(80);
-	dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME, 1);
+	dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME,NULL, 1);
 	if (dialogPos.x + dialogPos.y  != 0)
 	{
 		mAction->MoveCursor(dialogPos.x, dialogPos.y, true);	
@@ -210,3 +211,53 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
+
+void CTianTongGuaDan::DoTianTongChaseAction(int direct, int count)
+{
+	CPoint dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME);
+	if (dialogPos.x + dialogPos.y  == 0)
+	{
+		return ;
+	}
+	int time = mLuaEngine->GetDebugSleepInterval();
+	CPoint pos = mLuaEngine->GetOrigin2DropListButton();
+
+	//保存动作开始前鼠标的原始位置
+	GetCursorPos(&mInitialCursorPos);
+
+	//对话框原点
+	mAction->MoveCursor(dialogPos.x, dialogPos.y, true);
+	Sleep(time);
+
+	//到手数
+	pos = mLuaEngine->GetTradeCount();
+	mAction->MoveCursor(pos.x, pos.y);
+	TRACE("count=%d\r\n",count);
+	Sleep(time);
+	for (int i = 1; i < count; i++)
+	{
+		Sleep(time);
+		//控制手数
+		mAction->MouseClick();
+	}
+	mAction->RevertLastCusorMove();
+	CPoint* count2Direc = new CPoint();
+	if (direct == DO_HIGH)
+	{
+		count2Direc->SetPoint( 60 ,227);
+	} 
+	else if (direct == DO_LOW)
+	{
+		count2Direc->SetPoint(122 ,227);
+	}
+	DoHop(count2Direc->x, count2Direc->y);
+	Sleep(time);
+	mAction->RevertLastCusorMove();
+	mAction->Hop(138 , 478);
+	delete count2Direc;
+}
+
+CPoint CTianTongGuaDan::GetInitialCursorPos(void)
+{
+	return mInitialCursorPos;
+}

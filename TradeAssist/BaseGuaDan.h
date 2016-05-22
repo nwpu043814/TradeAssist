@@ -21,5 +21,5 @@ public:
 	virtual BOOL SetClipboardContent(CString source) const;
 	BOOL CheckEditPasteResult(const CString & mLastClipboardContent);
 	CString GetEditText(UINT checkLen = PRICE_LENGTH);
-	CPoint GetDialogPosByTitle(CString title , UINT retryTime = FIND_SUN_DIALOG_MAX_RETRY_TIMES);
+	CPoint GetDialogPosByTitle(CString title ,LPCTSTR className = NULL, UINT retryTime = FIND_SUN_DIALOG_MAX_RETRY_TIMES);
 };

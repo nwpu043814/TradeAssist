@@ -135,7 +135,7 @@ int CHaiJiaoGuaDan::DoSingleSideAction(int diff, int isHigh, int count, int wind
 			mAction->MouseClick();
 		}
 	} 
-	else
+	else if(isHigh == DO_LOW)
 	{
 		//ֹӯ�¼�ͷ
 		mAction->MoveCursor(96,2);

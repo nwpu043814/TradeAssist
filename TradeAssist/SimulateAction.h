@@ -1,6 +1,7 @@
 #pragma once
 #include "Constant.h"
 #include "LuaEngine.h"
+#include "atltypes.h"
 
 class CSimulateAction
 {
@@ -25,6 +26,13 @@ public:
 	int GetContentFromClipboard(void);
 	void ContinuesClick(int clickTimes);
 	void InputPrice(CString price);
+	void Hop(int dx, int dy);
+private:
+	// 最近一次鼠标移动位移
+	CPoint mLastCusorMove;
+public:
+	// 撤销上次鼠标移动
+	void RevertLastCusorMove(void);
 };
 
 typedef CSimulateAction * CSimulateActionP;

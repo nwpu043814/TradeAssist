@@ -6,7 +6,9 @@
 #include "LuoGeGuaDan.h"
 #include "HaiJiaoGuaDan.h"
 #include "KeYuGuaDan.h"
+#include "BaseGuaDan.h"
 #include "ZhonXinGuaDan.h"
+#include "Util.h"
 BEGIN_MESSAGE_MAP(CActionManager, CWinThread)
 	ON_THREAD_MESSAGE(WM_DO_GUADAN,OnDoGuadan)
 	ON_THREAD_MESSAGE(WM_DO_KUNJIAO_GUADAN,OnDoKunJiaoGuadan)
@@ -582,7 +584,7 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 		Sleep(time);
 		mAction->MoveCursor(0,-56);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		DoHop(0,42);
 		Sleep(time);
@@ -611,7 +613,7 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 		Sleep(time);
 		mAction->MoveCursor(0,-10);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mAction->ContinuesClick(31+diff);
 	}
@@ -624,7 +626,7 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 		Sleep(time);
 		mAction->ContinuesClick(1+diff);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mAction->MoveCursor(-38, -139);
 		Sleep(time);
@@ -644,7 +646,7 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 		mAction->ContinuesClick(stopGainDiff+30+diff);
 		mAction->MoveCursor(-179, 138);
 	} 
-	else
+	else if(direct == DO_LOW)
 	{
 		mAction->MoveCursor(179, -130);
 		Sleep(time);
@@ -666,9 +668,196 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
-
 void CActionManager::OnDoInputPrice(WPARAM wParam,LPARAM lParam)
 {
 	Sleep(100);
 	mAction->InputPrice(_T("5.8"));
+}
+
+void CActionManager::DoTiantongStopLose(int direction)
+{
+
+	CBaseGuaDan *base = new CBaseGuaDan(&mLuaEngine, mAction, mWndNewOwner);
+	CPoint	pos ;
+	int sleepTime = mLuaEngine.GetDebugSleepInterval();
+	mAction->MouseDoubleClick();
+
+	int diff = 2;
+	pos = base->GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME_PINGCANG);
+	if (pos.x + pos.y == 0)
+	{
+		delete base;
+		return;
+	}
+	Sleep(sleepTime);
+	mAction->MoveCursor(pos.x , pos.y, true );
+	Sleep(sleepTime);
+	mAction->Hop(334, 64);//点击下单类型
+	Sleep(sleepTime);
+	mAction->Hop(0, 28);//点击指价平仓
+	Sleep(sleepTime);
+	mAction->RevertLastCusorMove();
+	mAction->Hop(-278, 253);//点击启用止损
+	Sleep(sleepTime);
+	mAction->RevertLastCusorMove();
+	mAction->Hop(-137, 245);//初始化止损价格
+	Sleep(sleepTime);
+
+	if (direction == DO_HIGH)
+	{
+		//调整止损价格
+		mAction->RevertLastCusorMove();
+		mAction->Hop(-137, 257);
+		Sleep(sleepTime);
+		mAction->ContinuesClick(diff);
+	}
+	else if (direction == DO_LOW)
+	{
+		mAction->ContinuesClick(diff);
+	}
+	else
+	{
+		delete base;
+		return;
+	}
+	Sleep(sleepTime);
+	mAction->RevertLastCusorMove();
+	Sleep(sleepTime);
+	mAction->Hop(-207, 379);//点击确定
+	delete base;
+}
+
+// 带自动追加止损的天通chase
+void CActionManager::DoTianTongChaseActionExt(int direction, int mIntOrderCount)
+{
+	CTianTongGuaDan* action = new CTianTongGuaDan(&mLuaEngine, mAction, mWndNewOwner);
+	action->DoTianTongChaseAction(direction, mIntOrderCount);
+	Sleep(5000);
+
+	//关闭下单成功提示
+	CPoint comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME,HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME );
+	if(comfirDialogPos.x + comfirDialogPos.y == 0)
+	{
+		delete action;
+		return;
+	}
+
+	mAction->MoveCursor(comfirDialogPos.x, comfirDialogPos.y, true);
+	mAction->Hop(158, 125);
+	Sleep(200);
+	mAction->MoveCursor(action->GetInitialCursorPos().x, action->GetInitialCursorPos().y, true);
+	DoTiantongStopLose(direction);
+	Sleep(1500);
+
+	//关闭修改止损价格成功提示
+	comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME, HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME);
+	if(comfirDialogPos.x + comfirDialogPos.y == 0)
+	{
+		delete action;
+		return;
+	}
+	
+	mAction->MoveCursor(comfirDialogPos.x, comfirDialogPos.y, true);
+	mAction->Hop(158, 125);
+
+	delete action;
+}
+
+void CActionManager::DoEcnomicDataAction(PEcnomicData data, CDataManager* mDataManager, HWND hwnd)
+{
+	if (data == NULL)
+	{
+		return;
+	}
+
+	CTianTongGuaDan* action = new CTianTongGuaDan(&mLuaEngine, GetAction(), hwnd); 
+	if (!mDataManager->mNonfarmerNumber[0]->GetUrl().IsEmpty() && !mDataManager->mJoblessRate[0]->GetUrl().IsEmpty())
+	{
+
+		if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH
+			&& mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(data->GetResult());//根据两个数据更新总体多空。
+			DoTianTongChaseActionExt(DO_HIGH, mDataManager->mIntOrderCount);
+		}
+		else if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW
+			&& mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(data->GetResult());//根据两个数据更新总体多空。
+			DoTianTongChaseActionExt(DO_LOW, mDataManager->mIntOrderCount);
+		}
+		else if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH
+			&&  mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			if (mDataManager->mNonfarmerNumber[0]->GetWeight() > mDataManager->mJoblessRate[0]->GetWeight())
+			{
+				mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);//根据两个数据更新总体多空。
+				//TODO : do chase action
+			} 
+			else if (mDataManager->mNonfarmerNumber[0]->GetWeight() < mDataManager->mJoblessRate[0]->GetWeight())
+			{
+				mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);//根据两个数据更新总体多空。
+				//TODO : do chase action
+			}
+		}
+		else if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW
+			&&  mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			if (mDataManager->mNonfarmerNumber[0]->GetWeight() > mDataManager->mJoblessRate[0]->GetWeight())
+			{
+				mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);
+				//TODO : do chase action
+			} 
+			else if (mDataManager->mNonfarmerNumber[0]->GetWeight() < mDataManager->mJoblessRate[0]->GetWeight())
+			{
+				mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);
+				//TODO : do chase action
+			}
+		}
+		else if (mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_EQUAL)
+		{
+			mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(mDataManager->mNonfarmerNumber[0]->GetResult());
+
+			if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW)
+			{
+				DoTianTongChaseActionExt(DO_LOW,mDataManager-> mIntOrderCount);
+			}
+			else if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+			{
+				DoTianTongChaseActionExt(DO_HIGH, mDataManager->mIntOrderCount);
+			}
+		}
+		else if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_EQUAL)
+		{
+			mDataManager->mTotalConclution = CUtil::TranslateEcomicResult(mDataManager->mJoblessRate[0]->GetResult());
+			if (mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+			{
+				DoTianTongChaseActionExt(DO_LOW, mDataManager->mIntOrderCount);
+			}
+			else if (mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+			{
+				DoTianTongChaseActionExt(DO_HIGH, mDataManager->mIntOrderCount);
+			}
+		}
+	}
+	else if (!mDataManager->mNonfarmerNumber[0]->GetUrl().IsEmpty())
+	{
+		if (mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+		} 
+		else if(mDataManager->mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+		}
+	}
+	else if ( !mDataManager->mJoblessRate[0]->GetUrl().IsEmpty())
+	{
+		if (mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+		} 
+		else if(mDataManager->mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+		}
+	}
+
+	delete action;
 }

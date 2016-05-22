@@ -378,7 +378,7 @@ const CPoint& CLuaEngine::getEntrust2Direction(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHighEntrust2Direction.x == 0 || mHighEntrust2Direction.y == 0))
 		{
@@ -415,7 +415,7 @@ const CPoint& CLuaEngine::getEntrust2Direction(int direct)
 
 		return mLowEntrust2Direction;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHighEntrust2Direction.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -424,6 +424,10 @@ const CPoint& CLuaEngine::getEntrust2Direction(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHighEntrust2Direction;		
+	}
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -437,7 +441,7 @@ const CPoint & CLuaEngine::getDirection2Price(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHighDirection2Price.x == 0 || mHighDirection2Price.y == 0))
 		{
@@ -474,7 +478,7 @@ const CPoint & CLuaEngine::getDirection2Price(int direct)
 
 		return mLowDirection2Price;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHighDirection2Price.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -483,6 +487,10 @@ const CPoint & CLuaEngine::getDirection2Price(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHighDirection2Price;		
+	}
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -496,7 +504,7 @@ const CPoint& CLuaEngine::getPrice2Count(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHighPrice2Count.x == 0 || mHighPrice2Count.y == 0))
 		{
@@ -533,7 +541,7 @@ const CPoint& CLuaEngine::getPrice2Count(int direct)
 
 		return mLowPrice2Count;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHighPrice2Count.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -542,6 +550,10 @@ const CPoint& CLuaEngine::getPrice2Count(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHighPrice2Count;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -687,7 +699,7 @@ const CPoint& CLuaEngine::GetCount2OrderButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mCount2OrderButtonHigh.x == 0 || mCount2OrderButtonHigh.y == 0))
 		{
@@ -724,7 +736,7 @@ const CPoint& CLuaEngine::GetCount2OrderButton(int direct)
 
 		return mCount2OrderButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mCount2OrderButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -733,6 +745,10 @@ const CPoint& CLuaEngine::GetCount2OrderButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mCount2OrderButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -970,7 +986,7 @@ const CPoint& CLuaEngine::GetDirectionButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFDirectionButtonHigh.x == 0 || mHFDirectionButtonHigh.y == 0))
 		{
@@ -1007,7 +1023,7 @@ const CPoint& CLuaEngine::GetDirectionButton(int direct)
 
 		return mHFDirectionButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFDirectionButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1016,6 +1032,10 @@ const CPoint& CLuaEngine::GetDirectionButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFDirectionButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1029,7 +1049,7 @@ const CPoint& CLuaEngine::GetPriceAdjustButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFPriceAdjustButtonHigh.x == 0 || mHFPriceAdjustButtonHigh.y == 0))
 		{
@@ -1066,7 +1086,7 @@ const CPoint& CLuaEngine::GetPriceAdjustButton(int direct)
 
 		return mHFPriceAdjustButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFPriceAdjustButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1075,6 +1095,10 @@ const CPoint& CLuaEngine::GetPriceAdjustButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFPriceAdjustButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1088,7 +1112,7 @@ const CPoint & CLuaEngine::GetEnableStopButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFEnableStopButtonHigh.x == 0 || mHFEnableStopButtonHigh.y == 0))
 		{
@@ -1125,7 +1149,7 @@ const CPoint & CLuaEngine::GetEnableStopButton(int direct)
 
 		return mHFEnableStopButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFEnableStopButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1134,6 +1158,10 @@ const CPoint & CLuaEngine::GetEnableStopButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFEnableStopButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1147,7 +1175,7 @@ const CPoint & CLuaEngine::GetInitialStopPriceButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFInitialStopPriceButtonHigh.x == 0 || mHFInitialStopPriceButtonHigh.y == 0))
 		{
@@ -1184,7 +1212,7 @@ const CPoint & CLuaEngine::GetInitialStopPriceButton(int direct)
 
 		return mHFInitialStopPriceButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFInitialStopPriceButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1193,6 +1221,10 @@ const CPoint & CLuaEngine::GetInitialStopPriceButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFInitialStopPriceButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1206,7 +1238,7 @@ const CPoint & CLuaEngine::GetAdjustStopPriceButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFAdjustStopPriceButtonHigh.x == 0 || mHFAdjustStopPriceButtonHigh.y == 0))
 		{
@@ -1243,7 +1275,7 @@ const CPoint & CLuaEngine::GetAdjustStopPriceButton(int direct)
 
 		return mHFAdjustStopPriceButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFAdjustStopPriceButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1252,6 +1284,10 @@ const CPoint & CLuaEngine::GetAdjustStopPriceButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFAdjustStopPriceButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1265,7 +1301,7 @@ const CPoint& CLuaEngine::GetConfirmButton(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mHFConfirmButtonHigh.x == 0 || mHFConfirmButtonHigh.y == 0))
 		{
@@ -1302,7 +1338,7 @@ const CPoint& CLuaEngine::GetConfirmButton(int direct)
 
 		return mHFConfirmButtonLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mHFConfirmButtonHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1311,6 +1347,10 @@ const CPoint& CLuaEngine::GetConfirmButton(int direct)
 		lua_pop(m_plua,1);  
 
 		return mHFConfirmButtonHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1423,7 +1463,7 @@ const CPoint& CLuaEngine::GetPriceRange2Price(int direct)
 		}
 
 	}
-	else
+	else if (direct == DO_HIGH)
 	{
 		if (!(mPriceRange2PriceHigh.x == 0 || mPriceRange2PriceHigh.y == 0))
 		{
@@ -1460,7 +1500,7 @@ const CPoint& CLuaEngine::GetPriceRange2Price(int direct)
 
 		return mPriceRange2PriceLow;		
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		mPriceRange2PriceHigh.y = (int)lua_tonumber(m_plua, -1);   
 		lua_pop(m_plua,1);  
@@ -1469,6 +1509,10 @@ const CPoint& CLuaEngine::GetPriceRange2Price(int direct)
 		lua_pop(m_plua,1);  
 
 		return mPriceRange2PriceHigh;		
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1683,9 +1727,13 @@ const CPoint CLuaEngine::GetHuiFengDirectionButton(int direct)
 	{
 		return CPoint(-220, 134);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-282, 134);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1731,9 +1779,13 @@ const CPoint& CLuaEngine::GetHuiFengPriceRange2Price(int direct)
 	{
 		return CPoint(201, 56);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(32, 56);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1815,9 +1867,13 @@ CPoint CLuaEngine::GetLuoGeEntrust2Direct(int direct)
 	{
 		return CPoint(-257, 90);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-208, 90);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1827,9 +1883,13 @@ CPoint CLuaEngine::GetLuoGeDirection2Price(int direct)
 	{
 		return CPoint(11, 27);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-37, 27);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1899,9 +1959,13 @@ CPoint CLuaEngine::GetZhongXinEntrust2Direction(int direct)
 	{
 		return CPoint(-257, 90);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-208, 90);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1911,9 +1975,13 @@ CPoint CLuaEngine::GetZhongXinDirection2Price(int direct)
 	{
 		return CPoint(30,25);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-19, 25);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 
@@ -1923,9 +1991,13 @@ CPoint CLuaEngine::GetZhongXinPrice2Count(int direct)
 	{
 		return CPoint(-22,50);
 	} 
-	else
+	else if (direct == DO_HIGH)
 	{
 		return CPoint(-22, 50);
+	}	
+	else 
+	{
+		return CPoint();
 	}
 }
 

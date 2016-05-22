@@ -1,7 +1,8 @@
 #pragma once
 #include "SimulateAction.h"
 #include "Constant.h"
-
+#include "EcnomicPair.h"
+#include "DataManager.h"
 
 #define  WM_DO_HAIJIAO_GUADAN	WM_USER + 250
 #define  WM_DO_TIANTONG_GUADAN	WM_USER + 251
@@ -54,6 +55,10 @@ public:
 	int DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay);
 	CPoint GetKunJiaoDialogPos(void);
 	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
+	void DoTiantongStopLose(int direction);
+	// 带自动追加止损的天通chase
+	void DoTianTongChaseActionExt(int direction,int mIntOrderCount);
+	void DoEcnomicDataAction(PEcnomicData data, CDataManager* mDataManager,  HWND hwnd);
 };
 
 typedef CActionManager * CActionManagerP;

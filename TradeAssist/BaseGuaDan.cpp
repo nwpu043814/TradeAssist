@@ -95,7 +95,7 @@ int CBaseGuaDan::DoSingleSide(int diff, int direct, int count, int windowDelay)
 	return 0;
 }
 
-CPoint CBaseGuaDan::GetDialogPosByTitle(CString title , UINT retryTime)
+CPoint CBaseGuaDan::GetDialogPosByTitle(CString title ,LPCTSTR className,  UINT retryTime)
 {
 	CPoint pos;
 	pos.x = 0;
@@ -103,7 +103,7 @@ CPoint CBaseGuaDan::GetDialogPosByTitle(CString title , UINT retryTime)
 	int searchCount = 0;
 	while (searchCount++ < retryTime)
 	{
-		HWND wnd=::FindWindow(NULL, title);
+		HWND wnd=::FindWindow(className, title);
 		if (wnd)
 		{
 			CRect rect;

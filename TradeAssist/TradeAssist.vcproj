@@ -224,6 +224,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DataManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\EcnomicCompareResult.cpp"
 				>
 			</File>
@@ -237,6 +241,10 @@
 			</File>
 			<File
 				RelativePath=".\HaiJiaoGuaDan.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HotKeyManager.cpp"
 				>
 			</File>
 			<File
@@ -330,6 +338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DataManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\DataPacket.h"
 				>
 			</File>
@@ -351,6 +363,10 @@
 			</File>
 			<File
 				RelativePath=".\HaiJiaoGuaDan.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HotKeyManager.h"
 				>
 			</File>
 			<File

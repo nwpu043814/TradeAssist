@@ -3,6 +3,7 @@
 #include "Constant.h"
 
 CSimulateAction::CSimulateAction(void)
+: mLastCusorMove(0)
 {
 }
 
@@ -72,7 +73,8 @@ int CSimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 	{
 		SetCursorPos(lpPoint.x + dx, lpPoint.y + dy);
 	}
-
+	mLastCusorMove.x = dx;
+	mLastCusorMove.y = dy;
 	return 0;
 }
 
@@ -151,4 +153,16 @@ void CSimulateAction::InputPrice(CString price)
 		keybd_event(ch,0,KEYEVENTF_KEYUP,0);
 		Sleep(KEYBD_DELAY);
 	}
+}
+
+void CSimulateAction::Hop(int dx, int dy)
+{
+	MoveCursor(dx, dy);
+	MouseClick();
+}
+
+// 撤销上次鼠标移动
+void CSimulateAction::RevertLastCusorMove(void)
+{
+	MoveCursor(-mLastCusorMove.x, -mLastCusorMove.y);
 }

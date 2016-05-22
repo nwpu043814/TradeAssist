@@ -133,7 +133,10 @@
 #define		MSG_DELAY_YES	1
 #define		MSG_DELAY_NO	2
 
-#define		SUN_DIALOG_NAME _T("SunAwtDialog")
+#define		SUN_DIALOG_NAME _T("SunAwtDialog") 
+#define		HUIFENG_DIALOG_TITLE_NAME_PINGCANG _T("平仓单")//WindowsForms10.Window.8.app.0.33c0d9d
+#define		HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME _T("WindowsForms10.Window.8.app.0.33c0d9d")
+#define		HUIFENG_DIALOG_TITLE_NAME_CHICANG_TITLE_NAME _T("持仓明细")
 #define		HUIFENG_DIALOG_TITLE_NAME _T("建仓单")
 #define		HUIFENG_CONFIRM_DIALOG_TITLE_NAME _T("提示")
 #define		KUNJIAO_CONFIRM_DIALOG_TITLE_NAME _T("定单")
@@ -258,7 +261,7 @@
 #define		ECNOMIC_RESULT_TYPE_EQUAL _T("平")
 #define		ECNOMIC_RESULT_TYPE_UNKNOWN _T("未知")
 
-#define		THREAD_NUMBER 4
+#define		THREAD_NUMBER 1
 
 #define		LOCAL_SERVER_REQUEST_THREADED_NUMBER 1
 
@@ -278,6 +281,7 @@
 #define     ON_TIMER_LUOGE 5
 #define     ON_TIMER_FEINONG 6
 #define     ON_TIMER_ZHONGXIN 7
+#define     ON_TIMER_LOCALCAPTURE 8
 
 #define  APP_NAME _T("TradeAssist")
 #define  STRING_REG_CODE _T("REGCODE")
