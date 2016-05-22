@@ -1,4 +1,5 @@
 #pragma once
+#include "Constant.h"
 
 class CSimulateAction
 {
@@ -8,7 +9,7 @@ public:
 	// 模拟鼠标双击
 	int MouseDoubleClick(void);
 	// 鼠标单击
-	int MouseClick(void);
+	int MouseClick(int delay = MOUSE_CLICK_DELAY);
 	// 通过模拟Ctrl+C来复制
 	int KeyboardCopy(void);
 	// 通过键盘Ctrl+V模拟粘贴

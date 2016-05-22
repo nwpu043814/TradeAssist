@@ -121,7 +121,7 @@ public:
 	// 指价委托到方向
 	POINT GetTab2Direction(BOOL isHigh);
 	int ClearResource(void);
-	LRESULT OnHttpGetFinish(WPARAM w , LPARAM l);
+	LRESULT OnHttpGetPriceFinish(WPARAM w , LPARAM l);
 	WORD GetMilliseconds(void);
 	int UpdatePrice(bool isAdd, float diff = 6.0F);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);

@@ -334,7 +334,7 @@ BOOL CActionManager::MakeOrder(const CPoint & start2Button,
 		if (isDirectly)
 		{
 			mAction->MoveCursor(start2Button.x, start2Button.y);
-			mAction->MouseClick();
+			mAction->MouseClick(0);
 
 			TRACE("MakeOrder: useTime2.1=%u\r\n", GetMilliseconds() - start);
 
@@ -349,7 +349,7 @@ BOOL CActionManager::MakeOrder(const CPoint & start2Button,
 			
 			do 
 			{
-				mAction->MouseClick();
+				mAction->MouseClick(0);
 				SetClipboardContent(out);
 				mAction->SelectAll();
 				mAction->KeyboardPaste();
@@ -361,7 +361,7 @@ BOOL CActionManager::MakeOrder(const CPoint & start2Button,
 			if (toCheck == out || toCheck.Trim().GetLength() == 0)
 			{
 				mAction->MoveCursor(start2Button.x - start2Count.x, start2Button.y - start2Count.y);
-				mAction->MouseClick();
+				mAction->MouseClick(0);
 				TRACE("MakeOrder: useTime2.3=%u\r\n", GetMilliseconds() - start);
 
 			}

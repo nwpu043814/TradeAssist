@@ -206,7 +206,7 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_MESSAGE(WM_HOTKEY, &CTradeAssistDlg::OnHotKey) //添加此句
 	ON_MESSAGE(WM_DISPLAY_DATAK,  &CTradeAssistDlg::OnDisplayDataK)
 	ON_MESSAGE(WM_DO_TRADE,  &CTradeAssistDlg::OnDoTradeMsg) 
-	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetFinish)
+	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetPriceFinish)
 	ON_MESSAGE(WM_DO_CHASE,&CTradeAssistDlg::OnDoChase)
 	ON_MESSAGE(WM_HTTP_GET_ECNOMIC_DATA_FINISH,&CTradeAssistDlg::OnHttpGetEcnomicData) 
 	ON_MESSAGE(WM_DO_CANCEL_ORDER,  &CTradeAssistDlg::OnDeleteOrderMsg)
@@ -384,21 +384,8 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_DIRECT_DUO:
 		{
-			CString text = _T("17.5万123");
-			CStringW textW = CStringW(text);
-			TRACE(text);
-			CString mode = _T("万1");
-			CStringW modeW(mode); 
-			CString mode1 = _T("1");
-			
-			int pos = text.Find(mode);
-			TRACE("mode=%d,mode1=%d,pos=%d,spliter=%s, textW.len=%d\r\n", mode.GetLength(), mode1.GetLength(), pos, text.Right(7), textW.GetLength());
-			if(pos != -1)
-			{
-				CString buffer = text.Left(pos) + text.Right(text.GetLength() - 1 - pos - modeW.GetLength());
-				TRACE(buffer);
-			}
-			
+
+			mActionManager->GetAction()->MouseClick(0);
 
 			//UpdateData(TRUE);
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
@@ -960,7 +947,7 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 	}
 }
 
-LRESULT CTradeAssistDlg::OnHttpGetFinish(WPARAM w , LPARAM l)
+LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 {
 
 	PEcnomicData data = (PEcnomicData)l;

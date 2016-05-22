@@ -20,14 +20,17 @@ int CSimulateAction::MouseDoubleClick(void)
 }
 
 // Êó±êµ¥»÷
-int CSimulateAction::MouseClick(void)
+int CSimulateAction::MouseClick(int delay)
 {
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
 	SetCursorPos(lpPoint.x, lpPoint.y);
 
 	mouse_event(MOUSEEVENTF_LEFTDOWN,0,0, NULL,NULL);
-	Sleep(MOUSE_CLICK_DELAY);
+	if (delay > 0)
+	{
+		Sleep(delay);
+	}
 	mouse_event(MOUSEEVENTF_LEFTUP,0,0, NULL,NULL);
 	
 	return 0;
