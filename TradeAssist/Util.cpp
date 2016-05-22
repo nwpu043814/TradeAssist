@@ -9,6 +9,25 @@ CUtil::~CUtil(void)
 {
 }
 
+//将形如 “。。。。 23:07:11”的时间转化为秒并返回
+ULONGLONG CUtil::Time2Seconds(IN CString time)
+{
+	ULONGLONG result = 0;
+	const int timeLength = 8;
+	if (time.GetLength() > timeLength)
+	{
+		CString rightStr = time.Trim().Right(timeLength).Trim();
+	
+		int hour = atoi(rightStr.Left(2));
+		int minutes = atoi(rightStr.Mid(3,2));
+		int seconds = atoi(rightStr.Right(2));
+
+		result = (hour * 60 + minutes) * 60 + seconds;
+	}
+
+	return result;
+}
+
 void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
 {
 	if (text.GetLength() != 0)

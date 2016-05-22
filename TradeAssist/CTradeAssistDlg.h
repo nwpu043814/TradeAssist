@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include "chttpworker.h"
 #include "DataK.h"
+#include "HttpThread.h"
 
 
 // CTradeAssistDlg 对话框
@@ -52,6 +53,7 @@ private:
 
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
 	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
+	LRESULT OnDoHttpGetFinish(WPARAM w , LPARAM l);
 
 	BOOL CheckEditPasteResult();
 
@@ -132,4 +134,7 @@ public:
 	afx_msg void OnBnClickedButtonStartTimer();
 private:
 	CDataKP mDataK;
+	CHttpThreadP mHttpThread;
+	// 是否允许检测自动平仓时机
+	BOOL mEnableChckAutoCloseDepot;
 };

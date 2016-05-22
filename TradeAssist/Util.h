@@ -12,4 +12,6 @@ private:
 
 public:
 	static INT	GetTimeSpan(IN CString left, IN CString right);
+
+	static ULONGLONG Time2Seconds(IN CString time);
 };

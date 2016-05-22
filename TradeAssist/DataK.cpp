@@ -113,3 +113,8 @@ float CDataK::GetAmplitudeRate(void)
 {
 	return (GetAmplitude() + 0.000F)/mOpen;
 }
+
+UINT CDataK::GetClose(void)
+{
+	return mClose;
+}

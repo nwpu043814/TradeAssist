@@ -129,3 +129,6 @@
 
 //http请求线程结束后发送该消息到主线程
 #define  WM_HTTP_GET_FINISH WM_USER + 100
+
+//做多回调点数阈值 单位：元
+#define  BACK_THRESHOLD		24

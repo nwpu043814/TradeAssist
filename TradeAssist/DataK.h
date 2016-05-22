@@ -30,6 +30,7 @@ public:
 	INT GetAmplitude(void);
 	void InitialHighLow(UINT price);
 	float GetAmplitudeRate(void);
+	UINT GetClose(void);
 };
 
 

@@ -83,11 +83,13 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mIntHour(0)
 	, mIntMinute(0)
 	, mIntSecond(0)
+	, mEnableChckAutoCloseDepot(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new CSimulateAction();
 	mHttpWorker = new CHttpWorker();
 	mDataK = new CDataK();
+	mHttpThread = new CHttpThread();
 }
 
 void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
@@ -145,6 +147,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_HOUR, mIntHour);
 	DDX_Text(pDX, IDC_EDIT_MINUTE, mIntMinute);
 	DDX_Text(pDX, IDC_EDIT_SECOND, mIntSecond);
+	DDX_Check(pDX, IDC_CHECK_AUTO_CLOSE_DEPOT, mEnableChckAutoCloseDepot);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -154,6 +157,7 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_MESSAGE(WM_HOTKEY,OnHotKey) //添加此句
 	//}}AFX_MSG_MAP
 	ON_MESSAGE(WM_DO_TRADE, OnDoTradeMsg)
+	ON_MESSAGE(WM_HTTP_GET_FINISH,OnDoHttpGetFinish)
 	ON_MESSAGE(WM_DO_COUNT, OnDeleteOrderMsg)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CTradeAssistDlg::OnBnClickedOk)
@@ -542,6 +546,7 @@ CTradeAssistDlg::~CTradeAssistDlg()
 	delete mAction;
 	delete mHttpWorker;
 	delete mDataK;
+	delete mHttpThread;
 }
 
 int CTradeAssistDlg::InitialSetting(void)
@@ -1023,10 +1028,16 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 
 		if (mIntHour == time.wHour && mIntMinute == time.wMinute && mIntSecond == time.wSecond)
 		{
-
+			
 			KillTimer(nIDEvent);	
 			GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(TRUE);
 			OnFlashComplete();
+
+			if(mEnableChckAutoCloseDepot)
+			{
+				//开启自动平仓检测。
+				mHttpThread->PostThreadMessage(WM_DO_HTTP_GET, NULL, NULL);
+			}
 		}
 	}
 
@@ -1050,4 +1061,53 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 		text.LoadString(IDS_INVALID_TIMER);
 		MessageBox(text);
 	}
+}
+
+LRESULT CTradeAssistDlg::OnDoHttpGetFinish(WPARAM w , LPARAM l)
+{
+	if (w != NULL)
+	{
+		CDataPacketP packet = (CDataPacketP)w;
+
+		if (packet->mIsGood)
+		{
+
+			//更新价格
+			mDataK->SetClose(packet->mPrice, CUtil::Time2Seconds(packet->mPriceTime));
+
+			//这里判读是否回调
+			if (mDataK->IsPositive() && packet->mUpDrop > 0)
+			{
+				//做多分支
+				if(mDataK->GetHigh() - mDataK->GetClose() >= BACK_THRESHOLD)
+				{
+					mAction->MouseClick();
+					MessageBox("最多回调立即平仓");
+					return 0;
+				}
+				
+			}
+			else if(mDataK->IsNegtive() && packet->mUpDrop < 0)
+			{
+
+				//做空分支
+				if(mDataK->GetClose() - mDataK->GetLow() >= BACK_THRESHOLD)
+				{
+					mAction->MouseClick();
+					MessageBox("最空反弹立即平仓");
+					return 0;
+				}
+			}
+		}
+
+		delete packet;
+	}
+	else
+	{
+		
+	}
+
+	mHttpThread->PostThreadMessage(WM_DO_HTTP_GET, NULL, NULL);
+
+	return 1;
 }
