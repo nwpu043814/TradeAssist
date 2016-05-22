@@ -167,7 +167,6 @@ private:
 public:
 	afx_msg void OnBnClickedCheckSetMostTop();
 private:
-	int mEnableWindowMostTop;
-public:
-	void EnableWindowMostTop(bool isTop);
+	BOOL mEnableWindowMostTop;
+	void EnableWindowMostTop(BOOL isTop);
 };

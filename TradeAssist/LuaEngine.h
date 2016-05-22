@@ -10,6 +10,15 @@ extern "C"
 #include "lauxlib.h"
 } 
 
+
+#define DECLARE_POINT_FUNCTION_WITH_DIRECT(fun_name)  \
+	public:const CPoint & fun_name ## (int direct);\
+	private: CPoint mLow ## fun_name;\
+	private: CPoint mHigh ## fun_name;
+
+#define DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(fun_name)  public:const CPoint & fun_name ## ();\
+	private: CPoint m ## fun_name;
+
 #include "atltypes.h"
 class CLuaEngine
 {
@@ -31,45 +40,35 @@ private:
 	CString mExpectJoblessRate;
 	CPoint mOriginal2DoHigh;
 	CPoint mOriginal2DoLow;
-public:
-	CPoint GetOriginal2DoHigh(void);
-	CPoint GetOriginal2DoLow(void);
-	const CPoint & getOrigin2Entrust(void);
-private:
 	CPoint mOrigin2Entrust;
-public:
-	const CPoint& getEntrust2Direction(int direct);
-private:
 	CPoint mLowEntrust2Direction;
-public:
-	const CPoint & getDirection2Price(int direct);
-private:
 	CPoint mLowDirection2Price;
 public:
-	const CPoint& getPrice2Count(int direct);
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(getPrice2Count)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(getDirection2Price)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(getEntrust2Direction)
+
 private:
 	CPoint mHighPrice2Count;
 	CPoint mLowPrice2Count;
 	CPoint mHighDirection2Price;
-	CPoint mHighEntrust2Direction;
-public:
-	const CPoint& getCount2Confirm(void);
-private:
 	CPoint mCount2Confirm;
-public:
-	const CPoint& getOrigin2Remove(void);
-private:
+	CPoint mHighEntrust2Direction;
 	CPoint mOrigin2Remove;
 public:
-	const CPoint& getRemove2Confirm(void);
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getOrigin2Entrust)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOriginal2DoLow)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOriginal2DoHigh)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getCount2Confirm)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getOrigin2Remove)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getRemove2Confirm)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrigin2Count)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetCount2OrderButton)
 private:
 	CPoint mRemove2Confirm;
 	CPoint mOrigin2Count;
 	CPoint mCount2OrderButtonLow;
 	CPoint mCount2OrderButtonHigh;
-public:
-	const CPoint& GetOrigin2Count(void);
-	const CPoint& GetCount2OrderButton(UINT direct);
 private:
 	CString mNonfarmerTitle;
 	CString mJoblessTitle;
@@ -100,14 +99,17 @@ private:
 	int mChasePriceMax;
 public:
 	int GetChasePriceMax(void);
-	const CPoint& getOrigin2DropListButton(void);
-	const CPoint& getOrderTypeButton(void);
-	const CPoint& getDirectionButton(int direct);
-	const CPoint& getPriceAdjustButton(int direct);
-	const CPoint & getEnableStopButton(int direct);
-	const CPoint & getInitialStopPriceButton(int direct);
-	const CPoint & getAdjustStopPriceButton(int direct);
-	const CPoint& getConfirmButton(int direct);
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetTradeCount)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrigin2DropListButton)
+	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrderTypeButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetDirectionButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetPriceAdjustButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetEnableStopButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetInitialStopPriceButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetAdjustStopPriceButton)
+	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetConfirmButton)
+public:
+	int GetDoubleSideType(void);
 private:
 	CPoint mHFOrigin2DropListButton;
 	CPoint mHFOrderTypeButton;
@@ -123,4 +125,9 @@ private:
 	CPoint mHFAdjustStopPriceButtonHigh;
 	CPoint mHFConfirmButtonLow;
 	CPoint mHFConfirmButtonHigh;
+	int mDoubleSideType;
+	CPoint mHFTradeCount;
+	CPoint mHFScaleListItem;
+public:
+	const CPoint& GetScaleListItem(void);
 };

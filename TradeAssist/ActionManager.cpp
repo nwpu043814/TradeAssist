@@ -2,7 +2,7 @@
 #include "ActionManager.h"
 #include "Logger.h"
 
-CActionManager::CActionManager(__in HWND hWndNewOwner)
+CActionManager::CActionManager(__in HWND hWndNewOwner, CLuaEngine &  lua):mLuaEngine(lua)
 {
 	mAction = new CSimulateAction();
 	mWndNewOwner = hWndNewOwner;
@@ -401,4 +401,162 @@ POINT CActionManager::GetSunAwtDialogPos(void)
 #endif // _DEBUG
 
 	return pos;
+}
+
+int CActionManager::DoHFDoubleSide(int count, int windowDelay) const
+{
+	POINT lpPoint;
+	GetCursorPos(&lpPoint);
+
+	mAction->MouseDoubleClick();
+	DoHFSingleSide(DO_LOW, count, windowDelay);
+	CPoint pos = GetHFConfirmDialogPos();
+	CloseHFConfirmDialog(pos.x, pos.y);
+	mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
+	mAction->MouseDoubleClick();
+	DoHFSingleSide(DO_HIGH, count, windowDelay);
+	pos = GetHFConfirmDialogPos();
+	CloseHFConfirmDialog(pos.x, pos.y);
+
+	return 0;
+}
+
+// 1 for low 2 for high
+int CActionManager::DoHFSingleSide(int direct, int count, int windowDelay) const
+{
+
+	//1.当前位置双击弹出下单对话框。
+	int searchCount = 0;
+	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
+	{
+		HWND wnd=::FindWindow(NULL,HUIFENG_DIALOG_TITLE_NAME );
+		if (wnd)
+		{
+
+			CString log;
+			log.Format(_T("DoHFSingleSide direct=%d, dialogSearchCount=%d"), direct, searchCount);
+			CLogger::Add(log);
+
+			if (DoHFSingleSideAction(direct, count, windowDelay) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
+			{
+				return SEMIC_AUTO_TRADE_CALL_FAILED;
+			}
+			else
+			{
+				return SEMIC_AUTO_TRADE_CALL_SUCCESS;
+			}
+		} 
+		Sleep(WINDOW_CHECK_INTERVAL*searchCount);
+	}
+
+	return SEMIC_AUTO_TRADE_CALL_FAILED;
+}
+
+int CActionManager::DoHFSingleSideAction(int direct, int count, int windowDelay) const
+{
+	CPoint dialogPos = GetHFDialogPos();
+	if (dialogPos.x + dialogPos.y  == 0)
+	{
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
+	}
+	
+	CPoint pos = mLuaEngine.GetOrigin2DropListButton();
+	mAction->MoveCursor(dialogPos.x, dialogPos.y, true);
+	DoHop(pos.x, pos.y);
+	Sleep(windowDelay  > 50? windowDelay:50);
+	DoHop(mLuaEngine.GetOrderTypeButton().x, mLuaEngine.GetOrderTypeButton().y);
+
+	pos = mLuaEngine.GetTradeCount();
+	DoHop(pos.x, pos.y);
+
+	for (int i = 1; i < count; i++)
+	{
+		mAction->PressArrowUp();
+	}
+
+	DoHop(-pos.x, -pos.y);
+	Sleep(windowDelay  > 50? windowDelay:50);
+
+	pos = mLuaEngine.GetScaleListItem();
+	DoHop(pos.x, pos.y);
+
+	DoHop(mLuaEngine.GetDirectionButton(direct).x -pos.x, mLuaEngine.GetDirectionButton(direct).y -pos.y);
+	DoHop(mLuaEngine.GetPriceAdjustButton(direct).x, mLuaEngine.GetPriceAdjustButton(direct).y);
+	DoHop(mLuaEngine.GetEnableStopButton(direct).x, mLuaEngine.GetEnableStopButton(direct).y);
+	DoHop(mLuaEngine.GetInitialStopPriceButton(direct).x, mLuaEngine.GetInitialStopPriceButton(direct).y);
+	DoHop(mLuaEngine.GetAdjustStopPriceButton(direct).x, mLuaEngine.GetAdjustStopPriceButton(direct).y);
+	DoHop(mLuaEngine.GetConfirmButton(direct).x, mLuaEngine.GetConfirmButton(direct).y);
+
+	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
+}
+
+const CPoint & CActionManager::GetHFDialogPos(void) const
+{
+	CPoint pos;
+	pos.x = 0;
+	pos.y = 0;
+	int searchCount = 0;
+	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
+	{
+		HWND wnd=::FindWindow(NULL, HUIFENG_DIALOG_TITLE_NAME);
+		if (wnd)
+		{
+			CRect rect;
+			::GetWindowRect(wnd,rect);
+			pos.x = rect.left;
+			pos.y = rect.top;
+
+			break;;
+		} 
+		Sleep(WINDOW_CHECK_INTERVAL*searchCount);
+	}
+
+#ifdef _DEBUG
+	TRACE("GetHFDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
+#endif // _DEBUG
+
+	return pos;
+}
+
+void CActionManager::DoHop(int x, int y)  const
+{
+	mAction->MoveCursor(x, y);
+	mAction->MouseClick();
+}
+
+const CPoint& CActionManager::GetHFConfirmDialogPos(void) const
+{
+	CPoint pos;
+	pos.x = 0;
+	pos.y = 0;
+	int searchCount = 0;
+	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
+	{
+		HWND wnd=::FindWindow("WindowsForms10.Window.8.app.0.33c0d9d", HUIFENG_CONFIRM_DIALOG_TITLE_NAME);
+		if (wnd)
+		{
+			CRect rect;
+			::GetWindowRect(wnd,rect);
+			pos.x = rect.left;
+			pos.y = rect.top;
+
+			break;;
+		} 
+		Sleep(WINDOW_CHECK_INTERVAL *searchCount);
+	}
+
+#ifdef _DEBUG
+	TRACE("GetHFConfirmDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
+#endif // _DEBUG
+
+	return pos;
+}
+
+void CActionManager::CloseHFConfirmDialog(int left, int top) const
+{
+	const int dx = 152;
+	const int dy = 129;
+
+	mAction->MoveCursor(left+dx, top + dy,true);
+	mAction->MouseClick();
 }

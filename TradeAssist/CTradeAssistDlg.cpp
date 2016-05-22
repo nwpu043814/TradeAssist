@@ -82,7 +82,7 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mHttpWorker = new CHttpWorker();
 	mDataK = new CDataK();
-	mActionManager = new CActionManager(GetSafeHwnd());
+	mActionManager = new CActionManager(GetSafeHwnd(), mLuaEngine);
 
 	mNonfarmerNumber = new PEcnomicData[THREAD_NUMBER];
 	mNonfarmerNumber[0] = new CNonfarmerNumberData();
@@ -385,9 +385,10 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		case HOT_KEY_DIRECT_DUO:
 		{
 
-			mActionManager->GetAction()->MouseClick(0);
+			UpdateData(TRUE);
+			mActionManager->DoHFDoubleSide(mIntOrderCount, mIntMsgDelayMilliSeconds);
 
-			//UpdateData(TRUE);
+			
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
 			//UpdateData(FALSE);
 			break;
@@ -883,13 +884,22 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 			{
-				OnFlashComplete(); 
-				if(mEnableCheckAutoCloseDepot)
+				if (mLuaEngine.GetDoubleSideType() == 2)
 				{
-					mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
-					for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
+					//»ã·á
+					mActionManager->DoHFDoubleSide(mIntOrderCount, mIntMsgDelayMilliSeconds);
+				} 
+				else if (mLuaEngine.GetDoubleSideType() == 1)
+				{
+					//ÖÐöÎÁúÏé
+					OnFlashComplete(); 
+					if(mEnableCheckAutoCloseDepot)
 					{
-						RetartThread(mLocalPrice[i]);
+						mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
+						for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
+						{
+							RetartThread(mLocalPrice[i]);
+						}
 					}
 				}
 			}
@@ -1455,7 +1465,7 @@ void CTradeAssistDlg::OnBnClickedCheckSetMostTop()
 	EnableWindowMostTop(mEnableWindowMostTop);
 }
 
-void CTradeAssistDlg::EnableWindowMostTop(bool isTop)
+void CTradeAssistDlg::EnableWindowMostTop(BOOL isTop)
 {
 	if (isTop)
 	{

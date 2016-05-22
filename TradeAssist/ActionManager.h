@@ -5,7 +5,7 @@
 class CActionManager
 {
 public:
-	CActionManager(__in HWND hWndNewOwner);
+	CActionManager(__in HWND hWndNewOwner, CLuaEngine &  lua);
 	~CActionManager(void);
 	CString GetContentFromClipboard(void);
 	BOOL SetClipboardContent(CString source);
@@ -21,9 +21,18 @@ public:
 private:
 	CSimulateActionP mAction;
 	HWND mWndNewOwner;
+	CLuaEngine &  mLuaEngine;
 public:
 	BOOL MakeOrder(const CPoint & start2Button,
 	const CPoint & start2Count,const CPoint & count2Button,
 	UINT count, BOOL isDirectly);
 	POINT GetSunAwtDialogPos(void);
+	int DoHFDoubleSide(int count,int windowDelay) const;
+	// 1 for low 2 for high
+	int DoHFSingleSide(int direct,int count,int windowDelay) const;
+	int DoHFSingleSideAction(int direct, int count,int windowDelay) const;
+	const CPoint & GetHFDialogPos(void) const;
+	void DoHop(int x, int y)  const;
+	const CPoint& GetHFConfirmDialogPos(void) const;
+	void CloseHFConfirmDialog(int top, int left) const;
 };

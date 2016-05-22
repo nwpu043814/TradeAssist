@@ -89,3 +89,17 @@ int CSimulateAction::SelectAll(void)
 	keybd_event(VK_CONTROL,0,KEYEVENTF_KEYUP,0); 
 	return 0;
 }
+
+void CSimulateAction::PressArrowUp(void) const
+{
+	keybd_event(VK_UP ,0,0,0);
+	//Sleep(KEYBD_DELAY);
+	keybd_event(VK_UP,0,KEYEVENTF_KEYUP,0); 
+}
+
+void CSimulateAction::PressArrowDown(void) const
+{
+	keybd_event(VK_DOWN ,0,0,0);
+	//Sleep(KEYBD_DELAY);
+	keybd_event(VK_DOWN,0,KEYEVENTF_KEYUP,0); 
+}

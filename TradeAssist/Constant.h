@@ -132,6 +132,8 @@
 #define		MSG_DELAY_NO	2
 
 #define		SUN_DIALOG_NAME _T("SunAwtDialog")
+#define		HUIFENG_DIALOG_TITLE_NAME _T("建仓单")
+#define		HUIFENG_CONFIRM_DIALOG_TITLE_NAME _T("提示")
 
 #define		DELETE_ORDER_DELAY	450
 
@@ -222,6 +224,10 @@
 #define		LUA_FUNCTION_GetInitialStopPriceButton _T("getInitialStopPriceButton")
 #define		LUA_FUNCTION_GetAdjustStopPriceButton _T("getAdjustStopPriceButton")
 #define		LUA_FUNCTION_GetConfirmButton _T("getConfirmButton")
+#define		LUA_FUNCTION_GetDoubleSideType _T("getDoubleSideType")
+#define		LUA_FUNCTION_GetTradeCount _T("getTradeCount")
+#define		LUA_FUNCTION_GetScaleList _T("getScaleList")
+
 
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")
 #define		HTTP_URL_TIANTONG_HOST _T("jry.baidao.com")

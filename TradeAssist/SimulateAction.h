@@ -1,5 +1,6 @@
 #pragma once
 #include "Constant.h"
+#include "LuaEngine.h"
 
 class CSimulateAction
 {
@@ -14,9 +15,11 @@ public:
 	int KeyboardCopy(void);
 	// 通过键盘Ctrl+V模拟粘贴
 	int KeyboardPaste(void);
-	int MoveCursor(int dx, int dy, bool b = false);
+	int MoveCursor(int dx, int dy, bool isAbslute = false);
 	// 选中所有内容。
 	int SelectAll(void);
+	void PressArrowUp(void) const;
+	void PressArrowDown(void) const;
 };
 
 typedef CSimulateAction * CSimulateActionP;

@@ -128,7 +128,7 @@ end
 
 --点击下拉列表 公共
 function getOrigin2DropListButton()
-		return 342, 68;
+		return 342, 69;
 end
 
 --切到市价建单 公共
@@ -136,12 +136,21 @@ function getOrderTypeButton()
 		return 0 , 28;
 end
 
+--切到交易手数窗口
+function getTradeCount()
+		return -186,36
+end
+
+function getScaleList()
+		return 0, 39
+end
+
 --1 is do low 方向按钮 
 function getDirectionButton(direct)
 	if direct == 1 then
-		return 220,134
+		return -220,134
 	else
-		return 282,134
+		return -282,134
 	end
 end
 
@@ -180,6 +189,12 @@ function getConfirmButton(direct)
 	else
 		return -65,101
 	end
+end
+
+-- 返回1代表中鑫龙祥
+-- 返回2代表汇丰
+function getDoubleSideType()
+	return 2;
 end
 
 function getJoblessParam()

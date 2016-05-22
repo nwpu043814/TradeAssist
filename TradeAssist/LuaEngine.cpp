@@ -4,6 +4,46 @@
 #include <cmath>
 
 #pragma comment(lib,"lua5.1.lib")
+//
+//#define IMPLEMENT_POINT_FUNCTION_WITH_DIRECT(className, fun_name, macro_fun_name) \
+//	const CPoint & className ## :: ## fun_name ##(int direct) \
+//{				\
+//	if (direct == DO_LOW)	\
+//	{\
+//		if (!(m ## Low ## fun_name ## . ## x == 0 || m ## Low ## fun_name ## . ##  y == 0))\
+//		{\
+//			return m ## Low ## fun_name;\
+//		}\
+//	}\
+//	else\
+//	{\
+//		if (!(m ## High ## fun_name ## . ## x == 0 || m ## High ## fun_name ## . ##  y == 0))\
+//		{\
+//			return m ## High ## fun_name;\
+//		}\
+//	}\
+//	lua_State * m_plua = GetLuaState(0);   \
+//	int inCount =1;\
+//	lua_getglobal(m_plua, # fun_name);    \
+//	lua_pushnumber(m_plua,direct);\
+//	size_t size;\
+//	while(direct == 1) \
+//	{\
+//mLow ## fun_name ## .y = (int)lua_tonumber(m_plua, -1);  \ 
+//		lua_pop(m_plua,1);  \
+//mLow ## fun_name ## .x = (int)lua_tonumber(m_plua, -1);   \
+//		lua_pop(m_plua,1);  \
+//		return m ## Low ## fun_name;		\
+//	} \
+//	else\
+//	{\
+//		mHigh ## fun_name ## . ## y = (int)lua_tonumber(m_plua, -1);   \
+//		lua_pop(m_plua,1);  \
+//		mHigh ## fun_name ## . ## x = (int)lua_tonumber(m_plua, -1);   \
+//		lua_pop(m_plua,1);  \
+//		return m ## High ## fun_name;		\
+//	}\
+//}\
 
 
 CLuaEngine::CLuaEngine(void)
@@ -48,7 +88,10 @@ CLuaEngine::CLuaEngine(void)
 , mHFAdjustStopPriceButtonHigh(0)
 , mHFConfirmButtonLow(0)
 , mHFConfirmButtonHigh(0)
-{
+, mDoubleSideType(0)
+, mHFTradeCount(0)
+, mHFScaleListItem(0)
+		{
 	mLua = InitLuaState();
 	GetNonfarmerWorkerUrl(0);
 	GetJoblessUrl(0);
@@ -67,6 +110,23 @@ CLuaEngine::CLuaEngine(void)
 	GetChasePriceThreshold();
 	GetChaseMaxTime();
 	GetChasePriceMax();
+	GetOrigin2DropListButton();
+	GetOrderTypeButton();
+	GetDirectionButton(DO_LOW);
+	GetDirectionButton(DO_HIGH);
+	GetPriceAdjustButton(DO_LOW);
+	GetPriceAdjustButton(DO_HIGH);
+	GetEnableStopButton(DO_LOW);
+	GetEnableStopButton(DO_HIGH);
+	GetInitialStopPriceButton(DO_LOW);
+	GetInitialStopPriceButton(DO_HIGH);
+	GetAdjustStopPriceButton(DO_LOW);
+	GetAdjustStopPriceButton(DO_HIGH);
+	GetConfirmButton(DO_LOW);
+	GetConfirmButton(DO_HIGH);
+	GetDoubleSideType();
+	GetTradeCount();
+	GetScaleListItem();
 	memset(&mStartTime, 0, sizeof(CTime));
 }
 
@@ -234,7 +294,7 @@ CString CLuaEngine::GetExpectValue(CString funName)
 	return "";
 }
 
-CPoint CLuaEngine::GetOriginal2DoHigh(void)
+const CPoint& CLuaEngine::GetOriginal2DoHigh(void)
 {
 
 	if (mOriginal2DoHigh.x + mOriginal2DoHigh.y != 0)
@@ -269,7 +329,7 @@ CPoint CLuaEngine::GetOriginal2DoHigh(void)
 	return mOriginal2DoHigh;
 }
 
-CPoint CLuaEngine::GetOriginal2DoLow(void)
+const CPoint& CLuaEngine::GetOriginal2DoLow(void)
 {
 	if (mOriginal2DoLow.x + mOriginal2DoLow.y != 0)
 	{
@@ -646,7 +706,7 @@ const CPoint& CLuaEngine::GetOrigin2Count(void)
 	return mOrigin2Count;	
 }
 
-const CPoint& CLuaEngine::GetCount2OrderButton(UINT direct)
+const CPoint& CLuaEngine::GetCount2OrderButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -861,7 +921,7 @@ int CLuaEngine::GetChasePriceMax(void)
 	return mChasePriceMax;		
 }
 
-const CPoint& CLuaEngine::getOrigin2DropListButton(void)
+const CPoint& CLuaEngine::GetOrigin2DropListButton(void)
 {
 	if (!(mHFOrigin2DropListButton.x == 0 || mHFOrigin2DropListButton.y == 0))
 	{
@@ -894,7 +954,7 @@ const CPoint& CLuaEngine::getOrigin2DropListButton(void)
 	return mHFOrigin2DropListButton;	
 }
 
-const CPoint& CLuaEngine::getOrderTypeButton(void)
+const CPoint& CLuaEngine::GetOrderTypeButton(void)
 {
 	if (!(mHFOrderTypeButton.x == 0 || mHFOrderTypeButton.y == 0))
 	{
@@ -927,7 +987,7 @@ const CPoint& CLuaEngine::getOrderTypeButton(void)
 	return mHFOrderTypeButton;	
 }
 
-const CPoint& CLuaEngine::getDirectionButton(int direct)
+const CPoint& CLuaEngine::GetDirectionButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -986,7 +1046,7 @@ const CPoint& CLuaEngine::getDirectionButton(int direct)
 	}
 }
 
-const CPoint& CLuaEngine::getPriceAdjustButton(int direct)
+const CPoint& CLuaEngine::GetPriceAdjustButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -1045,7 +1105,7 @@ const CPoint& CLuaEngine::getPriceAdjustButton(int direct)
 	}
 }
 
-const CPoint & CLuaEngine::getEnableStopButton(int direct)
+const CPoint & CLuaEngine::GetEnableStopButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -1104,7 +1164,7 @@ const CPoint & CLuaEngine::getEnableStopButton(int direct)
 	}
 }
 
-const CPoint & CLuaEngine::getInitialStopPriceButton(int direct)
+const CPoint & CLuaEngine::GetInitialStopPriceButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -1163,7 +1223,7 @@ const CPoint & CLuaEngine::getInitialStopPriceButton(int direct)
 	}
 }
 
-const CPoint & CLuaEngine::getAdjustStopPriceButton(int direct)
+const CPoint & CLuaEngine::GetAdjustStopPriceButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -1222,7 +1282,7 @@ const CPoint & CLuaEngine::getAdjustStopPriceButton(int direct)
 	}
 }
 
-const CPoint& CLuaEngine::getConfirmButton(int direct)
+const CPoint& CLuaEngine::GetConfirmButton(int direct)
 {
 	if (direct == DO_LOW)
 	{
@@ -1279,4 +1339,100 @@ const CPoint& CLuaEngine::getConfirmButton(int direct)
 
 		return mHFConfirmButtonHigh;		
 	}
+}
+
+int CLuaEngine::GetDoubleSideType(void)
+{
+	if (mDoubleSideType != 0)
+	{
+		return mDoubleSideType;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetDoubleSideType);       
+	size_t size;
+	if(lua_pcall(m_plua,0,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 1;
+	}
+
+	mDoubleSideType = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mDoubleSideType;	
+}
+
+const CPoint& CLuaEngine::GetTradeCount(void)
+{
+	if (!(mHFTradeCount.x == 0 || mHFTradeCount.y == 0))
+	{
+		return mHFTradeCount;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetTradeCount);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mHFTradeCount.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mHFTradeCount.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mHFTradeCount;		
+}
+
+const CPoint& CLuaEngine::GetScaleListItem(void)
+{
+	if (!(mHFScaleListItem.x == 0 || mHFScaleListItem.y == 0))
+	{
+		return mHFScaleListItem;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetScaleList);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mHFScaleListItem.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mHFScaleListItem.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mHFScaleListItem;		
 }
