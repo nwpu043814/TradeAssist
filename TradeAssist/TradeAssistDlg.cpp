@@ -51,6 +51,7 @@ END_MESSAGE_MAP()
 CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTradeAssistDlg::IDD, pParent)
 	, mIsAutoSubmits(FALSE)
+	, mFlashComplete(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new SimulateAction();
@@ -78,6 +79,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DX, mStart2TabDx);
 	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mStart2TabDy);
 	DDX_Check(pDX, IDC_CHECK_AOTO_SUBMIT, mIsAutoSubmits);
+	DDX_Check(pDX, IDC_CHECK_FLASH_COMPLETE, mFlashComplete);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -86,7 +88,7 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(WM_HOTKEY,OnHotKey) //添加此句
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(WM_DO_LOW, OnDoLowMsg)
+	ON_MESSAGE(WM_DO_TRADE, OnDoLowMsg)
 	ON_MESSAGE(WM_DO_COUNT, OnDoCountMsg)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CTradeAssistDlg::OnBnClickedOk)
@@ -185,6 +187,7 @@ void CTradeAssistDlg::InstallHotKey()
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_LOW, MOD_WIN, VK_Z);
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_HIGH, MOD_WIN, VK_X);
 	::RegisterHotKey(m_hWnd, HOT_KEY_CODE_COUNT, MOD_WIN, VK_C);
+	::RegisterHotKey(m_hWnd, HOT_KEY_FLASH_COMPLETE, MOD_WIN, VK_A);
 
 }
 void CTradeAssistDlg::OnBnClickedCancel()
@@ -226,6 +229,13 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			 dispatchCount();
 			break;
 		}
+		case HOT_KEY_FLASH_COMPLETE:
+		{
+			MessageBox("查找窗口失败！123");
+			//OnFlashComplete();
+			break;;
+		}
+
 	}
 
 
@@ -253,6 +263,10 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 		{
 			return HOT_KEY_CODE_COUNT;
 		}
+		else if (virKey == VK_A)
+		{
+			return HOT_KEY_FLASH_COMPLETE;
+		}
 
 	}
 
@@ -262,14 +276,14 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 int CTradeAssistDlg::dispatchLowAction(void)
 {
 
-	this->PostMessage(WM_DO_LOW, DO_LOW);
+	this->PostMessage(WM_DO_TRADE, DO_LOW);
 
 	return 0;
 }
 
 int CTradeAssistDlg::dispatchHighAction(void)
 {
-	this->PostMessage(WM_DO_LOW, DO_HIGH);
+	this->PostMessage(WM_DO_TRADE, DO_HIGH);
 	return 0;
 }
 
@@ -452,7 +466,7 @@ int CTradeAssistDlg::InitialSetting(void)
 	mHighTab2DirectionDy.SetWindowText(outText);
 
 	mIsAutoSubmits = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, FALSE);
-
+	mFlashComplete = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_FLASH_COMPLETE, FALSE);
 	UpdateData(FALSE);
 
 	return 0;
@@ -509,6 +523,7 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY , atoi(contant));
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, mIsAutoSubmits);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_FLASH_COMPLETE, mFlashComplete);
 	return 0;
 }
 
@@ -670,8 +685,43 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_LOW);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_HIGH);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_COUNT);
-
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_FLASH_COMPLETE);
 	SaveSetting();
 	delete mAction;
 	return 0;
+}
+
+// 秒杀下单
+int CTradeAssistDlg::OnFlashComplete(void)
+{
+	POINT lpPoint;
+	GetCursorPos(&lpPoint);
+
+	mIsAutoSubmits = TRUE;	
+	SemicAutoTrade(DO_LOW);
+	//2.TODO 关闭确认对话框
+
+	//3.移动鼠标到双击位置。
+	SetCursorPos(lpPoint.x, lpPoint.y);
+	SemicAutoTrade(DO_HIGH);
+	return 0;
+}
+
+void CTradeAssistDlg::SemicAutoTrade(int direct) 
+{
+
+	//1.当前位置双击弹出下单对话框。
+	int searchCount = 10;
+	mAction->MouseDoubleClick();
+	while (searchCount-- > 0)
+	{
+		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
+		if (!wnd)
+		{
+
+			SendMessage(WM_DO_TRADE, direct);
+			break;;
+		} 
+		Sleep(WINDOW_CHECK_INTERVAL);
+	}
 }

@@ -28,7 +28,8 @@
 #define IDC_EDIT_HIGH_TAB_DIRECTION_DY  1017
 #define IDC_CHECK_AOTO_SUBMIT           1018
 #define IDC_EDIT_LEFT_TOP_TAB_DX2       1019
-#define IDC_EDIT1                       1019
+#define IDC_CHECK_AOTO_SUBMIT2          1019
+#define IDC_CHECK_FLASH_COMPLETE        1019
 
 // Next default values for new objects
 // 

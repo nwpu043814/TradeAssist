@@ -74,3 +74,5 @@ int SimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 
 	return 0;
 }
+
+
