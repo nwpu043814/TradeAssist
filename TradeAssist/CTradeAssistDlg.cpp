@@ -76,6 +76,7 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	
 	, mEnableChaseTimer(FALSE)
 	, mTotalConclution(_T(""))
+	, mPullPriceCount(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mHttpWorker = new CHttpWorker();
@@ -954,107 +955,42 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 	if (w != NULL &&& l != NULL)
 	{
 		CDataPacketP packet = (CDataPacketP)w;
+		mPullPriceCount++;
+		bool	updateUI = (mPullPriceCount%150) == 0;
 
 		if (packet->mIsGood)
 		{
+			CheckChaseMoment(packet); 
 
-			UpdateData();
-
-			if (mLuaEngine.GetStartPrice() == 0)
-			{
-				mLuaEngine.SetStartPrice(packet->mPrice);
-				mLuaEngine.GetStartTime() = CTime::GetCurrentTime();
-			}
-
-			CTimeSpan span = CTime::GetCurrentTime() - mLuaEngine.GetStartTime();
-
-			if (!mLuaEngine.GetHasChased() && span.GetTotalSeconds() < mLuaEngine.GetChaseMaxTime())
+			if (updateUI)
 			{
 
-				int diff = packet->mPrice - mLuaEngine.GetStartPrice();
-				TRACE("diff=%d, priceThreshold=%d\r\n",diff,  mLuaEngine.GetChasePriceThreshold());
-				if (diff > 0 && diff >= mLuaEngine.GetChasePriceThreshold()
-						&& mLuaEngine.GetChasePriceMax() >= diff)
+				if( CheckAutoCloseDepot(packet, data) != 0)
 				{
-					SendMessage(WM_DO_CHASE, DO_HIGH, NULL);
-					mLuaEngine.SetHasChased(true);
-				} 
-				else if ( diff < 0 && abs(diff) >= mLuaEngine.GetChasePriceThreshold()
-					&& mLuaEngine.GetChasePriceMax() >= abs(diff))
-				{
-					SendMessage(WM_DO_CHASE, DO_LOW, NULL);
-					mLuaEngine.SetHasChased(true);
-				}
-				else if (mLuaEngine.GetChasePriceMax() < abs(diff))
-				{
-					mLuaEngine.SetHasChased(true);
+					PostMessage(WM_DISPLAY_DATAK);	
 				}
 			}
-
-			//更新价格
-			mDataK->SetClose(packet->mPrice, packet->mPriceTime);
-			mDataK->SetMillionSecond(packet->mMillionSecond);
-			if (!mConnectOwnServer)
-			{
-				mDataK->SetDayUpDrop(packet->mUpDrop);	
-			}	
-
-			//这里判读是否回调
-			if (mDataK->IsPositive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() > 0 || mConnectOwnServer ))
-			{
-				
-				mDataK->SetDirectionAgree(true);
-				mDataK->SetCurrent2ExtremeDiff(mDataK->GetHigh() - mDataK->GetClose()) ;
-				mOpenDirection = 0;
-				UpdateData(FALSE);
-
-				//做多分支
-				if(mDataK->GetCurrent2ExtremeDiff() >= GetDynamicThreshold(mDataK->GetAmplitude()))
-				{
-					mActionManager->GetAction()->MouseClick();
-					CloseHttpThread(data);
-					PlaySoundResource(IDR_WAVE_DO_HIGH_CLOSE);
-					return 0;
-				}
-				
-			}
-			else if(mDataK->IsNegtive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() < 0 || mConnectOwnServer ))
-			{
-				mDataK->SetDirectionAgree(true);
-				mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );
-				mOpenDirection = 1;
-				UpdateData(FALSE);
-				//做空分支
-				if(mDataK->GetCurrent2ExtremeDiff() >=  GetDynamicThreshold(mDataK->GetAmplitude()))
-				{
-					mActionManager->GetAction()->MouseClick();
-					CloseHttpThread(data);
-					PlaySoundResource(IDR_WAVE_DO_LOW_CLOSE);
-					return 0;
-				}
-			}
-			else
-			{
-				mDataK->SetDirectionAgree(false);
-			}
-		}
-
-		PostMessage(WM_DISPLAY_DATAK);
+		}		
 	}
 
 	//发送消息最多尝试三次
-	int i = 0;
-	while (i++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES && data != NULL)
+
+	if (mPullPriceCount == DO_PULL_PRICE_TIMES_PER_MSG)
 	{
-		if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_GET_PRICE,NULL, (LPARAM)data))//post thread msg
+		mPullPriceCount = 0;
+		int i = 0;
+		while (i++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES && data != NULL)
 		{
-			TRACE("post message failed,errno:%d\r\n",::GetLastError());
+			if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_GET_PRICE,NULL, (LPARAM)data))//post thread msg
+			{
+				TRACE("post message failed,errno:%d\r\n",::GetLastError());
+			}
+			else
+			{
+				break;
+			}
 		}
-		else
-		{
-			break;
-		}
-	}
+}
 
 	return 1;
 }
@@ -1104,7 +1040,7 @@ CString CTradeAssistDlg::GetServerHost(void)
 	return mServerIp;
 }
 
-int CTradeAssistDlg::IsConnectOwnServer(void)
+int CTradeAssistDlg::IsContinuousPullPrice(void)
 {
 	return mConnectOwnServer;
 }
@@ -1214,9 +1150,198 @@ LRESULT CTradeAssistDlg::OnHttpGetEcnomicData(WPARAM w, LPARAM l)
 		return LRESULT();
 	}
 
+	DoEcnomicDataAction(data);
+
+	return LRESULT();
+}
+
+void CTradeAssistDlg::StartHttpThread(PEcnomicData data)
+{
+	if (data == NULL)
+	{
+		return;
+	}
+
+	//开启自动平仓检测。
+	if(data->GetStartEvent() == NULL)
+	{
+		data->SetStartEvent(::CreateEvent(0,FALSE,FALSE,0));
+	}
+
+	if(data->GetStartEvent() == NULL)
+	{
+		return;
+	}
+
+	if (data->GetThreadHandle() == NULL)
+	{
+		UINT id;
+		data->SetThreadHandle((HANDLE)_beginthreadex( NULL, NULL, &HttpProcess, data, NULL, &id ));
+		data->SetThreadId(id);
+	} 
+
+	if(data->GetThreadHandle() == NULL)
+	{
+		TRACE("start thread failed,errno:%d\r\n",::GetLastError());
+		CloseHandle(data->GetStartEvent());
+		data->SetStartEvent(NULL);
+		return ;
+	}
+
+	::WaitForSingleObject(data->GetStartEvent(),INFINITE);
+	CloseHandle(data->GetStartEvent());
+	data->SetStartEvent(NULL);
+
+	int count = 0;
+	while(count++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES)
+	{
+
+		if(!PostThreadMessage(data->GetThreadId(),data->GetMsgType(),(WPARAM)data, NULL))
+		{
+			TRACE("post message failed,errno:%d\r\n",::GetLastError());
+		}
+		else
+		{
+			break;
+		}
+		::Sleep(500);
+	}
+}
+
+LRESULT CTradeAssistDlg::OnDoChase(WPARAM wp, LPARAM lp)
+{
+
+	bool isDoHigh = 0;
+	if (wp == DO_LOW)
+	{
+		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+	}
+	else if (wp == DO_HIGH)
+	{
+		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+	}
+	else
+	{
+		return LRESULT();
+	}
+
+	return LRESULT();
+}
+
+void CTradeAssistDlg::CheckChaseMoment(CDataPacketP packet)
+{
+
+	if (packet == NULL)
+	{
+		return;
+	}
+
+	if (mLuaEngine.GetStartPrice() == 0)
+	{
+		mLuaEngine.SetStartPrice(packet->mPrice);
+		mLuaEngine.GetStartTime() = CTime::GetCurrentTime();
+	}
+
+	CTimeSpan span = CTime::GetCurrentTime() - mLuaEngine.GetStartTime();
+
+	if (!mLuaEngine.GetHasChased() && span.GetTotalSeconds() < mLuaEngine.GetChaseMaxTime())
+	{
+
+		int diff = packet->mPrice - mLuaEngine.GetStartPrice();
+		TRACE("diff=%d, priceThreshold=%d\r\n",diff,  mLuaEngine.GetChasePriceThreshold());
+		if (diff > 0 && diff >= mLuaEngine.GetChasePriceThreshold()
+			&& mLuaEngine.GetChasePriceMax() >= diff)
+		{
+			SendMessage(WM_DO_CHASE, DO_HIGH, NULL);
+			mLuaEngine.SetHasChased(true);
+		} 
+		else if ( diff < 0 && abs(diff) >= mLuaEngine.GetChasePriceThreshold()
+			&& mLuaEngine.GetChasePriceMax() >= abs(diff))
+		{
+			SendMessage(WM_DO_CHASE, DO_LOW, NULL);
+			mLuaEngine.SetHasChased(true);
+		}
+		else if (mLuaEngine.GetChasePriceMax() < abs(diff))
+		{
+			mLuaEngine.SetHasChased(true);
+		}
+	}
+}
+
+
+LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData data ) 
+{
+
+	if (packet == NULL || data == NULL)
+	{
+		return 1;
+	}
+
+	UpdateData();
+
+	//更新价格
+	mDataK->SetClose(packet->mPrice, packet->mPriceTime);
+	mDataK->SetMillionSecond(packet->mMillionSecond);
+	if (!mConnectOwnServer)
+	{
+		mDataK->SetDayUpDrop(packet->mUpDrop);	
+	}	
+
+	//这里判读是否回调
+	if (mDataK->IsPositive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() > 0 || mConnectOwnServer ))
+	{
+
+		mDataK->SetDirectionAgree(true);
+		mDataK->SetCurrent2ExtremeDiff(mDataK->GetHigh() - mDataK->GetClose()) ;
+		mOpenDirection = 0;
+		UpdateData(FALSE);
+
+		//做多分支
+		if(mDataK->GetCurrent2ExtremeDiff() >= GetDynamicThreshold(mDataK->GetAmplitude()))
+		{
+			mActionManager->GetAction()->MouseClick();
+			CloseHttpThread(data);
+			PlaySoundResource(IDR_WAVE_DO_HIGH_CLOSE);
+			return 0;
+		}
+
+	}
+	else if(mDataK->IsNegtive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() < 0 || mConnectOwnServer ))
+	{
+		mDataK->SetDirectionAgree(true);
+		mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );
+		mOpenDirection = 1;
+		UpdateData(FALSE);
+		//做空分支
+		if(mDataK->GetCurrent2ExtremeDiff() >=  GetDynamicThreshold(mDataK->GetAmplitude()))
+		{
+			mActionManager->GetAction()->MouseClick();
+			CloseHttpThread(data);
+			PlaySoundResource(IDR_WAVE_DO_LOW_CLOSE);
+			return 0;
+		}
+	}
+	else
+	{
+		mDataK->SetDirectionAgree(false);
+	}
+
+	return 1;
+}
+
+void CTradeAssistDlg::DoEcnomicDataAction( PEcnomicData data) 
+{
+
+	if (data == NULL)
+	{
+		return;
+	}
+
 	if (!mNonfarmerNumber[0]->GetUrl().IsEmpty() && !mJoblessRate[0]->GetUrl().IsEmpty())
 	{
-	
+
 		if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH
 			&& mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
 		{
@@ -1296,7 +1421,7 @@ LRESULT CTradeAssistDlg::OnHttpGetEcnomicData(WPARAM w, LPARAM l)
 		}
 
 		UpdateData(FALSE);
-		
+
 	}
 	else if (!mNonfarmerNumber[0]->GetUrl().IsEmpty())
 	{
@@ -1324,84 +1449,4 @@ LRESULT CTradeAssistDlg::OnHttpGetEcnomicData(WPARAM w, LPARAM l)
 				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, FALSE);
 		}
 	}
-
-	return LRESULT();
-}
-
-void CTradeAssistDlg::StartHttpThread(PEcnomicData data)
-{
-	if (data == NULL)
-	{
-		return;
-	}
-
-	//开启自动平仓检测。
-	if(data->GetStartEvent() == NULL)
-	{
-		data->SetStartEvent(::CreateEvent(0,FALSE,FALSE,0));
-	}
-
-	if(data->GetStartEvent() == NULL)
-	{
-		return;
-	}
-
-	if (data->GetThreadHandle() == NULL)
-	{
-		UINT id;
-		data->SetThreadHandle((HANDLE)_beginthreadex( NULL, NULL, &HttpProcess, data, NULL, &id ));
-		data->SetThreadId(id);
-	} 
-
-	if(data->GetThreadHandle() == NULL)
-	{
-		TRACE("start thread failed,errno:%d\r\n",::GetLastError());
-		CloseHandle(data->GetStartEvent());
-		data->SetStartEvent(NULL);
-		return ;
-	}
-
-	::WaitForSingleObject(data->GetStartEvent(),INFINITE);
-	CloseHandle(data->GetStartEvent());
-	data->SetStartEvent(NULL);
-
-	int count = 0;
-	while(count++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES)
-	{
-
-		if(!PostThreadMessage(data->GetThreadId(),data->GetMsgType(),(WPARAM)data, NULL))
-		{
-			TRACE("post message failed,errno:%d\r\n",::GetLastError());
-		}
-		else
-		{
-			break;
-		}
-		::Sleep(500);
-	}
-}
-
-LRESULT CTradeAssistDlg::OnDoChase(WPARAM wp, LPARAM lp)
-{
-
-	bool isDoHigh = 0;
-	if (wp == DO_LOW)
-	{
-		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
-			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
-	}
-	else if (wp == DO_HIGH)
-	{
-		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
-			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
-	}
-	else
-	{
-		return LRESULT();
-	}
-
-
-
-
-	return LRESULT();
 }

@@ -123,7 +123,7 @@ end
 
 --返回时间阈值，单位秒
 function getChaseMaxTime()
-		return 55;
+		return 600;
 end
 
 function getJoblessParam()

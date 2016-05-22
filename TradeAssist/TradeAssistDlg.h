@@ -12,6 +12,7 @@
 #include "EcnomicCompareResult.h"
 #include "ActionManager.h"
 #include "Resource.h"
+#include "DataPacket.h"
 
 // CTradeAssistDlg 对话框
 class CTradeAssistDlg : public CDialog
@@ -114,7 +115,7 @@ public:
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedOk();
 	HRESULT  OnHotKey(WPARAM w, LPARAM l);
-
+	LRESULT CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData data ) ;
 	// 获得sun对话框右上角的绝对坐标。
 	POINT GetSunAwtDialogPos(void);
 
@@ -122,17 +123,19 @@ public:
 	POINT GetTab2Direction(BOOL isHigh);
 	int ClearResource(void);
 	LRESULT OnHttpGetPriceFinish(WPARAM w , LPARAM l);
+
 	WORD GetMilliseconds(void);
 	int UpdatePrice(bool isAdd, float diff = 6.0F);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedButtonStartTimer();
-	int IsConnectOwnServer(void);
+	int IsContinuousPullPrice(void);
 	int CloseHttpThread(PEcnomicData data);
 	UINT GetDoHttpInterval(void);
 	int GetDynamicThreshold(int back);
 	int PlaySoundResource(int idRes);
 	CLuaEngine GetLuaEngine(void);
 	LRESULT OnHttpGetEcnomicData(WPARAM w, LPARAM l);
+	void DoEcnomicDataAction( PEcnomicData data ) ;
 	void StartHttpThread(PEcnomicData data);
 	UINT mServerPort;
 	UINT GetServerPort(void);
@@ -159,4 +162,7 @@ public:
 private:
 	BOOL mEnableChaseTimer;
 	CString mTotalConclution;
+	unsigned int mPullPriceCount;
+	private:
+	void CheckChaseMoment(CDataPacketP packet);
 };

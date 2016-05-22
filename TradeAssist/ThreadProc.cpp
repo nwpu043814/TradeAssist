@@ -34,42 +34,25 @@ UINT	__stdcall HttpProcess(void * param)
 			{
 			case WM_DO_HTTP_GET_PRICE:
 				{
-					CString host ;
-					int port;
-					CString uri;
-					if (dlg->IsConnectOwnServer())
-					{
-						host = dlg->GetServerHost();
-						port = dlg->GetServerPort();
-						uri = HTTP_URL_LOCAL_DATA;
-					} 
-					else
-					{
-						host =HTTP_URL_TIANTONG_HOST;
-						port = 80;
-						uri =  HTTP_URL_TIANTONG_URI;
-					}
+					CString host = dlg->GetServerHost();
+					int port = dlg->GetServerPort();
+					CString uri = HTTP_URL_LOCAL_DATA;
 
-					CString result = httpWorker.DoGet(host, port , uri);
-					CDataPacket packet;
-
-					if (dlg->IsConnectOwnServer())
+					for (int i = 0; i < DO_PULL_PRICE_TIMES_PER_MSG; i++)
 					{
+						CString result = httpWorker.DoGet(host, port , uri);
+						CDataPacket packet;				
 						CUtil::ParseOwnServerString(result,packet);
-					} 
-					else
-					{
-						CUtil::ParseDataString(result,packet);
-					}
+						TRACE("result=%s\r\n", result);
 
-					TRACE("result=%s\r\n", result);
+						if(dlg->GetDoHttpInterval() > 0)
+						{
+							Sleep(dlg->GetDoHttpInterval());
+						}
 
-					if(dlg->GetDoHttpInterval() > 0)
-					{
-						Sleep(dlg->GetDoHttpInterval());
+						dlg->SendMessage(WM_HTTP_GET_FINISH,(WPARAM)(&packet),(LPARAM)data);
 					}
 					
-					dlg->SendMessage(WM_HTTP_GET_FINISH,(WPARAM)(&packet),(LPARAM)data);
 					break;
 				}
 			case WM_DO_HTTP_EXIT:
