@@ -163,7 +163,12 @@ function getPriceAdjustButton(direct)
 	end
 end
 
---挂单价格到启用止损 
+--汇丰挂单价格到启用止损 
+function getHuiFengEnableStopButton(direct)
+		return -244,45
+end
+
+--天通挂单价格到启用止损 
 function getEnableStopButton(direct)
 		return -317,83
 end
@@ -217,10 +222,10 @@ end
 function getStopGainDiff(direct)
 	if direct == 1 then
 		--做空止盈
-		return 80
+		return 75
 	else
 		--做多止盈
-		return 100
+		return 75
 	end
 end
 
@@ -244,11 +249,13 @@ function getConfirmButton(direct)
 	return -66,65
 end
 
--- 返回1代表中鑫龙祥
+-- 返回1代表海交
 -- 返回2代表汇丰
 -- 返回3代表天通
+-- 返回4代表昆交所
+-- 返回5代表罗格
 function getDoubleSideType()
-	return 2;
+	return 1;
 end
 
 function getJoblessParam()
@@ -261,5 +268,13 @@ end
 
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 0;
+	return 10;
+end
+
+function getLuoGeStopLoseDiff()
+	return 15
+end
+
+function getLuoGeStopGainDiff()
+	return 70
 end

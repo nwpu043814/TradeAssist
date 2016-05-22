@@ -7,6 +7,7 @@
 #define  WM_DO_TIANTONG_GUADAN	WM_USER + 251
 #define  WM_DO_HAIJIAO_GUADAN	WM_USER + 252
 #define  WM_DO_KUNJIAO_GUADAN	WM_USER + 253
+#define  WM_DO_LUOGE_GUADAN	WM_USER + 254
 
 class CActionManager :
 	public CWinThread
@@ -19,7 +20,7 @@ public:
 	CString GetEditText(UINT checkLen = PRICE_LENGTH);
 	WORD GetMilliseconds(void);
 	BOOL CheckEditPasteResult(const CString & mLastClipboardContent);
-	int DoTrade(const POINT &dialogPos, double hightDiff, double lowDiff, BOOL direction,
+	int DoTrade(double hightDiff, double lowDiff, BOOL direction,
 		int mIntOrderCount);
 	int UpdatePrice(bool isAdd, float diff);
 	CSimulateAction* GetAction();
@@ -41,12 +42,17 @@ private:
 protected:
 	afx_msg void OnDoHuiFengGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoTianTongGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoKunJiaoGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoLuoGeGuadan(WPARAM wParam,LPARAM lParam);
 public:
 	void SetWindowOwner(HWND owner);
 	virtual BOOL InitInstance();
 	BOOL MakeOrder(const CPoint & start2Button,	const CPoint & start2Count,const CPoint & count2Button,	UINT count, BOOL isDirectly);
-	POINT GetSunAwtDialogPos(void);
+	POINT GetSunAwtDialogPos(CString title);
 	int DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay);
+	CPoint GetKunJiaoDialogPos(void);
+	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
+	int DoLuoGeSingleSideAction(int diff, int direct, int count, int windowDelay);
 };
 
 typedef CActionManager * CActionManagerP;

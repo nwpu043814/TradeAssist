@@ -23,6 +23,7 @@ public:
 	// 通过shift+End选中所有text
 	int SelectAll4HF(void);
 	int GetContentFromClipboard(void);
+	void ContinuesClick(int clickTimes);
 };
 
 typedef CSimulateAction * CSimulateActionP;

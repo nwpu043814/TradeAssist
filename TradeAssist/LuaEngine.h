@@ -152,4 +152,10 @@ public:
 	int GetHuiFengStopThreshold(void);
 	 int GetHuiFengStopLoseThreshold(int direct);
 	const CPoint& GetHuiFengConfirmButton(int direct);
+	CPoint GetLuoGeOrigin2Entrust(void);
+	CPoint GetLuoGeEntrust2Direct(int direct);
+	CPoint GetLuoGeDirection2Price(int direct);
+	CPoint GetLuoGePrice2Count(int direct);
+	int GetLuoGeStopLoseDiff(void);
+	int GetLuoGeStopGainDiff(void);
 };

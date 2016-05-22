@@ -385,7 +385,9 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_INCREASE_PRICE:
 		{
-			mActionManager->UpdatePrice(true, 10);
+			UpdateData();
+			//mActionManager->UpdatePrice(true, 10);
+			mActionManager->PostThreadMessage(WM_DO_LUOGE_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 			break;
 		}
 		case HOT_KEY_TEST_SERVER:
@@ -408,13 +410,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 
 			UpdateData(TRUE);
 
-			CHuifengGuadanParamP param = new CHuifengGuadanParam();
-			param->mLowDiff = atoi(mStrLowPriceDiff);
-			param->mHighDiff = atoi(mStrHighPriceDiff);
-			param->mTradeCount = mIntOrderCount;
-			param->mWindowDelay = mIntMsgDelayMilliSeconds;
-			param->mDirect = DO_BOTH;
-			mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);		
+			mActionManager->PostThreadMessage(WM_DO_KUNJIAO_GUADAN, (WPARAM)GetGuaDanParam(DO_BOTH), NULL);
 			
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
 			//UpdateData(FALSE);
@@ -449,14 +445,8 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			//	mUintAutoCloseThreshold += THRESHOLD_STEP;
 			//	UpdateData(FALSE);
 			//}
-			CHuifengGuadanParamP param = new CHuifengGuadanParam();
-			param->mLowDiff = atoi(mStrLowPriceDiff);
-			param->mHighDiff = atoi(mStrHighPriceDiff);
-			param->mTradeCount = mIntOrderCount;
-			param->mWindowDelay = mIntMsgDelayMilliSeconds;
-			param->mDirect = DO_BOTH;
 
-			mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);
+			mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 			break;
 		}
 		case HOT_KEY_DECREASE_THRESHOLD:
@@ -468,14 +458,8 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			//	mUintAutoCloseThreshold -= THRESHOLD_STEP;
 			//	UpdateData(FALSE);
 			//}
-			CHuifengGuadanParamP param = new CHuifengGuadanParam();
-			param->mLowDiff = atoi(mStrLowPriceDiff);
-			param->mHighDiff = atoi(mStrHighPriceDiff);
-			param->mTradeCount = mIntOrderCount;
-			param->mWindowDelay = mIntMsgDelayMilliSeconds;
-			param->mDirect = DO_BOTH;
 
-			mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) param, NULL);
+			mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 			break;
 		}
 	}
@@ -586,7 +570,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	}
 	UpdateData(TRUE);
 
-	return mActionManager->DoTrade( mActionManager->GetSunAwtDialogPos(), atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),direction, mIntOrderCount);
+	return mActionManager->DoTrade(atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),direction, mIntOrderCount);
 
 }
 
@@ -758,7 +742,7 @@ LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 	int searchCount = 10;
 	while (searchCount-- > 0)
 	{
-		POINT pos =mActionManager->GetSunAwtDialogPos();
+		POINT pos =mActionManager->GetSunAwtDialogPos(_T("订单窗口"));
 		if (pos.x != 0 && pos.y != 0)
 		{
 			CPoint origin2Remove = mLuaEngine.getOrigin2Remove();
@@ -952,14 +936,7 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 				if (mLuaEngine.GetDoubleSideType() == ON_TIMER_HUIFENG)
 				{
 					//TOD在接收消失时释放该缓存。
-					CHuifengGuadanParamP param = new CHuifengGuadanParam();
-					param->mLowDiff = atoi(mStrLowPriceDiff);
-					param->mHighDiff = atoi(mStrHighPriceDiff);
-					param->mTradeCount = mIntOrderCount;
-					param->mWindowDelay = mIntMsgDelayMilliSeconds;
-					param->mDirect = DO_BOTH;
-
-					mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);
+					mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 				} 
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONXIN)
 				{
@@ -977,14 +954,17 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_TIANTONG)
 				{
 					//TOD在接收消失时释放该缓存。
-					CHuifengGuadanParamP param = new CHuifengGuadanParam();
-					param->mLowDiff = atoi(mStrLowPriceDiff);
-					param->mHighDiff = atoi(mStrHighPriceDiff);
-					param->mTradeCount = mIntOrderCount;
-					param->mWindowDelay = mIntMsgDelayMilliSeconds;
-					param->mDirect = DO_BOTH;
-
-					mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) param, NULL);
+					mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+				}
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_KUNJIAO)
+				{
+					//TOD在接收消失时释放该缓存。
+					mActionManager->PostThreadMessage(WM_DO_KUNJIAO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+				}
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_LUOGE)
+				{
+					//TOD在接收消失时释放该缓存。
+					mActionManager->PostThreadMessage(WM_DO_LUOGE_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 				}
 			}
 		}
@@ -1077,27 +1057,13 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 			{
 				//追空挂多
 				mLuaEngine.SetHasChased(true);
-
-				CHuifengGuadanParamP param = new CHuifengGuadanParam();
-				param->mLowDiff = atoi(mStrLowPriceDiff);
-				param->mHighDiff = atoi(mStrHighPriceDiff);
-				param->mTradeCount = mIntOrderCount;
-				param->mWindowDelay = mIntMsgDelayMilliSeconds;
-				param->mDirect = DO_HIGH;
-				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);
+				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_HIGH), NULL);
 			}
 			else if (packet->mChaseDirect == DO_HIGH && !mLuaEngine.GetHasChased())
 			{
 				//追多挂空
 				mLuaEngine.SetHasChased(true);
-
-				CHuifengGuadanParamP param = new CHuifengGuadanParam();
-				param->mLowDiff = atoi(mStrLowPriceDiff);
-				param->mHighDiff = atoi(mStrHighPriceDiff);
-				param->mTradeCount = mIntOrderCount;
-				param->mWindowDelay = mIntMsgDelayMilliSeconds;
-				param->mDirect = DO_LOW;
-				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);
+				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_LOW), NULL);
 			}
 			
 
@@ -1590,4 +1556,15 @@ void CTradeAssistDlg::EnableWindowMostTop(BOOL isTop)
 
 		CButton* pBtn = (CButton*)GetDlgItem(IDC_CHECK_SET_MOST_TOP);
 		pBtn->SetCheck(isTop?1:0);
+}
+
+CHuifengGuadanParamP CTradeAssistDlg::GetGuaDanParam(int dirct)
+{
+	CHuifengGuadanParamP param = new CHuifengGuadanParam();
+	param->mLowDiff = atoi(mStrLowPriceDiff);
+	param->mHighDiff = atoi(mStrHighPriceDiff);
+	param->mTradeCount = mIntOrderCount;
+	param->mWindowDelay = mIntMsgDelayMilliSeconds;
+	param->mDirect = dirct;
+	return param;
 }

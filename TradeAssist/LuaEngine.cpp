@@ -1692,7 +1692,32 @@ const CPoint CLuaEngine::GetHuiFengDirectionButton(int direct)
 const CPoint& CLuaEngine::GetHuiFengEnableStopButton(int direct)
 {
 
-	return CPoint(-244, 45);
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetHuiFengEnableStopButton);       
+	size_t size;
+	lua_pushnumber(m_plua,direct);
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	CPoint result;
+	result.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	result.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return result;		
 }
 
 const CPoint& CLuaEngine::GetHuiFengInitialStopPriceButton(int direct)
@@ -1777,4 +1802,88 @@ int CLuaEngine::GetHuiFengStopLoseThreshold(int direct)
 const CPoint& CLuaEngine::GetHuiFengConfirmButton(int direct)
 {
 	return CPoint(-30, 72);
+}
+
+CPoint CLuaEngine::GetLuoGeOrigin2Entrust(void)
+{
+	return CPoint(363,57);
+}
+
+CPoint CLuaEngine::GetLuoGeEntrust2Direct(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(-257, 90);
+	} 
+	else
+	{
+		return CPoint(-208, 90);
+	}
+}
+
+CPoint CLuaEngine::GetLuoGeDirection2Price(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(11, 27);
+	} 
+	else
+	{
+		return CPoint(-37, 27);
+	}
+}
+
+CPoint CLuaEngine::GetLuoGePrice2Count(int direct)
+{
+	return CPoint(-11, 47);
+}
+
+int CLuaEngine::GetLuoGeStopLoseDiff(void)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetLuoGeStopLoseDiff);    
+	size_t size;
+	if(lua_pcall(m_plua,0,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 15;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}
+
+int CLuaEngine::GetLuoGeStopGainDiff(void)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetLuoGeStopGainDiff);    
+	size_t size;
+	if(lua_pcall(m_plua,0,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 70;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
 }

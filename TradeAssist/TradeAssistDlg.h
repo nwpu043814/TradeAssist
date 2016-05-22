@@ -13,7 +13,7 @@
 #include "ActionManager.h"
 #include "Resource.h"
 #include "DataPacket.h"
-
+#include "HuifengGuadanParam.h"
 // CTradeAssistDlg ¶Ô»°¿ò
 class CTradeAssistDlg : public CDialog
 {
@@ -165,4 +165,6 @@ public:
 private:
 	BOOL mEnableWindowMostTop;
 	void EnableWindowMostTop(BOOL isTop);
+public:
+	CHuifengGuadanParamP GetGuaDanParam(int dirct);
 };

@@ -115,3 +115,11 @@ int CSimulateAction::SelectAll4HF(void)
 	keybd_event(VK_SHIFT,0,KEYEVENTF_KEYUP,0); 
 	return 0;
 }
+
+void CSimulateAction::ContinuesClick(int clickTimes)
+{
+	for (int i = 0 ;i < clickTimes; i++)
+	{
+		MouseClick();
+	}
+}

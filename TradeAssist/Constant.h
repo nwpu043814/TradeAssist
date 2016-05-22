@@ -136,6 +136,7 @@
 #define		SUN_DIALOG_NAME _T("SunAwtDialog")
 #define		HUIFENG_DIALOG_TITLE_NAME _T("建仓单")
 #define		HUIFENG_CONFIRM_DIALOG_TITLE_NAME _T("提示")
+#define		KUNJIAO_CONFIRM_DIALOG_TITLE_NAME _T("定单")
 
 #define		DELETE_ORDER_DELAY	450
 
@@ -235,10 +236,14 @@
 #define		LUA_FUNCTION_GetHFConfirDialogOK _T("getHFConfirDialogOK")
 #define		LUA_FUNCTION_GetPriceRange2Price _T("getPriceRange2Price")
 #define		LUA_FUNCTION_GetPrice2StopCheckbox _T("getPrice2StopCheckbox")
+#define		LUA_FUNCTION_GetHuiFengEnableStopButton _T("getHuiFengEnableStopButton")
 #define		LUA_FUNCTION_GetStopGainThreshold _T("getStopGainThreshold")
 #define		LUA_FUNCTION_GetStopLoseThreshold _T("getStopLoseThreshold")
 #define		LUA_FUNCTION_GetHuiFengStopLoseThreshold _T("getHuiFengStopLoseThreshold")
 #define		LUA_FUNCTION_GetDebugSleepInterval _T("getDebugSleepInterval")
+
+#define		LUA_FUNCTION_GetLuoGeStopLoseDiff _T("getLuoGeStopLoseDiff")
+#define		LUA_FUNCTION_GetLuoGeStopGainDiff _T("getLuoGeStopGainDiff")
 
 
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")
@@ -268,6 +273,8 @@
 #define     ON_TIMER_ZHONXIN 1
 #define     ON_TIMER_HUIFENG 2
 #define     ON_TIMER_TIANTONG 3
+#define     ON_TIMER_KUNJIAO 4
+#define     ON_TIMER_LUOGE 5
 
 #define  APP_NAME _T("TradeAssist")
 #define  STRING_REG_CODE _T("REGCODE")
