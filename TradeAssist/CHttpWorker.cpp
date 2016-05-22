@@ -5,6 +5,7 @@ CRITICAL_SECTION g_cs;
 CHttpWorker::CHttpWorker(void)
 {
 	mConnection = NULL;
+	pFile = NULL;
 }
 
 CHttpWorker::~CHttpWorker(void)
@@ -17,6 +18,15 @@ CHttpWorker::~CHttpWorker(void)
 		mConnection = NULL;
 		mSession.Close();
 		LeaveCriticalSection(&g_cs);
+	}
+
+	if (pFile != NULL)
+	{
+
+		pFile->Close(); 
+		pFile->EndRequest();
+		delete pFile;
+		pFile = NULL;
 	}
 }
 
@@ -37,11 +47,12 @@ CHttpConnection* CHttpWorker::EstablishConnection(CString host, UINT port, CStri
 	}
 }
 
-CString CHttpWorker::DoGet(CString host, UINT port, CString uri)
+void CHttpWorker::DoGet(const CString & host, UINT port,const CString & uri, CString & resultString)
 {
 	if (host.GetLength() == 0 || uri.GetLength() == 0)
 	{
-		return DOGET_RESULT_ERROR_INVALID_PARAM;
+		resultString = DOGET_RESULT_ERROR_INVALID_PARAM;
+		return ;
 	}
 
 	if (mConnection == NULL)
@@ -51,54 +62,51 @@ CString CHttpWorker::DoGet(CString host, UINT port, CString uri)
 
 	if (mConnection == NULL)
 	{
-		return DOGET_RESULT_ERROR_NOT_RETURN_OK;
+		resultString =  DOGET_RESULT_ERROR_NOT_RETURN_OK;
+		return;
 	}
 
-	CString result;
+	resultString = "";
 	
 	try
 	{
+
+		if (pFile == NULL)
+		{
+			pFile = mConnection->OpenRequest( CHttpConnection::HTTP_VERB_GET,uri,NULL, 1, NULL, NULL,
+				INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE );
+			CString szHeaders = HTTP_HEADER;
+			pFile->AddRequestHeaders(szHeaders);
+		}
 		
-		CHttpFile* pFile = mConnection->OpenRequest( CHttpConnection::HTTP_VERB_GET,uri,NULL, 1, NULL, NULL,
-			INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE );
-		CString szHeaders = HTTP_HEADER;
-		pFile->AddRequestHeaders(szHeaders);
 		pFile->SendRequest();
 		DWORD dwRet;
 		pFile->QueryInfoStatusCode(dwRet);
 		if(dwRet != HTTP_STATUS_OK)
 		{
-
-			result = DOGET_RESULT_ERROR_NOT_RETURN_OK;
+			resultString = DOGET_RESULT_ERROR_NOT_RETURN_OK;
 		}
 		else
 		{
 			CString buffer;
 			while (	pFile->ReadString(buffer))
 			{
-				result.Append(buffer);
+				resultString.Append(buffer);
 			}
 		}
-
-	
-		pFile->Close(); 
-		delete pFile;
-	
 	}
 	catch (CMemoryException* )
 	{
-		result = DOGET_RESULT_ERROR_NOT_RETURN_OK;
+		resultString = DOGET_RESULT_ERROR_NOT_RETURN_OK;
 	}
 	catch (CFileException* )
 	{
-		result = DOGET_RESULT_ERROR_NOT_RETURN_OK;
+		resultString = DOGET_RESULT_ERROR_NOT_RETURN_OK;
 	}
 	catch (CException* )
 	{
-		result = DOGET_RESULT_ERROR_NOT_RETURN_OK;
+		resultString = DOGET_RESULT_ERROR_NOT_RETURN_OK;
 	}
-
-	return result;
 }
 
 
@@ -119,7 +127,7 @@ INT CHttpWorker::GetFile(const CString& strUrl,  CString& out)
 		return GET_FILE_RESULT_ERRROR_URL;
 	}
 	
-	out = DoGet(strServer, nPort, strObject);
+	DoGet(strServer, nPort, strObject, out);
 	if (out == DOGET_RESULT_ERROR_NOT_RETURN_OK || out == DOGET_RESULT_ERROR_INVALID_PARAM)
 	{
 		return GET_FILE_RESULT_ERROR_SEND;

@@ -793,16 +793,6 @@ CString CLuaEngine::GetJoblessTitle(void)
 	return mJoblessTitle;
 }
 
-double CLuaEngine::GetStartPrice(void)
-{
-	return mStartPrice;
-}
-
-void CLuaEngine::SetStartPrice(double startPrice)
-{
-	mStartPrice = startPrice;
-}
-
 INT CLuaEngine::GetChasePriceThreshold(void)
 {
 	if (mChasePriceThreshold!= 0)
@@ -1735,37 +1725,6 @@ const CPoint CLuaEngine::GetHuiFengDirectionButton(int direct)
 	{
 		return CPoint();
 	}
-}
-
-const CPoint& CLuaEngine::GetHuiFengEnableStopButton(int direct)
-{
-
-	lua_State * m_plua = GetLuaState(0);   
-	lua_getglobal(m_plua,LUA_FUNCTION_GetHuiFengEnableStopButton);       
-	size_t size;
-	lua_pushnumber(m_plua,direct);
-	if(lua_pcall(m_plua,1,2,0)!= 0)        
-	{
-		const char * str = lua_tolstring(m_plua, -1, &size);     
-		lua_pop(m_plua,1);
-
-#ifdef _DEBUG
-		CString msg; 
-		msg.Format(_T("%s"), str);
-		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
-#endif // _DEBUG      
-
-		return CPoint();
-	}
-
-	CPoint result;
-	result.y = (int)lua_tonumber(m_plua, -1);   
-	lua_pop(m_plua,1);  
-
-	result.x = (int)lua_tonumber(m_plua, -1);   
-	lua_pop(m_plua,1);  
-
-	return result;		
 }
 
 const CPoint& CLuaEngine::GetHuiFengInitialStopPriceButton(int direct)

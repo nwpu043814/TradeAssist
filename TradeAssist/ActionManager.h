@@ -11,7 +11,7 @@
 #define  WM_DO_ZHONGXIN_GUADAN	WM_USER + 255
 #define  WM_DO_INPUT_PRICE	WM_USER + 256
 #define  WM_DO_GUADAN	WM_USER + 257
-#define  WM_DO_KEYU_GUADAN	WM_USER + 258
+#define  WM_DO_TIANTONG_BAIDAO_CHASE	WM_USER + 258
 
 class CActionManager :
 	public CWinThread
@@ -37,9 +37,8 @@ private:
 	// 1 for low 2 for high
 	int DoHFSingleSide(int diff,int direct,int count,int windowDelay, int softwareType);
 
-	const CPoint & GetDialogPosByTitle(CString title , UINT retryTime = FIND_SUN_DIALOG_MAX_RETRY_TIMES) const;
+	void GetDialogPosByTitle(CString title ,CPoint &pos,  UINT retryTime = FIND_SUN_DIALOG_MAX_RETRY_TIMES) const;
 	void DoHop(int x, int y)  const;
-	const CPoint& GetHFConfirmDialogPos(void) const;
 	void CloseHFConfirmDialog(int top, int left);
 	DECLARE_MESSAGE_MAP()
 	DECLARE_DYNCREATE(CActionManager)
@@ -47,6 +46,8 @@ protected:
 	afx_msg void OnDoGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoKunJiaoGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoInputPrice(WPARAM wParam,LPARAM lParam);
+	// 带自动追加止损的天通chase
+	void DoTianTongFastChaseActionExt(WPARAM wParam,LPARAM lParam);
 public:
 	void SetWindowOwner(HWND owner);
 	virtual BOOL InitInstance();
@@ -56,7 +57,7 @@ public:
 	CPoint GetKunJiaoDialogPos(void);
 	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
 	void DoTiantongStopLose(int direction);
-	// 带自动追加止损的天通chase
+
 	void DoTianTongChaseActionExt(int direction,int mIntOrderCount);
 	void DoEcnomicDataAction(PEcnomicData data, CDataManager* mDataManager,  HWND hwnd);
 };

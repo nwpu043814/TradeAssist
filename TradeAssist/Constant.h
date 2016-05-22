@@ -31,18 +31,17 @@
 #define		WM_DISPLAY_DATAK  (WM_USER+103)
 
 //http请求线程结束后发送该消息到主线程
-#define		WM_HTTP_GET_FINISH (WM_USER + 104)
+#define		WM_HTTP_GET_LOCAL_PRICE_SUCCESS (WM_USER + 104)
 
 #define		WM_HTTP_GET_ECNOMIC_DATA_FINISH (WM_USER + 105)
 
 #define		WM_DO_CHASE (WM_USER + 106)
 
 #define		WM_ALT_D (WM_USER + 107)
-//#define		WINDOW_CHECK_INTERVAL	50
-//#define		KEYBD_DELAY 30
-//#define		MOUSE_DOUBLE_CLICK_DELAY 30
-//#define		MOUSE_CLICK_DELAY 30
-//#define		GET_CLIPBOARD_CONTENT_DELAY 30
+
+//baidao数据获取成功
+#define		WM_HTTP_GET_BAIDAO_PRICE_SUCCESS (WM_USER + 108)
+
 //自动挂单需要保留的宏定义
 
 
@@ -254,7 +253,7 @@
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")
 #define		HTTP_URL_TIANTONG_HOST _T("jry.baidao.com")
 #define		HTTP_URL_TIANTONG_URI _T("/api/hq/npdata.do?ids=1&markettype=ttj")
-#define		HTTP_URL_LOCAL _T("http://localhost")
+#define		HTTP_URL_LOCAL_SERVER _T("http://localhost")
 
 #define		ECNOMIC_RESULT_TYPE_LOW _T("空")
 #define		ECNOMIC_RESULT_TYPE_HIGH _T("多")
@@ -274,7 +273,19 @@
 #define 	NETWORK_KEY_CAPTURE_TIME "CAPTURE_TIME"
 #define 	NETWORK_KEY_CHASE_DIRECT "CHASE_DIRECT"
 
-#define     VALID_PRICE		3000
+
+//baidao key定义
+#define     BAIDAO_KEY_CURRENT_PRICE _T("now")
+#define     BAIDAO_KEY_PRICE_TIME _T("pricetime")
+#define		BAIDAO_KEY_NAME_UPDROP _T("updrop")
+#define		BAIDAO_KEY_NAME_PERCENT _T("percent")
+#define		BAIDAO_KEY_NAME_UPDATETIME _T("updatetime")
+#define		BAIDAO_KEY_NAME_NICKNAME _T("nickname")
+
+//追单阈值，价格变化超过这个值就会提示做多或者做空
+#define		BAIDAO_CHASE_THRESHOLD	2.0F
+
+#define     VALID_PRICE		1000
 #define     ON_TIMER_HAIJIAO 1
 #define     ON_TIMER_TIANTONG 3
 #define     ON_TIMER_KUNJIAO 4
@@ -282,6 +293,7 @@
 #define     ON_TIMER_FEINONG 6
 #define     ON_TIMER_ZHONGXIN 7
 #define     ON_TIMER_LOCALCAPTURE 8
+#define     ON_TIMER_BAIDAO_PRICE 9
 
 #define  APP_NAME _T("TradeAssist")
 #define  STRING_REG_CODE _T("REGCODE")

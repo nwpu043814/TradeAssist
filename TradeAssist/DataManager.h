@@ -2,6 +2,7 @@
 #include "LuaEngine.h"
 #include "EcnomicPair.h"
 #include "HuifengGuadanParam.h"
+#include "HttpBaidaoThread.h"
 class CDataManager
 {
 public:
@@ -67,4 +68,10 @@ public:
 	void StartUpdateFeiNongData(void);
 	void StartHttpThread(PEcnomicData data);
 	CHuifengGuadanParamP GetGuaDanParam(int dirct);
+
+	CHttpBaidaoThreadP mBaidaoHttpThread;
+	void StartUpdateBaidaoPrice();
+	void StopBaidaoUpdateThread(void);
 };
+
+typedef CDataManager * CDataManagerP;

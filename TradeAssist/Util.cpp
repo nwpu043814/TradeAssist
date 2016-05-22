@@ -35,88 +35,33 @@ ULONGLONG CUtil::Time2Seconds(IN CString time)
 	return result;
 }
 
-void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
+
+//解析baidao的天通银数据，text内容类似：[{"sid":"TPME.XAGUSD","percent":"-0.29%","updatetime":"20150312 09:18:23","nickname":"XAGUSD","buy":3068,"status":1,"updrop":-9,"close":3060,"id":1,"open":3070,"sell":3060,"now":3060,"pricetime":"20150312 09:18:23","name":"现货白银","high":3079,"low":3057,"preclose":3069,"avg":3071,"amplitude":"0.72%"}]
+void CUtil::ParseBaidaoApiDataString(IN CString text, OUT CDataPacket & result)
 {
-	//static int increade = 0;
-	//static bool isUp = true;
 
 	if (text.GetLength() != 0)
 	{
-		text = text.MakeLower();
 		result.mIsGood = TRUE;
+		Json::Reader reader;
+		Json::Value root;
 
-		CString value = GetValue(text, KEY_NAME_UPDROP);
-		if (value.GetLength() != 0)
+		//去除前后的括号
+		text.Remove('[');
+		text.Remove(']');
+
+		if(!reader.parse(text.GetBuffer(0),root))
 		{
-			result.mUpDrop = atoi(value);//atoi(value); revert
-		}
-		else
-		{
+			printf("failed to parse!\n");
 			result.mIsGood = FALSE;
 		}
 
-		value = GetValue(text, KEY_NAME_PERCENT);
-		if (value.GetLength() != 0)
-		{
-			result.mPercent = value;
-		}
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		value = GetValue(text, KEY_NAME_PRICETIME);
-		if (value.GetLength() != 0)
-		{
-			result.mPriceTime = value;
-		}
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		value = GetValue(text, KEY_NAME_UPDATETIME);
-		if (value.GetLength() != 0)
-		{
-			result.mUpdateTime = value;
-		}
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		value = GetValue(text, KEY_NAME_NICKNAME);
-		if (value.GetLength() != 0)
-		{
-			result.mNickName = value;
-		}
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-		
-		value = GetValue(text, KEY_NAME_NOW);
-		if (value.GetLength() != 0)
-		{
-			/*if (isUp)
-			{
-				result.mPrice = (atoi(value) + increade++);
-
-				if (increade > 40)
-				{
-					isUp =false;
-				}			
-			} 
-			else
-			{
-				result.mPrice = (atoi(value) + increade--);				
-			}*/
-			result.mPrice = atoi(value);
-		}
-		else
-		{
-			result.mIsGood = FALSE;
-		}
+		result.mPrice = root[BAIDAO_KEY_CURRENT_PRICE].asDouble();
+		result.mUpDrop = root[BAIDAO_KEY_NAME_UPDROP].asInt();
+		result.mPriceTime = root[BAIDAO_KEY_PRICE_TIME].asString().c_str();
+		result.mNickName =  root[BAIDAO_KEY_NAME_NICKNAME].asString().c_str() ;
+		result.mPercent =  root[BAIDAO_KEY_NAME_PERCENT].asString().c_str() ;
+		result.mUpdateTime =  root[BAIDAO_KEY_NAME_UPDATETIME].asString().c_str() ;
 	}
 	else
 	{
@@ -159,7 +104,7 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 	return secondsDiff ;
  }
 
- int CUtil::ParseOwnServerString(CString text, CDataPacket& result)
+ int CUtil::ParseLocalPriceDataString(CString text, CDataPacket& result)
  {
 	 //5740.72:1365862696259:2013_04_13_22_18_16:average
 	 if (text.GetLength() != 0)
@@ -217,9 +162,4 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 	 expect.Remove('%');
 	 expect.Remove('+');
 	 return expect;
- }
-
- ULONGLONG CUtil::CompareSYSTEMTIME(SYSTEMTIME left, SYSTEMTIME right)
- {
-	 return ULONGLONG();
  }

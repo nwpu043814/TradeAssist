@@ -257,8 +257,9 @@ end
 -- 返回6代表更新非农
 -- 返回7代表更新中新
 -- 返回8代表拉取本地数据服务器
+-- 返回9代表拉取百道数据
 function getDoubleSideType()
-	return 6;
+	return 9;
 end
 
 function getJoblessParam()

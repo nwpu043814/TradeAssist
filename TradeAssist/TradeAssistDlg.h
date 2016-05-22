@@ -6,7 +6,7 @@
 #include "afxwin.h"
 #include "httpworker.h"
 #include "DataK.h"
-#include "HttpThread.h"
+#include "HttpBaidaoThread.h"
 #include "afxcmn.h"
 #include "luaengine.h"
 #include "EcnomicCompareResult.h"
@@ -15,6 +15,7 @@
 #include "DataPacket.h"
 #include "hotkeymanager.h"
 #include "DataManager.h"
+#include "TradeAssistController.h"
 // CTradeAssistDlg 对话框
 class CTradeAssistDlg : public CDialog
 {
@@ -44,7 +45,7 @@ private:
 	int dispatchLowAction(void);
 	// 处理高位事件
 	int dispatchHighAction(void);
-	CActionManager* mActionManager;
+	CActionManagerP mActionManager;
 	LRESULT OnAltDMsg(WPARAM w , LPARAM l);
 
 	// 设置剪贴板的内容
@@ -73,8 +74,8 @@ public:
 	POINT GetSunAwtDialogPos(void);
 
 	int ClearResource(void);
-	LRESULT OnHttpGetPriceFinish(WPARAM w , LPARAM l);
-
+	LRESULT OnHttpGetLocalCapturePriceFinish(WPARAM w , LPARAM l);
+	LRESULT OnHttpGetBaidaoPriceFinish(WPARAM w , LPARAM l);
 	WORD GetMilliseconds(void);
 	int UpdatePrice(bool isAdd, float diff = 6.0F);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
@@ -98,6 +99,7 @@ private:
 public:
 	int StartUpdateFeiNongData(void);
 private:
-	CHotKeyManager* mHotkeyManager;
-	CDataManager* mDataManager;
+	CHotKeyManagerP mHotkeyManager;
+	CDataManagerP mDataManager;
+	CTradeAssistControllerP  mController;
 };

@@ -10,7 +10,7 @@
 #include "HttpWorker.h"
 #include "Util.h"
 #include "DataPacket.h"
-#include "HttpThread.h"
+#include "HttpBaidaoThread.h"
 #include "aboutDlg.h"
 #include <process.h>
 #include "afxmt.h"
@@ -19,7 +19,6 @@
 #include<crtdbg.h>
 #include <mmsystem.h>
 #include "dalyFx.h"
-#include "RegistDlg.h"
 #include "HuifengGuadanParam.h"
 #include "tiantongguadan.h"
 
@@ -46,11 +45,11 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	mDataK = new CDataK();
 	mActionManager =(CActionManagerP) AfxBeginThread(RUNTIME_CLASS(CActionManager));
 	mActionManager->SetWindowOwner(GetSafeHwnd());
+	
 	mDataManager = new CDataManager();
 	mDataManager->initialNonfarmerThread(&mLuaEngine);
 	mDataManager->initialJoblessRateThread(&mLuaEngine);
 	mDataManager->initialLocalPriceThread();
-
 	InitializeCriticalSection(&g_cs);
 }
 
@@ -113,7 +112,8 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(WM_HOTKEY, &CTradeAssistDlg::OnHotKey) //添加此句
 	ON_MESSAGE(WM_DISPLAY_DATAK,  &CTradeAssistDlg::OnDisplayDataK)
-	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetPriceFinish)
+	ON_MESSAGE(WM_HTTP_GET_LOCAL_PRICE_SUCCESS,&CTradeAssistDlg::OnHttpGetLocalCapturePriceFinish)
+	ON_MESSAGE(WM_HTTP_GET_BAIDAO_PRICE_SUCCESS,&CTradeAssistDlg::OnHttpGetBaidaoPriceFinish)
 	ON_MESSAGE(WM_ALT_D,&CTradeAssistDlg::OnAltDMsg)
 	ON_MESSAGE(WM_HTTP_GET_ECNOMIC_DATA_FINISH,&CTradeAssistDlg::OnHttpGetEcnomicData) 
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
@@ -130,19 +130,6 @@ END_MESSAGE_MAP()
 BOOL CTradeAssistDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-
-	RegistDlg dlg;
-
-	if (dlg.Explorer(dlg.GetRegCode()))
-	{
-
-		dlg.DoModal();
-
-		if (RegistDlg::mIntResult > 0)
-		{
-			ExitProcess(RegistDlg::mIntResult);
-		} 
-	}
 
 	// 将“关于...”菜单项添加到系统菜单中。
 
@@ -167,10 +154,12 @@ BOOL CTradeAssistDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 	_CrtDumpMemoryLeaks();
+
 	// TODO: 在此添加额外的初始化代码
 	mHotkeyManager = new CHotKeyManager(m_hWnd);
 	mHotkeyManager->InstallHotKey();
 	InitialSetting();
+	mController = new CTradeAssistController(mHotkeyManager,mDataManager, mActionManager, GetOwner(), mDataK);
 	EnableWindowMostTop(mDataManager->mEnableWindowMostTop);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -283,16 +272,15 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_TEST_SERVER:
 		{
-			UpdateData();
-			for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
-			{
-				mDataManager->StartHttpThread(mDataManager->mLocalPrice[i]);
-			}
+			//启动
+
+			UpdateData(TRUE);
+			mDataManager->StopBaidaoUpdateThread();
+			mDataManager->StartUpdateBaidaoPrice();
 			break;
 		}
 		case HOT_KEY_ALT_D:
-		{
-			
+		{	
 			this->PostMessage(WM_ALT_D);
 			break;
 		}
@@ -353,6 +341,7 @@ CTradeAssistDlg::~CTradeAssistDlg()
 	delete mHttpWorker;
 	delete mDataK;
 	delete mHotkeyManager;
+	delete mController;
 
 	delete mDataManager->mJoblessRate[0]->GetThreadData();
 	delete mDataManager->mNonfarmerNumber[0]->GetThreadData();
@@ -407,7 +396,6 @@ int CTradeAssistDlg::ClearResource(void)
 	KillTimer(TIMER_ID_FOR_DO_FLASH_TRADE);
 	SaveSetting();
 	CLogger::SaveLog();
-
 	return 0;
 }
 
@@ -483,6 +471,10 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 			{
 				mDataManager->StartUpdateFeiNongData();
 			}
+			else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_BAIDAO_PRICE)
+			{
+		mDataManager->StopBaidaoUpdateThread();		mDataManager->StartUpdateBaidaoPrice();
+			}
 			
 		}
 	}
@@ -509,7 +501,7 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 		mDataManager->mIntSecond = _T("0.0");
 	}
 
-	if (mDataManager->mServerIp.Trim().GetLength() == 0 ||mDataManager->mServerIp.Trim().GetLength() == 0)
+	if (mDataManager->mServerIp.Trim().GetLength() == 0)
 	{
 		CString text;
 		text.LoadString(IDS_STRING_SERVER_INFO_INVALID);
@@ -538,7 +530,64 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 	}
 }
 
-LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
+LRESULT CTradeAssistDlg::OnHttpGetBaidaoPriceFinish(WPARAM w , LPARAM l)
+{
+	bool	updateUI  = true;
+	if (w  != NULL)
+	{
+		CDataPacketP packet = (CDataPacketP)w;
+		long current =GetTickCount();
+
+		//50毫秒更新一次UI
+		if (current - mDataManager->mUILastUpdateTime > 50)
+		{
+			mDataManager->mUILastUpdateTime = current;
+			updateUI = true;
+		}
+		else
+		{
+			updateUI = false;
+		}
+
+		if (packet->mIsGood)
+		{
+			if(packet->mChaseDirect == DO_LOW && !mLuaEngine.GetHasChased())
+			{
+				//追空
+				mLuaEngine.SetHasChased(true);
+				mActionManager->PostThreadMessage(WM_DO_TIANTONG_BAIDAO_CHASE, (WPARAM) DO_LOW, NULL);
+			}
+			else if (packet->mChaseDirect == DO_HIGH && !mLuaEngine.GetHasChased())
+			{
+				//追多
+				mLuaEngine.SetHasChased(true);
+				mActionManager->PostThreadMessage(WM_DO_TIANTONG_BAIDAO_CHASE, (WPARAM) DO_HIGH, NULL);
+			}
+
+			if (mDataManager->mBaidaoHttpThread != NULL && mLuaEngine.GetHasChased())
+			{
+				mDataManager->StopBaidaoUpdateThread();
+				updateUI = true;
+			}
+
+			if (updateUI)
+			{
+				//更新价格
+				mDataK->SetClose(packet->mPrice, packet->mPriceTime);
+				mDataK->SetQueryPriceUseTime(packet->mQueryPriceUseTime);
+				mDataK->SetCapturePriceUseTime(packet->mCapturePriceUseTime);
+				PostMessage(WM_DISPLAY_DATAK);		
+			}
+		}
+
+		delete packet;
+		packet = NULL;
+	}
+
+	return 1;
+}
+
+LRESULT CTradeAssistDlg::OnHttpGetLocalCapturePriceFinish(WPARAM w , LPARAM l)
 {
 
 	PEcnomicData data = (PEcnomicData)l;
@@ -568,8 +617,6 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 
 		if (packet->mIsGood)
 		{
-			//暂时关闭中鑫的追单
-			//CheckChaseMoment(packet); 
 			if(packet->mChaseDirect == DO_LOW && !mLuaEngine.GetHasChased())
 			{
 				//追空挂多
@@ -601,7 +648,7 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 		int i = 0;
 		while (i++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES && data != NULL)
 		{
-			if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_GET_PRICE,NULL, (LPARAM)data))//post thread msg
+			if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_GET_LOCAL_SERVER_PRICE,NULL, (LPARAM)data))//post thread msg
 			{
 				TRACE("post message failed,errno:%d\r\n",::GetLastError());
 			}
@@ -618,9 +665,8 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 {
 	UpdateData(TRUE);
-
+	mDataManager->mDataKOpen = mDataK->GetOpen();
 	mDataManager->mDataKClose = mDataK->GetClose();
-	mDataManager->mDataKOpen = mLuaEngine.GetStartPrice();//mDataK->GetOpen();
 	mDataManager->mDataKCloseTime = mDataK->GetCloseTime().Right(8);
 	mDataManager->mDataKOpenTime = mDataK->GetOpenTime().Right(8);
 	mDataManager->mDataKHighPrice = mDataK->GetHigh();
@@ -687,7 +733,8 @@ UINT CTradeAssistDlg::GetDoHttpInterval(void)
 int CTradeAssistDlg::GetDynamicThreshold(int back)
 {
 
-	return	mLuaEngine.GetDynamicThreshold(GetCurrentThreadId(), mDataManager->mBoolEnableAutoThreshold,back,mDataManager->mStrLowPriceDiff, mDataManager->mUintAutoCloseThreshold);
+	return	mLuaEngine.GetDynamicThreshold(GetCurrentThreadId(), mDataManager->mBoolEnableAutoThreshold,
+		back,mDataManager->mStrLowPriceDiff, mDataManager->mUintAutoCloseThreshold);
 }
 
 int CTradeAssistDlg::PlaySoundResource(int idRes)

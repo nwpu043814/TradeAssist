@@ -76,7 +76,7 @@ void RegistDlg::PreInitDialog()
 	codes[0] = GetInterval();
 	for (int i = 0; i < number ;i++)
 	{
-		codes[i] = codes[0] << (i) + (i*differ);
+		codes[i] = (codes[0] << i) + (i*differ);
 	}
 	codes[number-1] = ~codes[number-1]; 
 	m_strUserID.Format("%X-%X-%X", codes[0],codes[1],codes[2]);

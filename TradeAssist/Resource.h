@@ -3,7 +3,6 @@
 // Used by TradeAssist.rc
 //
 #define IDCANCEL2                       3
-#define IDCCHECK                        3
 #define IDM_ABOUTBOX                    0x0010
 #define IDD_ABOUTBOX                    100
 #define IDS_ABOUTBOX                    101
@@ -14,7 +13,6 @@
 #define IDR_WAVE_CLOSE_DEPOT            129
 #define IDR_WAVE_DO_HIGH_CLOSE          129
 #define IDR_WAVE_DO_LOW_CLOSE           131
-#define IDD_DIALOG_REGIST               132
 #define IDC_EDIT_PRICE_DIFF             1000
 #define IDC_EDIT_HIGH_PRICE_DIFF        1000
 #define IDC_EDIT_COUNT                  1001
@@ -43,9 +41,7 @@
 #define IDC_CHECK_AOTO_CHASE            1019
 #define IDC_EDIT1                       1020
 #define IDC_EDIT_AUTO_COMPLETE_INTERVAL 1020
-#define IDC_EDIT_PC_CODE                1020
 #define IDC_EDIT_START_DELETE_ORDER_DY  1021
-#define IDC_EDIT_REGIST_CODE            1021
 #define IDC_EDIT_DELETE_CONFIRM_DX      1022
 #define IDC_EDIT_DELETE_CONFIRM_DY      1023
 #define IDC_EDIT_MSG_DELAY              1024

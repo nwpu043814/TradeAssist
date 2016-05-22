@@ -13,3 +13,5 @@ public:
 	void UninstallHotkey(void);
 	int ParseHotKey(UINT mode, UINT virKey);
 };
+
+typedef CHotKeyManager* CHotKeyManagerP;

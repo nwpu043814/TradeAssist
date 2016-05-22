@@ -9,7 +9,10 @@ CDataK::CDataK(void)
 , mLow(0)
 , mOpenTime(_T(""))
 , mCloseTime(_T(""))
+,mMillionSecond(0)
 , mIntCurrent2ExtremeDiff(0)
+,mQueryPriceUseTime(0.0F)
+,mCapturePriceUseTime(0.0F)
 {
 }
 
@@ -26,6 +29,7 @@ void CDataK::SetClose(double close, CString time)
 	if (mOpenTime.GetLength() == 0)
 	{
 		mOpenTime = time;
+		mOpen = close;
 	}
 
 	mCloseTime = time;

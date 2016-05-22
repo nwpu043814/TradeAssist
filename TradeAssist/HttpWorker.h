@@ -19,10 +19,11 @@ class CHttpWorker
 private:
 	CInternetSession mSession;
 	CHttpConnection* mConnection;
+	CHttpFile* pFile;
 public:
 	CHttpWorker(void);
 	virtual ~CHttpWorker(void);
-	CString DoGet(CString host,UINT port, CString uri);
+	void DoGet(const CString & host, UINT port,const CString & uri, CString & resultString);
 	int GetFile(const CString& url, CString& out);
 	CHttpConnection* EstablishConnection(CString host, UINT port, CString uri);
 };

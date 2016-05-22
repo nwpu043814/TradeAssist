@@ -26,9 +26,8 @@ void CTianTongGuaDan::CloseHFConfirmDialog(int left, int top)
 }
 
 
-const CPoint& CTianTongGuaDan::GetHFConfirmDialogPos(int retryTimes) const
+void  CTianTongGuaDan::GetHFConfirmDialogPos(CPoint&pos,  int retryTimes) const
 {
-	CPoint pos;
 	pos.x = 0;
 	pos.y = 0;
 	int searchCount = 0;
@@ -51,7 +50,6 @@ const CPoint& CTianTongGuaDan::GetHFConfirmDialogPos(int retryTimes) const
 	TRACE("GetHFConfirmDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
 #endif // _DEBUG
 
-	return pos;
 }
 
 int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int windowDelay)
@@ -165,7 +163,7 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	{
 		//从止损上箭头到确定按钮。
 		DoHop(-65, 99);
-		pos = GetHFConfirmDialogPos();
+		GetHFConfirmDialogPos(pos);
 		if (pos.x + pos.y != 0)
 		{
 			CloseHFConfirmDialog(pos.x, pos.y);
@@ -192,7 +190,7 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	DoHop(mLuaEngine->GetConfirmButton(direct).x, mLuaEngine->GetConfirmButton(direct).y);
 	Sleep(time);
 
-	pos = GetHFConfirmDialogPos(FIND_SUN_DIALOG_MAX_RETRY_TIMES*2);
+	GetHFConfirmDialogPos(pos, FIND_SUN_DIALOG_MAX_RETRY_TIMES*2);
 	if (pos.x + pos.y != 0)
 	{
 		CloseHFConfirmDialog(pos.x, pos.y);
@@ -211,6 +209,37 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
+void CTianTongGuaDan::DoTianTongFastChase(int direct)
+{
+	CPoint dialogPos = GetDialogPosByTitle(HUIFENG_DIALOG_TITLE_NAME);
+	if (dialogPos.x + dialogPos.y  == 0)
+	{
+		return ;
+	}
+
+	//保存动作开始前鼠标的原始位置
+	GetCursorPos(&mInitialCursorPos);
+
+	mAction->MoveCursor(dialogPos.x, dialogPos.y, true);
+	//坐标数据暂时写死，带后续优化
+	if (direct == DO_HIGH)
+	{
+		//原点到方向的点击
+		DoHop(67, 232);
+
+		//方向到确定提交的点击
+		DoHop(76,242);
+	} 
+	else if(direct == DO_LOW)
+	{
+		//原点到方向的点击
+		DoHop(129,232);
+
+		//方向到确定提交的点击
+		DoHop(0, 242);
+	}
+	
+}
 
 void CTianTongGuaDan::DoTianTongChaseAction(int direct, int count)
 {

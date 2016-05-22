@@ -3,16 +3,13 @@
 #include "Logger.h"
 #include "HuifengGuadanParam.h"
 #include "TianTongGuaDan.h"
-#include "LuoGeGuaDan.h"
-#include "HaiJiaoGuaDan.h"
-#include "KeYuGuaDan.h"
 #include "BaseGuaDan.h"
-#include "ZhonXinGuaDan.h"
 #include "Util.h"
 BEGIN_MESSAGE_MAP(CActionManager, CWinThread)
 	ON_THREAD_MESSAGE(WM_DO_GUADAN,OnDoGuadan)
 	ON_THREAD_MESSAGE(WM_DO_KUNJIAO_GUADAN,OnDoKunJiaoGuadan)
 	ON_THREAD_MESSAGE(WM_DO_INPUT_PRICE,OnDoInputPrice) 
+	ON_THREAD_MESSAGE(WM_DO_TIANTONG_BAIDAO_CHASE,DoTianTongFastChaseActionExt) 
 END_MESSAGE_MAP()
 IMPLEMENT_DYNCREATE(CActionManager, CWinThread)
 
@@ -53,29 +50,9 @@ void CActionManager::OnDoGuadan(WPARAM wParam,LPARAM lParam)
 	
 	switch (lParam)
 	{
-	case WM_DO_HAIJIAO_GUADAN:
-		{
-			guadan= new CHaiJiaoGuaDan(&mLuaEngine, mAction, mWndNewOwner);
-		}
-		break;
 	case WM_DO_TIANTONG_GUADAN:
 		{
 			guadan= new CTianTongGuaDan(&mLuaEngine, mAction, mWndNewOwner);
-		}
-		break;
-	case WM_DO_ZHONGXIN_GUADAN:
-		{
-			guadan= new CZhonXinGuaDan(&mLuaEngine, mAction, mWndNewOwner);
-		}
-		break;
-	case WM_DO_KEYU_GUADAN:
-		{
-			guadan= new CKeYuGuaDan(&mLuaEngine, mAction, mWndNewOwner);
-		}
-		break;
-	case WM_DO_LUOGE_GUADAN:
-		{
-			guadan= new CLuoGeGuaDan(&mLuaEngine, mAction, mWndNewOwner);
 		}
 		break;
 	}
@@ -453,9 +430,8 @@ int CActionManager::DoHFSingleSide(int diff, int direct, int count, int windowDe
 	return SEMIC_AUTO_TRADE_CALL_FAILED;
 }
 
-const CPoint & CActionManager::GetDialogPosByTitle(CString title, UINT retryTime) const
+void CActionManager::GetDialogPosByTitle(CString title,  CPoint & pos, UINT retryTime) const
 {
-	CPoint pos;
 	pos.x = 0;
 	pos.y = 0;
 	int searchCount = 0;
@@ -478,7 +454,6 @@ const CPoint & CActionManager::GetDialogPosByTitle(CString title, UINT retryTime
 	TRACE("GetHFDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
 #endif // _DEBUG
 
-	return pos;
 }
 
 void CActionManager::DoHop(int x, int y)  const
@@ -487,33 +462,7 @@ void CActionManager::DoHop(int x, int y)  const
 	mAction->MouseClick();
 }
 
-const CPoint& CActionManager::GetHFConfirmDialogPos(void) const
-{
-	CPoint pos;
-	pos.x = 0;
-	pos.y = 0;
-	int searchCount = 0;
-	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
-	{
-		HWND wnd=::FindWindow("WindowsForms10.Window.8.app.0.33c0d9d", HUIFENG_CONFIRM_DIALOG_TITLE_NAME);
-		if (wnd)
-		{
-			CRect rect;
-			::GetWindowRect(wnd,rect);
-			pos.x = rect.left;
-			pos.y = rect.top;
 
-			break;;
-		} 
-		Sleep(WINDOW_CHECK_INTERVAL* 2*searchCount);
-	}
-
-#ifdef _DEBUG
-	TRACE("GetHFConfirmDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
-#endif // _DEBUG
-
-	return pos;
-}
 
 void CActionManager::CloseHFConfirmDialog(int left, int top)
 {
@@ -658,7 +607,8 @@ int CActionManager::DoKunJiaoSingleSideAction(int diff, int direct, int count, i
 	Sleep(200);
 	DoHop(-222,72);
 	
-	CPoint confirmDlgPos = GetDialogPosByTitle(KUNJIAO_CONFIRM_TITLE_NAME);
+	CPoint confirmDlgPos;
+	GetDialogPosByTitle(KUNJIAO_CONFIRM_TITLE_NAME, confirmDlgPos);
 	if (confirmDlgPos.x + confirmDlgPos.y != 0)
 	{
 		mAction->MoveCursor(confirmDlgPos.x, confirmDlgPos.y, true);
@@ -727,7 +677,47 @@ void CActionManager::DoTiantongStopLose(int direction)
 	delete base;
 }
 
-// 带自动追加止损的天通chase
+
+// 给baidao数据查询自动追单用的，带自动追加止损的天通chase
+void CActionManager::DoTianTongFastChaseActionExt(WPARAM wParam,LPARAM lParam)
+{
+	int direction = static_cast<int>(wParam);
+	CTianTongGuaDan* action = new CTianTongGuaDan(&mLuaEngine, mAction, mWndNewOwner);
+	action->DoTianTongFastChase(direction);
+	Sleep(5000);
+
+	//关闭下单成功提示
+	CPoint comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME,HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME );
+	if(comfirDialogPos.x + comfirDialogPos.y == 0)
+	{
+		delete action;
+		return;
+	}
+
+	mAction->MoveCursor(comfirDialogPos.x, comfirDialogPos.y, true);
+	mAction->Hop(158, 125);
+	Sleep(200);
+	mAction->MoveCursor(action->GetInitialCursorPos().x, action->GetInitialCursorPos().y, true);
+	DoTiantongStopLose(direction);
+	Sleep(1500);
+
+	//关闭修改止损价格成功提示
+	comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME, HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME);
+	if(comfirDialogPos.x + comfirDialogPos.y == 0)
+	{
+		delete action;
+		return;
+	}
+
+	mAction->MoveCursor(comfirDialogPos.x, comfirDialogPos.y, true);
+	mAction->Hop(158, 125);
+
+	delete action;
+}
+
+
+
+// 给fx678两个经济数据查询结果自动追单用的追加止损的天通银操作
 void CActionManager::DoTianTongChaseActionExt(int direction, int mIntOrderCount)
 {
 	CTianTongGuaDan* action = new CTianTongGuaDan(&mLuaEngine, mAction, mWndNewOwner);
@@ -750,7 +740,7 @@ void CActionManager::DoTianTongChaseActionExt(int direction, int mIntOrderCount)
 	Sleep(1500);
 
 	//关闭修改止损价格成功提示
-	comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME, HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME);
+	comfirDialogPos = action->GetDialogPosByTitle(HUIFENG_CONFIRM_DIALOG_TITLE_NAME,  HUIFENG_DIALOG_TITLE_NAME_CHICANG_CLASS_NAME);
 	if(comfirDialogPos.x + comfirDialogPos.y == 0)
 	{
 		delete action;

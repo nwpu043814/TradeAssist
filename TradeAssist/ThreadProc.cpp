@@ -5,7 +5,7 @@
 #include "Util.h"
 #include "logger.h"
 
-
+//获取汇通网的失业率，非农就业数据，本地价格服务器抓取都在这个线程实现.
 UINT	__stdcall HttpProcess(void * param)
 {
 	if (param == NULL)
@@ -33,17 +33,18 @@ UINT	__stdcall HttpProcess(void * param)
 
 			switch(msg.message)
 			{
-			case WM_DO_HTTP_GET_PRICE:
+			case WM_DO_HTTP_GET_LOCAL_SERVER_PRICE:
 				{
+					//本地价格获取
 					CString host = dlg->GetServerHost();
 					int port = dlg->GetServerPort();
 					CString uri = HTTP_URL_LOCAL_DATA;
-
+					CString result = "";
 					for (int i = 0; i < DO_PULL_PRICE_TIMES_PER_MSG; i++)
 					{
-						CString result = httpWorker.DoGet(host, port , uri);
+						httpWorker.DoGet(host, port , uri,result);
 						CDataPacket packet;				
-						CUtil::ParseOwnServerString(result,packet);
+						CUtil::ParseLocalPriceDataString(result,packet);
 						TRACE("result=%s\r\n", result);
 
 						if(result.Find("average") != -1)
@@ -56,7 +57,7 @@ UINT	__stdcall HttpProcess(void * param)
 							Sleep(dlg->GetDoHttpInterval());
 						}
 
-						dlg->SendMessage(WM_HTTP_GET_FINISH,(WPARAM)(&packet),(LPARAM)data);
+						dlg->SendMessage(WM_HTTP_GET_LOCAL_PRICE_SUCCESS,(WPARAM)(&packet),(LPARAM)data);
 					}
 					
 					break;
@@ -68,7 +69,7 @@ UINT	__stdcall HttpProcess(void * param)
 				}
 			case WM_DO_HTTP_GET_ECNOMIC_DATA:
 				{
-
+					//拉取两个经济数据
 					if (msg.wParam == NULL)
 					{
 						break;

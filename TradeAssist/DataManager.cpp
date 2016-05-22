@@ -2,7 +2,7 @@
 #include "DataManager.h"
 #include "Constant.h"
 #include "TradeAssist.h "
-#include "HttpThread.h"
+#include "HttpBaidaoThread.h"
 #include <process.h>
 extern CTradeAssistApp theApp;
 UINT	__stdcall HttpProcess(void * param);
@@ -45,12 +45,14 @@ CDataManager::CDataManager(void):mIsAutoSubmits(FALSE)
 , mCapturePriceUseTime(0)
 , mUILastUpdateTime(0)
 , mEnableWindowMostTop(0)
+,mBaidaoHttpThread(NULL)
 {
 
 }
 
 CDataManager::~CDataManager(void)
 {
+	StopBaidaoUpdateThread();
 }
 
 void CDataManager::Load(void)
@@ -124,10 +126,10 @@ void CDataManager::initialLocalPriceThread(void)
 	for (int i =0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
 	{
 		mLocalPrice[i] = new CLocalServerData();
-		mLocalPrice[i]->SetUrl(HTTP_URL_LOCAL);
+		mLocalPrice[i]->SetUrl(HTTP_URL_LOCAL_SERVER);
 		mLocalPrice[i]->SetResult(EcnomicResult::TYPE_UNKOWN);
 		mLocalPrice[i]->SetExpectValue(_T(""));
-		mLocalPrice[i]->SetMsgType(WM_DO_HTTP_GET_PRICE);
+		mLocalPrice[i]->SetMsgType(WM_DO_HTTP_GET_LOCAL_SERVER_PRICE);
 	}
 }
 
@@ -228,4 +230,31 @@ CHuifengGuadanParamP CDataManager::GetGuaDanParam(int dirct)
 	param->mWindowDelay = mIntMsgDelayMilliSeconds;
 	param->mDirect = dirct;
 	return param;
+}
+
+void CDataManager::StartUpdateBaidaoPrice()
+{
+	mBaidaoHttpThread = DYNAMIC_DOWNCAST(CHttpBaidaoThread, AfxBeginThread(RUNTIME_CLASS(CHttpBaidaoThread)));
+	mBaidaoHttpThread->SetChaseHighThreshold(atoi(mStrHighPriceDiff)); 
+	mBaidaoHttpThread->SetChaseLowThreshold(atoi(mStrLowPriceDiff)); 
+	// 需要执行线程中的操作时
+	mBaidaoHttpThread ->PostThreadMessage(WM_DO_HTTP_GET_BAIDAO_DATA,NULL,NULL);
+}
+
+void CDataManager::StopBaidaoUpdateThread(void)
+{
+	if (mBaidaoHttpThread != NULL)
+	{
+		// 结束线程
+		HANDLE hp=mBaidaoHttpThread->m_hThread;
+		if (hp) 
+		{
+			if (WaitForSingleObject(hp, 1) != WAIT_OBJECT_0)
+			{
+				TerminateThread(hp,0);
+			}
+			CloseHandle(hp);
+		}
+		mBaidaoHttpThread = NULL;
+	}
 }

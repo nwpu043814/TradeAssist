@@ -240,31 +240,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HaiJiaoGuaDan.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\HotKeyManager.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\HttpThread.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\KeYuGuaDan.cpp"
+				RelativePath=".\HttpBaidaoThread.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\LuaEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\LuoGeGuaDan.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\RegistDlg.cpp"
 				>
 			</File>
 			<File
@@ -300,11 +284,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Util.cpp"
+				RelativePath=".\TradeAssistController.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ZhonXinGuaDan.cpp"
+				RelativePath=".\Util.cpp"
 				>
 			</File>
 		</Filter>
@@ -362,15 +346,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HaiJiaoGuaDan.h"
-				>
-			</File>
-			<File
 				RelativePath=".\HotKeyManager.h"
 				>
 			</File>
 			<File
-				RelativePath=".\HttpThread.h"
+				RelativePath=".\HttpBaidaoThread.h"
 				>
 			</File>
 			<File
@@ -379,10 +359,6 @@
 			</File>
 			<File
 				RelativePath=".\HuifengGuadanParam.h"
-				>
-			</File>
-			<File
-				RelativePath=".\KeYuGuaDan.h"
 				>
 			</File>
 			<File
@@ -410,14 +386,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\LuoGeGuaDan.h"
-				>
-			</File>
-			<File
-				RelativePath=".\RegistDlg.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -442,15 +410,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TradeAssistController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TradeAssistDlg.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Util.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ZhonXinGuaDan.h"
 				>
 			</File>
 		</Filter>
