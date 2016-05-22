@@ -62,7 +62,6 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mOpenDirection(-1)
 	, mServerIp(_T(""))
 	, mServerPort(0)
-	, mConnectOwnServer(FALSE)
 	, mUintDoHttpInterval(0)
 	, mBoolEnableAutoThreshold(FALSE)
 	, mIsTimer4Tomorrow(false)
@@ -184,7 +183,6 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RADI_HIGH, mOpenDirection);
 	DDX_Text(pDX, IDC_EDIT_SERVER_HOST, mServerIp);
 	DDX_Text(pDX, IDC_EDIT_SERVER_PORT, mServerPort);
-	DDX_Check(pDX, IDC_CHECK_OWN_SERVER, mConnectOwnServer);
 	DDX_Text(pDX, IDC_EDIT_DO_HTTP_REQUEST_INTERVAL, mUintDoHttpInterval);
 	DDV_MinMaxUInt(pDX, mUintDoHttpInterval, 0, 1000);
 	DDX_Check(pDX, IDC_CHECK_ENABLE_AUTO_THRESHOLD, mBoolEnableAutoThreshold);
@@ -626,7 +624,6 @@ int CTradeAssistDlg::InitialSetting(void)
 
 	mServerIp = theApp.GetProfileString(STRING_SETTING, STRING_EDIT_SERVER_HOST, NULL);
 	mServerPort = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_SERVER_PORT, 80);
-	mConnectOwnServer = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_CONNECT_OWN_SERVER, 0);
 	mUintDoHttpInterval = theApp.GetProfileInt(STRING_SETTING,STRING_EDIT_DO_HTTP_INTERVAL, 0) ;
 	mBoolEnableAutoThreshold = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, 1);
 	mEnableChaseTimer = theApp.GetProfileInt(  STRING_SETTING, STRING_EDIT_ENABLE_CHASE_TIMER, 1);
@@ -653,7 +650,6 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_CLOSE_THRESHOLD, mUintAutoCloseThreshold);
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_SERVER_PORT, mServerPort);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_CONNECT_OWN_SERVER, mConnectOwnServer);
 	theApp.WriteProfileString(STRING_SETTING, STRING_EDIT_SERVER_HOST, mServerIp);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_DO_HTTP_INTERVAL, mUintDoHttpInterval);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, mBoolEnableAutoThreshold);
@@ -1012,10 +1008,6 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	{
 		mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
 	}
-	if (!mConnectOwnServer)
-	{
-		mDataKDayUpdrop = mDataK->GetDayUpDrop();
-	}
 	
 	//更新进度条范围
 	int low, up;
@@ -1038,11 +1030,6 @@ UINT CTradeAssistDlg::GetServerPort(void)
 CString CTradeAssistDlg::GetServerHost(void)
 {
 	return mServerIp;
-}
-
-int CTradeAssistDlg::IsContinuousPullPrice(void)
-{
-	return mConnectOwnServer;
 }
 
 int CTradeAssistDlg::CloseHttpThread(PEcnomicData data)
@@ -1284,13 +1271,9 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 	//更新价格
 	mDataK->SetClose(packet->mPrice, packet->mPriceTime);
 	mDataK->SetMillionSecond(packet->mMillionSecond);
-	if (!mConnectOwnServer)
-	{
-		mDataK->SetDayUpDrop(packet->mUpDrop);	
-	}	
 
 	//这里判读是否回调
-	if (mDataK->IsPositive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() > 0 || mConnectOwnServer ))
+	if (mDataK->IsPositive())
 	{
 
 		mDataK->SetDirectionAgree(true);
@@ -1308,7 +1291,7 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 		}
 
 	}
-	else if(mDataK->IsNegtive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() < 0 || mConnectOwnServer ))
+	else if(mDataK->IsNegtive() )
 	{
 		mDataK->SetDirectionAgree(true);
 		mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );

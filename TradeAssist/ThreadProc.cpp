@@ -3,6 +3,7 @@
 #include "TradeAssistDlg.h"
 #include "DataPacket.h"
 #include "Util.h"
+#include "logger.h"
 
 
 UINT	__stdcall HttpProcess(void * param)
@@ -44,6 +45,11 @@ UINT	__stdcall HttpProcess(void * param)
 						CDataPacket packet;				
 						CUtil::ParseOwnServerString(result,packet);
 						TRACE("result=%s\r\n", result);
+
+						if(result.Find("average") != -1)
+						{
+							CLogger::Add(result);
+						}
 
 						if(dlg->GetDoHttpInterval() > 0)
 						{

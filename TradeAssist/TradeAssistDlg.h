@@ -110,7 +110,6 @@ private:
 	int mOpenDirection;
 	CString mServerIp;
 	CLuaEngine mLuaEngine;
-	BOOL mConnectOwnServer;
 public:
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedOk();
@@ -128,7 +127,6 @@ public:
 	int UpdatePrice(bool isAdd, float diff = 6.0F);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnBnClickedButtonStartTimer();
-	int IsContinuousPullPrice(void);
 	int CloseHttpThread(PEcnomicData data);
 	UINT GetDoHttpInterval(void);
 	int GetDynamicThreshold(int back);
