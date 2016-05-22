@@ -58,7 +58,6 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mDataKStatisticsUpdrop(0)
 	, mDataKDayUpdrop(0)
 	, mDataKCurrent2ExtremeDiff(0)
-	, mDataKDirectionAgree(FALSE)
 	, mOpenDirection(-1)
 	, mServerIp(_T(""))
 	, mServerPort(0)
@@ -72,7 +71,6 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mJoblessRateWeight(_T(""))
 	, mNonfarmerNumberCount(_T(""))
 	, mJoblessRateCount(_T(""))
-	
 	, mEnableChaseTimer(FALSE)
 	, mTotalConclution(_T(""))
 	, mPullPriceCount(0)
@@ -179,7 +177,6 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DATAK_DAY_UPDROP, mDataKDayUpdrop);
 	DDX_Text(pDX, IDC_EDIT_CURRENT_EXTREME_DIFF, mDataKCurrent2ExtremeDiff);
 	DDV_MinMaxInt(pDX, mDataKCurrent2ExtremeDiff, -100, 100);
-	DDX_Check(pDX, IDC_CHECK_STATISTICS_DAY_UPDROP_AGREE, mDataKDirectionAgree);
 	DDX_Control(pDX, IDC_PROGRESS_AUTO_CLOSE_DEPOT, mProgressAutoCloseDepot);
 	DDX_Radio(pDX, IDC_RADI_HIGH, mOpenDirection);
 	DDX_Text(pDX, IDC_EDIT_SERVER_HOST, mServerIp);
@@ -1005,13 +1002,8 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	mDataKLowPrice = mDataK->GetLow();
 	mDataKCurrent2ExtremeDiff = mDataK->GetCurrent2ExtremeDiff();
 	mDataKStatisticsUpdrop = mDataK->GetAmplitude();
-	mDataKDirectionAgree = mDataK->IsDirectionAgree();
 	mQueryPriceUseTime = mDataK->GetQueryPriceUseTime();
-
-	if (mDataKDirectionAgree)
-	{
-		mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
-	}
+	mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
 	
 	//更新进度条范围
 	int low, up;
@@ -1274,13 +1266,10 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 
 	//更新价格
 	mDataK->SetClose(packet->mPrice, packet->mPriceTime);
-	//mDataK->SetMillionSecond(packet->mMillionSecond);
 	mDataK->SetQueryPriceUseTime(packet->mQueryPriceUseTime);
 	//这里判读是否回调
 	if (mDataK->IsPositive())
 	{
-
-		mDataK->SetDirectionAgree(true);
 		mDataK->SetCurrent2ExtremeDiff(mDataK->GetHigh() - mDataK->GetClose()) ;
 		mOpenDirection = 0;
 		UpdateData(FALSE);
@@ -1297,7 +1286,7 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 	}
 	else if(mDataK->IsNegtive() )
 	{
-		mDataK->SetDirectionAgree(true);
+
 		mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );
 		mOpenDirection = 1;
 		UpdateData(FALSE);
@@ -1309,10 +1298,6 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 			PlaySoundResource(IDR_WAVE_DO_LOW_CLOSE);
 			return 0;
 		}
-	}
-	else
-	{
-		mDataK->SetDirectionAgree(false);
 	}
 
 	return 1;

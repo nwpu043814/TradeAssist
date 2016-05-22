@@ -42,14 +42,6 @@ public:
 	// 设置全天涨跌值
 	void SetDayUpDrop(int updrop);
 private:
-	// 标记统计涨跌和下发涨跌方向是否匹配。
-	bool mIsDirectionAgree;
-public:
-	// 标记统计涨跌和下发涨跌方向是否匹配。
-	bool IsDirectionAgree(void);
-	// 标记统计涨跌和下发涨跌方向是否匹配。
-	void SetDirectionAgree(bool isAgree);
-private:
 	// 回调幅度
 	int mIntCurrent2ExtremeDiff;
 

@@ -103,8 +103,6 @@ private:
 	int mDataKDayUpdrop;
 	// 当前回调幅度
 	int mDataKCurrent2ExtremeDiff;
-	// 统计方向和全天方向匹配。
-	BOOL mDataKDirectionAgree;
 	// 自动平仓预警
 	CProgressCtrl mProgressAutoCloseDepot;
 	int mOpenDirection;

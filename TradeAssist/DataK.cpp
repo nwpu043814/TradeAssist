@@ -10,7 +10,6 @@ CDataK::CDataK(void)
 , mOpenTime(_T(""))
 , mCloseTime(_T(""))
 , mIntDayUpDrop(0)
-, mIsDirectionAgree(false)
 , mIntCurrent2ExtremeDiff(0)
 {
 }
@@ -138,18 +137,6 @@ int CDataK::GetDayUpDrop(void)
 void CDataK::SetDayUpDrop(int updrop)
 {
 	mIntDayUpDrop = updrop;
-}
-
-// 标记统计涨跌和下发涨跌方向是否匹配。
-bool CDataK::IsDirectionAgree(void)
-{
-	return mIsDirectionAgree;
-}
-
-// 标记统计涨跌和下发涨跌方向是否匹配。
-void CDataK::SetDirectionAgree(bool isAgree)
-{
-	mIsDirectionAgree = isAgree;
 }
 
 int CDataK::GetCurrent2ExtremeDiff(void)
