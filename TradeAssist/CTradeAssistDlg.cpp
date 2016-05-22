@@ -3,139 +3,50 @@
 
 #include "stdafx.h"
 #include "TradeAssist.h"
-#include "CTradeAssistDlg.h"
+#include "TradeAssistDlg.h"
 #include "Constant.h"
-#include "CSimulateAction.h"
-#include "CLogger.h"
-#include "CHttpWorker.h"
+#include "SimulateAction.h"
+#include "Logger.h"
+#include "HttpWorker.h"
 #include "Util.h"
 #include "DataPacket.h"
 #include "HttpThread.h"
+#include "aboutDlg.h"
 #include <process.h>
 #include "afxmt.h"
+#define _CRTDBG_MAP_ALLOC
+#include<stdlib.h>
+#include<crtdbg.h>
+#include <mmsystem.h>
+#include "dalyFx.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#pragma comment(lib,_T("lua5.1.lib"))
+#pragma comment(lib,_T("winmm"))
 
-
-// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-
-class CAboutDlg : public CDialog
-{
-public:
-	CAboutDlg();
-
-// 对话框数据
-	enum { IDD = IDD_ABOUTBOX };
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
-
-// 实现
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
-{
+#define CLOSE_THREAD(data, number ) for (int i = 0 ; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)\
+{\
+	CloseHttpThread(data[i]);\
 }
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialog::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
-END_MESSAGE_MAP()
-
-
-// CTradeAssistDlg 对话框
-HANDLE hStartEvent;
-CCriticalSection critical_section;
-
-UINT	__stdcall HttpProcess(void * param)
-{
-	MSG msg;
-	PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-
-	if(!SetEvent(hStartEvent)) //set thread start event 
-	{
-		TRACE("set start event failed,errno:%d/n",::GetLastError());
-		return 1;
-	}
-
-	CHttpWorkerP mHttpWorker = new CHttpWorker();
-
-	while(true)
-	{
-		if(GetMessage(&msg,0,0,0)) //get msg from message queue
-		{
-			switch(msg.message)
-			{
-				case WM_DO_HTTP_GET:
-				{
-					TRACE("recv %d\r\n",msg.wParam);
-					CString result = mHttpWorker->DoGet(TEXT("jry.baidao.com"), 80, TEXT("/api/hq/npdata.do?ids=1&markettype=ttj"));
-					CDataPacketP packet = new CDataPacket();
-					CUtil::ParseDataString(result,*packet);
-					TRACE("result=%s\r\n", result);
-					Sleep(TIMER_INTERVAL_UPDATE_DATAK);
-			
-					critical_section.Lock();
-					if (! ((CTradeAssistDlg*)(param))->OnDoHttpGetFinish((WPARAM)packet,NULL))
-					{
-						delete packet;
-
-						PostThreadMessage((DWORD)(msg.lParam),WM_DO_HTTP_GET, msg.wParam, msg.lParam);
-					}
-					critical_section.Unlock();
-
-					break;
-				}
-				case WM_DO_HTTP_EXIT:
-				{
-					return 0;
-				}
-			}
-		}
-	}
-
-	return 0;
-}
+extern CRITICAL_SECTION g_cs;
+UINT	__stdcall HttpProcess(void * param);
 
 CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTradeAssistDlg::IDD, pParent)
 	, mIsAutoSubmits(FALSE)
-	, mAutoCompleteInterval(0)
+	, mAutoCompleteInterval(_T(""))
 	, mLastClipboardContent(_T(""))
 	, mStrHighPriceDiff(_T(""))
 	, mIntOrderCount(1)
-	, mIntLowTab2DirectDx(0)
-	, mIntLowTab2DirectDy(0)
-	, mIntLowDirect2PriceDx(0)
-	, mIntLowDirect2PriceDy(0)
-	, mIntLowPrice2CountDx(0)
-	, mIntLowPrice2CountDy(0)
-	, mIntHighTab2DirectDx(0)
-	, mIntHighTab2DirectDy(0)
-	, mIntHighDirect2PriceDx(0)
-	, mIntHighDirect2PriceDy(0)
-	, mIntCount2ConfirmDx(0)
-	, mIntCount2ConfirmDy(0)
-	, mIntStart2TabDx(0)
-	, mIntStart2TabDy(0)
-	, mIntHighPrice2CountDx(0)
-	, mIntHighPrice2CountDy(0)
-	, mIntStart2DeleteOrderDx(0)
-	, mIntStart2DeleteOrderDy(0)
-	, mIntDelete2ConfirmDx(0)
-	, mIntDelete2ConfirmDy(0)
 	, mIntMsgDelayMilliSeconds(100)
 	, mIntHour(0)
 	, mIntMinute(0)
-	, mIntSecond(0)
-	, mEnableChckAutoCloseDepot(FALSE)
+	, mIntSecond(_T(""))
+	, mEnableCheckAutoCloseDepot(FALSE)
 	, mStrLowPriceDiff(_T(""))
 	, mDataKClose(0)
 	, mDataKOpen(0)
@@ -143,80 +54,110 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mDataKOpenTime(_T(""))
 	, mDataKHighPrice(0)
 	, mDataKLowPrice(0)
-	, mThreadHandle(0)
-	, mThreadID(0)
 	, mUintAutoCloseThreshold(0)
 	, mDataKStatisticsUpdrop(0)
 	, mDataKDayUpdrop(0)
 	, mDataKCurrent2ExtremeDiff(0)
 	, mDataKDirectionAgree(FALSE)
 	, mOpenDirection(-1)
+	, mServerIp(_T(""))
+	, mServerPort(0)
+	, mConnectOwnServer(FALSE)
+	, mUintDoHttpInterval(0)
+	, mBoolEnableAutoThreshold(FALSE)
+	, mIsTimer4Tomorrow(false)
+	, mActualNonfarmerNumber(_T(""))
+	, mNonfarmerNumberResult(_T(""))
+	, mJoblessRateResult(_T(""))
+	, mNonfarmerNumnerWeight(_T(""))
+	, mJoblessRateWeight(_T(""))
+	, mNonfarmerNumberCount(_T(""))
+	, mJoblessRateCount(_T(""))
+	
+	, mEnableChaseTimer(FALSE)
+	, mTotalConclution(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	mAction = new CSimulateAction();
 	mHttpWorker = new CHttpWorker();
 	mDataK = new CDataK();
+	mActionManager = new CActionManager(GetSafeHwnd());
+
+	mNonfarmerNumber = new PEcnomicData[THREAD_NUMBER];
+	mNonfarmerNumber[0] = new CNonfarmerNumberData();
+	mNonfarmerNumber[0]->SetUrl( mLuaEngine.GetNonfarmerWorkerUrl(0));
+	mNonfarmerNumber[0]->SetResult( EcnomicResult::TYPE_UNKOWN);
+	mNonfarmerNumber[0]->SetExpectValue( mLuaEngine.GetExpectValue(LUA_FUNCTION_GetExpectNonfarmerWorker));
+	mNonfarmerNumber[0]->SetMsgType(WM_DO_HTTP_GET_ECNOMIC_DATA);
+
+	for(int i = 1; i < THREAD_NUMBER; i++)
+	{
+		if (i < THREAD_NUMBER/2)
+		{
+			mNonfarmerNumber[i] = new CNonfarmerNumberData(*mNonfarmerNumber[0]);
+		}
+		else
+		{
+			PDailyFx dailyFx = new CDailyFx(*mNonfarmerNumber[0]);
+			dailyFx->SetIspositive(true);
+			dailyFx->SetUrl(mLuaEngine.GetDailyFxUrl());
+			dailyFx->SetTitle(mLuaEngine.GetNonfarmerTitle());
+			mNonfarmerNumber[i] = dailyFx;
+		}
+	}
+
+	mJoblessRate	= new PEcnomicData[THREAD_NUMBER];
+	mJoblessRate[0] = new CJoblessRateData();
+	mJoblessRate[0]->SetUrl(mLuaEngine.GetJoblessUrl(0));
+	mJoblessRate[0]->SetResult(EcnomicResult::TYPE_UNKOWN);
+	mJoblessRate[0]->SetExpectValue(mLuaEngine.GetExpectValue(LUA_FUNCTION_GetExpectJoblessRate));
+	mJoblessRate[0]->SetMsgType(WM_DO_HTTP_GET_ECNOMIC_DATA);
+
+	for(int i = 1; i < THREAD_NUMBER; i++)
+	{
+		if (i < THREAD_NUMBER/2)
+		{
+			mJoblessRate[i] = new CJoblessRateData(*mJoblessRate[0]);
+		}
+		else
+		{
+			PDailyFx dailyFx = new CDailyFx(*mNonfarmerNumber[0]);
+			dailyFx->SetIspositive(false);
+			dailyFx->SetUrl(mLuaEngine.GetDailyFxUrl());
+			dailyFx->SetTitle(mLuaEngine.GetJoblessTitle());
+			mJoblessRate[i] = dailyFx;
+		}
+	}
+
+	mLocalPrice = new PEcnomicData[LOCAL_SERVER_REQUEST_THREADED_NUMBER];
+	for (int i =0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
+	{
+		mLocalPrice[i] = new CLocalServerData();
+		mLocalPrice[i]->SetUrl(HTTP_URL_LOCAL);
+		mLocalPrice[i]->SetResult(EcnomicResult::TYPE_UNKOWN);
+		mLocalPrice[i]->SetExpectValue(_T(""));
+		mLocalPrice[i]->SetMsgType(WM_DO_HTTP_GET_PRICE);
+	}
+
+	InitializeCriticalSection(&g_cs);
 }
+
 
 void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Check(pDX, IDC_CHECK_AOTO_SUBMIT, mIsAutoSubmits);
 	DDX_Text(pDX, IDC_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
-	DDV_MinMaxUInt(pDX, mAutoCompleteInterval, 0, 100);
+	DDV_MaxChars(pDX, mAutoCompleteInterval, 3);
 	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE_DIFF, mStrHighPriceDiff);
 	DDV_MaxChars(pDX, mStrHighPriceDiff, 4);
 	DDX_Text(pDX, IDC_EDIT_COUNT, mIntOrderCount);
 	DDV_MinMaxUInt(pDX, mIntOrderCount, 0, 100);
-	DDX_Text(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DX, mIntLowTab2DirectDx);
-	DDV_MinMaxInt(pDX, mIntLowTab2DirectDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DY, mIntLowTab2DirectDy);
-	DDV_MinMaxUInt(pDX, mIntLowTab2DirectDy, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DX, mIntLowDirect2PriceDx);
-	DDV_MinMaxUInt(pDX, mIntLowDirect2PriceDx, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DY, mIntLowDirect2PriceDy);
-	DDV_MinMaxUInt(pDX, mIntLowDirect2PriceDy, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DX, mIntLowPrice2CountDx);
-	DDV_MinMaxInt(pDX, mIntLowPrice2CountDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DY, mIntLowPrice2CountDy);
-	DDV_MinMaxUInt(pDX, mIntLowPrice2CountDy, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DX, mIntHighTab2DirectDx);
-	DDV_MinMaxInt(pDX, mIntHighTab2DirectDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DY, mIntHighTab2DirectDy);
-	DDV_MinMaxUInt(pDX, mIntHighTab2DirectDy, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DX, mIntHighDirect2PriceDx);
-	DDV_MinMaxInt(pDX, mIntHighDirect2PriceDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DY, mIntHighDirect2PriceDy);
-	DDV_MinMaxInt(pDX, mIntHighDirect2PriceDy, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_COUNT_CONFIRM_DX, mIntCount2ConfirmDx);
-	DDV_MinMaxInt(pDX, mIntCount2ConfirmDx, 0, 500);
-	DDX_Text(pDX, IDC_EDIT_COUNT_CONFIRM_Dy, mIntCount2ConfirmDy);
-	DDV_MinMaxInt(pDX, mIntCount2ConfirmDy, 0, 500);
-	DDX_Text(pDX, IDC_EDIT_LEFT_TOP_TAB_DX, mIntStart2TabDx);
-	DDV_MinMaxUInt(pDX, mIntStart2TabDx, 0, 500);
-	DDX_Text(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mIntStart2TabDy);
-	DDV_MinMaxUInt(pDX, mIntStart2TabDy, 0, 500);
-	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DX, mIntHighPrice2CountDx);
-	DDV_MinMaxInt(pDX, mIntHighPrice2CountDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DY, mIntHighPrice2CountDy);
-	DDV_MinMaxInt(pDX, mIntHighPrice2CountDy, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_START_DELETE_ORDER_DX, mIntStart2DeleteOrderDx);
-	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDx, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_START_DELETE_ORDER_DY, mIntStart2DeleteOrderDy);
-	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDy, 0, 1000);
-	DDX_Text(pDX, IDC_EDIT_DELETE_CONFIRM_DX, mIntDelete2ConfirmDx);
-	DDV_MinMaxInt(pDX, mIntDelete2ConfirmDx, -500, 500);
-	DDX_Text(pDX, IDC_EDIT_DELETE_CONFIRM_DY, mIntDelete2ConfirmDy);
-	DDV_MinMaxInt(pDX, mIntDelete2ConfirmDy, -500, 500);
 	DDX_Text(pDX, IDC_EDIT_MSG_DELAY, mIntMsgDelayMilliSeconds);
-	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 100, 500);
+	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 0, 2000);
 	DDX_Text(pDX, IDC_EDIT_HOUR, mIntHour);
-	DDV_MinMaxUInt(pDX, mIntHour, 0, 23);
 	DDX_Text(pDX, IDC_EDIT_MINUTE, mIntMinute);
-	DDV_MinMaxUInt(pDX, mIntMinute, 0, 59);
 	DDX_Text(pDX, IDC_EDIT_SECOND, mIntSecond);
-	DDV_MinMaxUInt(pDX, mIntSecond, 0, 59);
-	DDX_Check(pDX, IDC_CHECK_AUTO_CLOSE_DEPOT, mEnableChckAutoCloseDepot);
+	DDX_Check(pDX, IDC_CHECK_AUTO_CLOSE_DEPOT, mEnableCheckAutoCloseDepot);
 	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_DIFF, mStrLowPriceDiff);
 	DDV_MaxChars(pDX, mStrLowPriceDiff, 4);
 	DDX_Text(pDX, IDC_EDIT_DATAK_CURRENT_PRICE, mDataKClose);
@@ -232,7 +173,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DATAK_LOW_PRICE, mDataKLowPrice);
 	DDV_MinMaxUInt(pDX, mDataKLowPrice, 0, 10000);
 	DDX_Text(pDX, IDC_EDIT_AUTO_CLOSE_THRESHOLD, mUintAutoCloseThreshold);
-	DDV_MinMaxUInt(pDX, mUintAutoCloseThreshold, 10, 30);
+	DDV_MinMaxUInt(pDX, mUintAutoCloseThreshold, THRESHOLD_MIN, THRESHOLD_MAX);
 	DDX_Text(pDX, IDC_EDIT_DATAK_STATISTICS_UPDROP, mDataKStatisticsUpdrop);
 	DDX_Text(pDX, IDC_EDIT_DATAK_DAY_UPDROP, mDataKDayUpdrop);
 	DDX_Text(pDX, IDC_EDIT_CURRENT_EXTREME_DIFF, mDataKCurrent2ExtremeDiff);
@@ -240,18 +181,35 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_STATISTICS_DAY_UPDROP_AGREE, mDataKDirectionAgree);
 	DDX_Control(pDX, IDC_PROGRESS_AUTO_CLOSE_DEPOT, mProgressAutoCloseDepot);
 	DDX_Radio(pDX, IDC_RADI_HIGH, mOpenDirection);
+	DDX_Text(pDX, IDC_EDIT_SERVER_HOST, mServerIp);
+	DDX_Text(pDX, IDC_EDIT_SERVER_PORT, mServerPort);
+	DDX_Check(pDX, IDC_CHECK_OWN_SERVER, mConnectOwnServer);
+	DDX_Text(pDX, IDC_EDIT_DO_HTTP_REQUEST_INTERVAL, mUintDoHttpInterval);
+	DDV_MinMaxUInt(pDX, mUintDoHttpInterval, 0, 1000);
+	DDX_Check(pDX, IDC_CHECK_ENABLE_AUTO_THRESHOLD, mBoolEnableAutoThreshold);
+	DDX_Text(pDX, IDC_EDIT_NONFARMER_NUMBER, mActualNonfarmerNumber);
+	DDX_Text(pDX, IDC_EDIT_JOBLESS_RATE, mActualJoblessRate);
+	DDX_Text(pDX, IDC_EDIT_NONFARMER_NUMBER_RESULT, mNonfarmerNumberResult);
+	DDX_Text(pDX, IDC_EDIT_JOBLESS_RATE_RESULT, mJoblessRateResult);
+	DDX_Text(pDX, IDC_EDIT_NONFARMER_NUMBER_WEIGHT, mNonfarmerNumnerWeight);
+	DDX_Text(pDX, IDC_EDIT_JOBLESS_RATE_WEIGHT, mJoblessRateWeight);
+	DDX_Text(pDX, IDC_EDIT_NONFARMER_NUMBER_WEIGHT2, mNonfarmerNumberCount);
+	DDX_Text(pDX, IDC_EDIT_JOBLESS_RATE_WEIGHT2, mJoblessRateCount);
+	DDX_Check(pDX, IDC_CHECK_AOTO_CHASE, mEnableChaseTimer);
+	DDX_Text(pDX, IDC_EDIT_TOTAL_CONCLUTION, mTotalConclution);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_MESSAGE(WM_HOTKEY,OnHotKey) //添加此句
-	//}}AFX_MSG_MAP
-	ON_MESSAGE(WM_DISPLAY_DATAK, OnDisplayDataK)
-	ON_MESSAGE(WM_DO_TRADE, OnDoTradeMsg) 
-	ON_MESSAGE(WM_HTTP_GET_FINISH,OnDoHttpGetFinish)
-	ON_MESSAGE(WM_DO_COUNT, OnDeleteOrderMsg)
+	ON_MESSAGE(WM_HOTKEY, &CTradeAssistDlg::OnHotKey) //添加此句
+	ON_MESSAGE(WM_DISPLAY_DATAK,  &CTradeAssistDlg::OnDisplayDataK)
+	ON_MESSAGE(WM_DO_TRADE,  &CTradeAssistDlg::OnDoTradeMsg) 
+	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetFinish)
+	ON_MESSAGE(WM_DO_CHASE,&CTradeAssistDlg::OnDoChase)
+	ON_MESSAGE(WM_HTTP_GET_ECNOMIC_DATA_FINISH,&CTradeAssistDlg::OnHttpGetEcnomicData) 
+	ON_MESSAGE(WM_DO_CANCEL_ORDER,  &CTradeAssistDlg::OnDeleteOrderMsg)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CTradeAssistDlg::OnBnClickedOk)
 	ON_WM_CLOSE()
@@ -288,11 +246,10 @@ BOOL CTradeAssistDlg::OnInitDialog()
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
-
+	_CrtDumpMemoryLeaks();
 	// TODO: 在此添加额外的初始化代码
 	InstallHotKey();
 	InitialSetting();
-	mProgressAutoCloseDepot.SetRange(0, 20);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -353,11 +310,15 @@ void CTradeAssistDlg::InstallHotKey()
 	::RegisterHotKey(m_hWnd, HOT_KEY_FLASH_COMPLETE, MOD_WIN, VK_A);
 	::RegisterHotKey(m_hWnd, HOT_KEY_DECREASE_PRICE, MOD_SHIFT, VK_Z);
 	::RegisterHotKey(m_hWnd, HOT_KEY_INCREASE_PRICE, MOD_SHIFT, VK_X);
+	::RegisterHotKey(m_hWnd, HOT_KEY_TEST_SERVER, MOD_SHIFT, VK_T);
+	::RegisterHotKey(m_hWnd, HOT_KEY_DIRECT_DUO, MOD_SHIFT, VK_D);
+	::RegisterHotKey(m_hWnd, HOT_KEY_DIRECT_KONG, MOD_SHIFT, VK_K);
+	::RegisterHotKey(m_hWnd, HOT_KEY_INCREASE_THRESHOLD, MOD_SHIFT, VK_S);
+	::RegisterHotKey(m_hWnd, HOT_KEY_DECREASE_THRESHOLD, MOD_SHIFT, VK_A);
 
 }
 void CTradeAssistDlg::OnBnClickedCancel()
 {
-
 	ClearResource();
 	OnCancel();
 }
@@ -404,12 +365,88 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_DECREASE_PRICE:
 		{
-			UpdatePrice(false);
+			mActionManager->UpdatePrice(false, 10);
 			break;
 		}
 		case HOT_KEY_INCREASE_PRICE:
 		{
-			mProgressAutoCloseDepot.SetPos(20);
+			mActionManager->UpdatePrice(true, 10);
+			break;
+		}
+		case HOT_KEY_TEST_SERVER:
+		{
+			UpdateData();
+			for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
+			{
+				StartHttpThread(mLocalPrice[i]);
+			}
+			break;
+		}
+		case HOT_KEY_DIRECT_DUO:
+		{
+			CString text = _T("17.5万123");
+			CStringW textW = CStringW(text);
+			TRACE(text);
+			CString mode = _T("万1");
+			CStringW modeW(mode); 
+			CString mode1 = _T("1");
+			
+			int pos = text.Find(mode);
+			TRACE("mode=%d,mode1=%d,pos=%d,spliter=%s, textW.len=%d\r\n", mode.GetLength(), mode1.GetLength(), pos, text.Right(7), textW.GetLength());
+			if(pos != -1)
+			{
+				CString buffer = text.Left(pos) + text.Right(text.GetLength() - 1 - pos - modeW.GetLength());
+				TRACE(buffer);
+			}
+			
+
+			//UpdateData(TRUE);
+			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
+			//UpdateData(FALSE);
+			break;
+		}
+		case HOT_KEY_DIRECT_KONG:
+		{
+			UpdateData(TRUE);
+			for (int i =0 ; i < THREAD_NUMBER; i++)
+			{
+				if (mNonfarmerNumber[i]->IsEnable() && mNonfarmerNumber[i]->GetThreadId() == 0)
+				{
+					StartHttpThread(mNonfarmerNumber[i]);
+				}
+			}
+
+			for (int i =0 ; i < THREAD_NUMBER; i++)
+			{
+				if (mJoblessRate[i]->IsEnable() && mJoblessRate[i]->GetThreadId() == 0)
+				{
+					StartHttpThread(mJoblessRate[i]);
+				}
+			}
+
+			break;
+		}
+		case HOT_KEY_INCREASE_THRESHOLD:
+		{
+			UpdateData(TRUE);
+			if (mUintAutoCloseThreshold + THRESHOLD_STEP <= THRESHOLD_MAX)
+			{
+				mUintAutoCloseThreshold += THRESHOLD_STEP;
+				UpdateData(FALSE);
+			}
+			
+			break;
+		}
+		case HOT_KEY_DECREASE_THRESHOLD:
+		{
+			UpdateData(TRUE);
+			if (mUintAutoCloseThreshold - THRESHOLD_STEP >= THRESHOLD_MIN)
+			{
+
+				mUintAutoCloseThreshold -= THRESHOLD_STEP;
+				UpdateData(FALSE);
+			}
+			
 			break;
 		}
 	}
@@ -453,6 +490,26 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 		{
 			return HOT_KEY_INCREASE_PRICE;
 		}
+		else if (virKey == VK_T)
+		{
+			return HOT_KEY_TEST_SERVER;
+		}
+		else if (virKey == VK_D)
+		{
+			return HOT_KEY_DIRECT_DUO;
+		}
+		else if (virKey == VK_K)
+		{
+			return HOT_KEY_DIRECT_KONG;
+		}
+		else if (virKey == VK_S)
+		{
+			return HOT_KEY_INCREASE_THRESHOLD;
+		}
+		else if (virKey == VK_A)
+		{
+			return HOT_KEY_DECREASE_THRESHOLD;
+		}
 	}
 
 	return VK_INVALID;
@@ -472,7 +529,7 @@ int CTradeAssistDlg::dispatchHighAction(void)
 
 int CTradeAssistDlg::dispatchCount(void)
 {
-	this->PostMessage(WM_DO_COUNT);
+	this->PostMessage(WM_DO_CANCEL_ORDER);
 	return 0;
 }
 
@@ -492,85 +549,11 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	}
 	UpdateData(TRUE);
 
-	//点击委托tab。
-	POINT start = GetSunAwtDialogPos();
-	if (start.x == 0 && start.y == 0)
-	{
-		CLogger::Add("not find sunawtdialog");
-		//未能找到sun对话框
-		return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG;
-	}
-	mAction->MoveCursor(start.x,start.y, true);
 
-	//从原点移动到指价委托tab。
-	mAction->MoveCursor(mIntStart2TabDx,mIntStart2TabDy);
-	mAction->MouseClick();
+	return mActionManager->DoTrade( mActionManager->GetSunAwtDialogPos(),GetDirection2PriceVector(direction), mLuaEngine.getOrigin2Entrust(),
+		GetTab2Direction(direction), GetPrice2CountVector(direction), mLuaEngine.getCount2Confirm(), atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),mLastClipboardContent,
+		direction, mIntOrderCount, mIsAutoSubmits );
 
-
-	//指价委托到方向
-	POINT tab2Direction = GetTab2Direction(direction);
-	mAction->MoveCursor(tab2Direction.x,tab2Direction.y);
-	mAction->MouseClick();
-
-	//从方向移到价格控件
-	POINT direction2PriceVector = GetDirection2PriceVector(direction);
-	mAction->MoveCursor(direction2PriceVector.x,direction2PriceVector.y);
-
-	//获得预制的点差
-	CString outText;
-	float highDiff = atof(mStrHighPriceDiff);
-	float lowDiff = atof(mStrLowPriceDiff);
-
-	//取得当前价格。
-	CString text = GetEditText();
-	if(text.Find(_T("."))  == -1)
-	{
-		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
-	}
-
-	float newCount = direction?atof(text) + highDiff : atof(text) - lowDiff ;
-	outText.Format("%.2f",newCount);
-
-	CString log;
-	log.Format("originalprice=%s, hiDiff=%f, lowDiff=%f newPrice=%s, direction=%d", text, highDiff, lowDiff ,outText, direction);
-	CLogger::Add(log);
-
-	//保存以备检查
-	mLastClipboardContent = outText;
-
-	//设置剪贴板内容并粘贴到窗口
-	SetClipboardContent(outText);
-	mAction->KeyboardPaste();
-
-	if(!CheckEditPasteResult())
-	{
-		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
-	}
-
-	//移动到设置手数的控件
-	POINT price2CountVector = GetPrice2CountVector(direction);
-	mAction->MoveCursor(price2CountVector.x,price2CountVector.y);
-
-	//更新交易手数
-	mAction->MouseDoubleClick();
-	outText.Format("%d", mIntOrderCount);
-	SetClipboardContent(outText);
-	mAction->KeyboardPaste();
-
-	//移动到确定按钮上
-	mAction->MoveCursor(mIntCount2ConfirmDx,mIntCount2ConfirmDy);
-
-	//自动提交
-	if(mIsAutoSubmits)
-	{
-		mAction->MouseClick();
-	}
-
-#ifdef _DEBUG
-	TRACE("OnDoTradeMsg submit time=%d\r\n", GetMilliseconds() - startTime);
-#endif
-
-	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
 // 获得剪贴板的内容
@@ -579,106 +562,86 @@ CString CTradeAssistDlg::GetContentFromClipboard(void)
 	char *buffer = NULL;
 	
 	CString fromClipboard;
-	if (OpenClipboard())
+	int i = 0;
+	while (i++ < OPEN_CLIPBOARD_MAX_RETRY_TIMES)
 	{
-		HANDLE hData = GetClipboardData(CF_TEXT);  
-		char * buffer = (char*)GlobalLock(hData);  
-		fromClipboard = buffer;  GlobalUnlock(hData);  
-		CloseClipboard();
+		if (OpenClipboard())
+		{
+			HANDLE hData = GetClipboardData(CF_TEXT);  
+			char * buffer = (char*)GlobalLock(hData);  
+			fromClipboard = buffer;  
+			GlobalUnlock(hData);  
+			CloseClipboard();
+			break;
+		}
+		else
+		{
+			TRACE("GetContentFromClipboard failed, error=%d\r\n", ::GetLastError());
+		}
 	}
+	TRACE("GetContentFromClipboard i=%d\r\n", i);
 
 	return fromClipboard;
 }
 
-// 设置剪贴板的内容
-BOOL CTradeAssistDlg::SetClipboardContent(CString source)
-{
-	if( OpenClipboard() ) 
-	{  
-		HGLOBAL clipbuffer; 
-		char * buffer;  
-		EmptyClipboard(); 
-		clipbuffer = GlobalAlloc(GMEM_DDESHARE, source.GetLength()+1);
-		buffer = (char*)GlobalLock(clipbuffer);  strcpy_s(buffer, source.GetLength()+1,  LPCSTR(source));
-		GlobalUnlock(clipbuffer);  SetClipboardData(CF_TEXT,clipbuffer); 
-		CloseClipboard();
-
-		return 1;
-	}
-	return 0;
-}
-
-
-
 CTradeAssistDlg::~CTradeAssistDlg()
 {
-	delete mAction;
+	delete mActionManager;
 	delete mHttpWorker;
 	delete mDataK;
-	
-	if (mThreadID != 0)
+
+
+	delete mJoblessRate[0]->GetThreadData();
+	delete mNonfarmerNumber[0]->GetThreadData();
+
+	for (int i =0; i < THREAD_NUMBER; i++)
 	{
-		PostThreadMessage(mThreadID,WM_DO_HTTP_EXIT,(WPARAM) (AfxGetMainWnd()),(LPARAM)(mThreadID));
+		CloseHttpThread(mJoblessRate[i]);
+		CloseHttpThread(mNonfarmerNumber[i]);
+
+		delete mNonfarmerNumber[i];
+		delete mJoblessRate[i];
 	}
+
+	delete[] mNonfarmerNumber;
+	delete[] mJoblessRate;	
+
+	for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
+	{
+		CloseHttpThread(mLocalPrice[i]);
+		delete mLocalPrice[i];
+	}
+
+	delete[] mLocalPrice;
 }
 
 int CTradeAssistDlg::InitialSetting(void)
 {
 	CString outText;
-	mStrHighPriceDiff.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_DIFF, 10));
-	mStrLowPriceDiff.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_DIFF, 10));
+	mStrHighPriceDiff.Format(_T("%d"), theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_DIFF, 10));
+	mStrLowPriceDiff.Format(_T("%d"), theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_DIFF, 10));
 	mIntOrderCount = theApp.GetProfileInt(STRING_SETTING, STRING_KEY_COUNT, 6);
 
-	//做多方向到价格
-	mIntHighDirect2PriceDx = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX, 0);
-	mIntHighDirect2PriceDy = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY, 0);
-	
-	//做多价格到交易笔数
-	mIntHighPrice2CountDx = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX, 0);
-	mIntHighPrice2CountDy = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY, 0);
-
-	//做空方向到价格
-	mIntLowDirect2PriceDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX, 0);
-	mIntLowDirect2PriceDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY, 0);
-
-	//做空价格到交易笔数
-	mIntLowPrice2CountDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX, 0);
-	mIntLowPrice2CountDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY, 0);	
-
-	//交易笔数到确定按钮
-	mIntCount2ConfirmDx = theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX, 0);
-	mIntCount2ConfirmDy = theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY, 0);
-	
-	//原点到指价委托
-	mIntStart2TabDx = theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DX, 0);
-	mIntStart2TabDy = theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DY, 0);
-
-	//做空指价委托到方向
-	mIntLowTab2DirectDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX, 0);
-	mIntLowTab2DirectDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY, 0);
-
-	//做多指价委托到方向
-	mIntHighTab2DirectDx =theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX, 0);
-	mIntHighTab2DirectDy =theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY, 0);
-
-	//删除订单原定到删除
-	mIntStart2DeleteOrderDx =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DX, 0);
-	mIntStart2DeleteOrderDy =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DY, 0);
-
-	//删除到确定
-	mIntDelete2ConfirmDx =theApp.GetProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DX, 0);
-	mIntDelete2ConfirmDy =theApp.GetProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DY, 0);
-
 	mIsAutoSubmits = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, FALSE);
-	mAutoCompleteInterval = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, 2);
-
+	mAutoCompleteInterval = theApp.GetProfileString(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, NULL);
 	mIntMsgDelayMilliSeconds = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, 100);
-
 	mIntHour = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_HOUR, 0);
 	mIntMinute = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_MINUTE, 0);
-	mIntSecond = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_SECOND, 0);
-	mEnableChckAutoCloseDepot = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_ENABLE_CHECK_AUTO_CLOSE_DEPOT, 0);
+	mIntSecond = theApp.GetProfileString(STRING_SETTING, STRING_EDIT_SECOND, NULL);
+	mEnableCheckAutoCloseDepot = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_ENABLE_CHECK_AUTO_CLOSE_DEPOT, 0);
 	mUintAutoCloseThreshold = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_CLOSE_THRESHOLD, 20);
+
+	if (mUintAutoCloseThreshold <THRESHOLD_MIN || mUintAutoCloseThreshold > THRESHOLD_MAX)
+	{
+		mUintAutoCloseThreshold = 10;
+	}
+
+	mServerIp = theApp.GetProfileString(STRING_SETTING, STRING_EDIT_SERVER_HOST, NULL);
+	mServerPort = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_SERVER_PORT, 80);
+	mConnectOwnServer = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_CONNECT_OWN_SERVER, 0);
+	mUintDoHttpInterval = theApp.GetProfileInt(STRING_SETTING,STRING_EDIT_DO_HTTP_INTERVAL, 0) ;
+	mBoolEnableAutoThreshold = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, 1);
+	mEnableChaseTimer = theApp.GetProfileInt(  STRING_SETTING, STRING_EDIT_ENABLE_CHASE_TIMER, 1);
 	UpdateData(FALSE);
 
 	return 0;
@@ -691,47 +654,22 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_DIFF , atoi(mStrLowPriceDiff));
 	theApp.WriteProfileInt(STRING_SETTING, STRING_KEY_COUNT , mIntOrderCount);
 
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX , mIntHighDirect2PriceDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY , mIntHighDirect2PriceDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX ,mIntHighPrice2CountDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY , mIntHighPrice2CountDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX , mIntLowDirect2PriceDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY , mIntLowDirect2PriceDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX , mIntLowPrice2CountDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY , mIntLowPrice2CountDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX , mIntCount2ConfirmDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY , mIntCount2ConfirmDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DX , mIntStart2TabDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DY , mIntStart2TabDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX , mIntLowTab2DirectDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY , mIntLowTab2DirectDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX , mIntHighTab2DirectDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY , mIntHighTab2DirectDy);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DX , mIntStart2DeleteOrderDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DY , mIntStart2DeleteOrderDy);
-
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, mIsAutoSubmits);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
-
-	theApp.WriteProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DX, mIntDelete2ConfirmDx);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_DELETE_CONFIRM_DY, mIntDelete2ConfirmDy);
-
+	theApp.WriteProfileString(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_MSG_DELAY_TIME, mIntMsgDelayMilliSeconds);
 	
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_HOUR, mIntHour);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_MINUTE, mIntMinute);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_SECOND, mIntSecond);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_ENABLE_CHECK_AUTO_CLOSE_DEPOT, mEnableChckAutoCloseDepot);
+	theApp.WriteProfileString(STRING_SETTING, STRING_EDIT_SECOND, mIntSecond);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_ENABLE_CHECK_AUTO_CLOSE_DEPOT, mEnableCheckAutoCloseDepot);
 	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_CLOSE_THRESHOLD, mUintAutoCloseThreshold);
 
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_SERVER_PORT, mServerPort);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_CONNECT_OWN_SERVER, mConnectOwnServer);
+	theApp.WriteProfileString(STRING_SETTING, STRING_EDIT_SERVER_HOST, mServerIp);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_DO_HTTP_INTERVAL, mUintDoHttpInterval);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_ENABLE_AUTO_THRESHOLD, mBoolEnableAutoThreshold);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_ENABLE_CHASE_TIMER, mEnableChaseTimer);
 	return 0;
 }
 
@@ -739,19 +677,9 @@ int CTradeAssistDlg::SaveSetting(void)
 POINT CTradeAssistDlg::GetPrice2CountVector(BOOL isHigh)
 {
 	POINT point;
-	CString buffer;
-
-	if (isHigh)
-	{
-		point.x = mIntHighPrice2CountDx;
-		point.y = mIntHighPrice2CountDy;
-	}
-	else
-	{
-		point.x = mIntLowPrice2CountDx;
-		point.y = mIntLowPrice2CountDy;
-	}
-
+	CPoint p = mLuaEngine.getPrice2Count(isHigh?DO_HIGH:DO_LOW);
+	point.x = p.x;
+	point.y = p.y;
 	return point;
 }
 
@@ -759,25 +687,15 @@ POINT CTradeAssistDlg::GetPrice2CountVector(BOOL isHigh)
 POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 {
 	POINT point;
-	CString buffer;
-
-	if (isHigh)
-	{
-		point.x =mIntHighDirect2PriceDx;
-		point.y =mIntHighDirect2PriceDy;
-	}
-	else
-	{
-		point.x = mIntLowDirect2PriceDx;
-		point.y =  mIntLowDirect2PriceDy;
-	}
-
+	CPoint p = mLuaEngine.getDirection2Price(isHigh?DO_HIGH:DO_LOW);
+	point.x =p.x;
+	point.y =p.y;
 	return point;
 }
 
 LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 {
-	mAction->MouseClick();
+	mActionManager->GetAction()->MouseClick();
 	UpdateData(TRUE);
 	Sleep(DELETE_ORDER_DELAY);
 
@@ -788,52 +706,26 @@ LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 	int searchCount = 10;
 	while (searchCount-- > 0)
 	{
-		POINT pos =GetSunAwtDialogPos();
+		POINT pos =mActionManager->GetSunAwtDialogPos();
 		if (pos.x != 0 && pos.y != 0)
 		{
-			mAction->MoveCursor(pos.x, pos.y, true);
-			mAction->MoveCursor(mIntStart2DeleteOrderDx,mIntStart2DeleteOrderDy);
+			CPoint origin2Remove = mLuaEngine.getOrigin2Remove();
+			CPoint delete2Confirm = mLuaEngine.getRemove2Confirm();
+			mActionManager->GetAction()->MoveCursor(pos.x, pos.y, true);
+			mActionManager->GetAction()->MoveCursor(origin2Remove.x,origin2Remove.y);
 			Sleep(DELETE_ORDER_DELAY);
-			mAction->MouseClick();
-			mAction->MoveCursor(mIntDelete2ConfirmDx, mIntDelete2ConfirmDy);
-			Sleep(DELETE_ORDER_DELAY);
-			mAction->MouseClick();
+			mActionManager->GetAction()->MouseClick();
+			mActionManager->GetAction()->MoveCursor(delete2Confirm.x, delete2Confirm.y);
+			Sleep(DELETE_ORDER_DELAY*2);
+			mActionManager->GetAction()->MouseClick();
 			break;
 		}
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
 
-	mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
+	mActionManager->GetAction()->MoveCursor(lpPoint.x, lpPoint.y, true);
 
 	return LRESULT();
-}
-// 获得sun对话框右上角的绝对坐标。
-POINT CTradeAssistDlg::GetSunAwtDialogPos(void)
-{
-	POINT pos;
-	pos.x = 0;
-	pos.y = 0;
-	int searchCount = 0;
-	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
-	{
-		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
-		if (wnd)
-		{
-			CRect rect;
-			::GetWindowRect(wnd,rect);
-			pos.x = rect.left;
-			pos.y = rect.top;
-
-			break;;
-		} 
-		Sleep(WINDOW_CHECK_INTERVAL);
-	}
-
-#ifdef _DEBUG
-	TRACE("GetSunAwtDialogPos count=%d x=%d, y=%d\r\n", searchCount, pos.x, pos.y);
-#endif // _DEBUG
-
-	return pos;
 }
 
 
@@ -841,19 +733,9 @@ POINT CTradeAssistDlg::GetSunAwtDialogPos(void)
 POINT CTradeAssistDlg::GetTab2Direction(BOOL isHigh)
 {
 	POINT point;
-	CString buffer;
-	
-	if (isHigh)
-	{
-		point.x = mIntHighTab2DirectDx;
-		point.y = mIntHighTab2DirectDy;
-	}
-	else
-	{
-		point.x = mIntLowTab2DirectDx;
-		point.y = mIntLowTab2DirectDy;
-	}
-
+	CPoint p = mLuaEngine.getEntrust2Direction(isHigh?DO_HIGH:DO_LOW);
+	point.x = p.x;
+	point.y = p.y;
 	return point;
 }
 
@@ -866,16 +748,15 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_FLASH_COMPLETE);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DECREASE_PRICE);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_INCREASE_PRICE);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_TEST_SERVER);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DIRECT_DUO);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DIRECT_KONG);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_INCREASE_THRESHOLD);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DECREASE_THRESHOLD);
 	
 	KillTimer(TIMER_ID_FOR_DO_FLASH_TRADE);
-	KillTimer(TIMER_ID_FOR_UPDATE_DATAK);
 	SaveSetting();
 
-	if (mThreadHandle != 0)
-	{
-		CloseHandle(mThreadHandle);
-		mThreadHandle = 0;
-	}
 
 	CLogger::SaveLog();
 
@@ -885,28 +766,26 @@ int CTradeAssistDlg::ClearResource(void)
 // 秒杀下单
 int CTradeAssistDlg::OnFlashComplete(void)
 {
-
-
-	WORD	start = GetMilliseconds();
-
-	POINT lpPoint;
-	GetCursorPos(&lpPoint);
-	mAction->MouseClick();
 	UpdateData(TRUE);
 	mIsAutoSubmits = TRUE;	
 	UpdateData(FALSE);
+
+	WORD	start = GetMilliseconds();
+	POINT lpPoint;
+	GetCursorPos(&lpPoint);
+	mActionManager->GetAction()->MouseClick();
 
 	int retryTimes = 0;
 	int result = SemicAutoTrade(DO_LOW);
 	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
 	{
 		SetCursorPos(lpPoint.x, lpPoint.y);
-		mAction->MouseClick();
+		mActionManager->GetAction()->MouseClick();
 		result = SemicAutoTrade(DO_LOW);
 	}
 
 	CString log;
-	log.Format("OnFlashComplete low time1=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+	log.Format(_T("OnFlashComplete low time1=%d, retryTimes=%d"), GetMilliseconds() - start, retryTimes);
 	CLogger::Add(log);
 
 	//2.延时下单间隔
@@ -915,25 +794,25 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	TRACE("OnFlashComplete time1=%d\r\n", GetMilliseconds() - start);
 #endif // _DEBUG
 
-	if (mAutoCompleteInterval > 0)
-	{
-		Sleep(mAutoCompleteInterval*1000);
+	if (mAutoCompleteInterval.Trim().GetLength() > 0)
+	{	
+		Sleep(static_cast<DWORD>(atof(mAutoCompleteInterval.Trim())*1000));
 	}
 
 	//3.移动鼠标到双击位置。
 	SetCursorPos(lpPoint.x, lpPoint.y);
-	mAction->MouseClick();
+	mActionManager->GetAction()->MouseClick();
 
 	retryTimes = 0;
 	result = SemicAutoTrade(DO_HIGH);
 	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
 	{
 		SetCursorPos(lpPoint.x, lpPoint.y);
-		mAction->MouseClick();
+		mActionManager->GetAction()->MouseClick();
 		result = SemicAutoTrade(DO_HIGH);
 	}
 
-	log.Format("OnFlashComplete high time2=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+	log.Format(_T("OnFlashComplete high time2=%d, retryTimes=%d"), GetMilliseconds() - start, retryTimes);
 	CLogger::Add(log);
 
 #ifdef _DEBUG
@@ -955,7 +834,7 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 		{
 
 			CString log;
-			log.Format("SemicAutoTrade direct=%d, dialogSearchCount=%d", direct, searchCount);
+			log.Format(_T("SemicAutoTrade direct=%d, dialogSearchCount=%d"), direct, searchCount);
 			CLogger::Add(log);
 
 			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
@@ -973,81 +852,6 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 	return SEMIC_AUTO_TRADE_CALL_FAILED;
 }
 
-// 通过双击复制获得编辑框内容。
-CString CTradeAssistDlg::GetEditText(BOOL needDoubleClick)
-{
-	CString text;
-	
-#ifdef _DEBUG
-	WORD	start = GetMilliseconds();
-#endif // _DEBUG
-	SetClipboardContent("");
-	int copyCount = 0;
-	while(copyCount++  < GET_EDIT_CONTENT_MAX_TIMES)
-	{
-		mAction->SelectAll();
-		mAction->KeyboardCopy();
-		Sleep((copyCount-1)*GET_CLIPBOARD_CONTENT_DELAY);
-		text = GetContentFromClipboard();
-		text = text.Trim();
-		if (text.GetLength() < PRICE_LENGTH)
-		{
-			continue;			
-		}
-		else
-		{
-			break;
-		}
-	}
-#ifdef _DEBUG
-	TRACE("GetEditText time=%d, copycount=%d, text=%s\r\n", GetMilliseconds() - start, copyCount, text);
-#endif
-
-	return text;
-}
-
-BOOL CTradeAssistDlg::CheckEditPasteResult()
-{
-
-#ifdef _DEBUG
-	WORD	start = GetMilliseconds();
-#endif // _DEBUG
-
-	BOOL	result = TRUE;
-
-	int priceCheckCount = 0;
-	while(priceCheckCount++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
-	{
-		CString toCheckPrice = GetEditText();
-
-		if (toCheckPrice.Compare(mLastClipboardContent) == 0)
-		{
-			//通过检查，设置正确。
-			result = TRUE;
-			break;
-		}
-		else
-		{
-#ifdef _DEBUG
-			CString log;
-			log.Format("CheckEditPasteResult failed Good=%s, Bad=%s",mLastClipboardContent, toCheckPrice);
-			CLogger::Add(log);
-			TRACE(log+"\r\n");
-#endif
-
-			//未设置正确，需要重新设置
-			SetClipboardContent(mLastClipboardContent);
-			mAction->KeyboardPaste();
-			result = FALSE;
-		}
-	}
-
-#ifdef _DEBUG
-	TRACE("CheckEditPasteResult time=%d, checkCount=%d\r\n", GetMilliseconds() - start, priceCheckCount);
-#endif
-
-	return result;
-}
 
 WORD CTradeAssistDlg::GetMilliseconds(void)
 {
@@ -1057,49 +861,6 @@ WORD CTradeAssistDlg::GetMilliseconds(void)
 	return time.wSecond * 1000 + time.wMilliseconds;
 }
 
-// 清空剪贴板
-BOOL CTradeAssistDlg::GlearClipboard(void)
-{
-	if( OpenClipboard() ) 
-	{  
-		if (EmptyClipboard())
-		{
-			CloseClipboard();
-			TRACE("GlearClipboard return 1\r\n");
-			return 1;
-		}
-		else
-		{
-			CloseClipboard();
-		}
-	}
-
-	TRACE("GlearClipboard return 0\r\n");
-	return 0;
-}
-
-int CTradeAssistDlg::UpdatePrice(bool isAdd)
-{
-	Sleep(mIntMsgDelayMilliSeconds);
-	//取得当前价格。
-	CString text = GetEditText();
-	if(text.Find(_T("."))  == -1)
-	{
-		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
-	}
-
-	CString outText;
-	float diff = 10.0f;
-
-	float newCount = isAdd?atof(text) + diff : atof(text) - diff ;
-	outText.Format("%.2f",newCount);
-
-	//设置剪贴板内容并粘贴到窗口
-	SetClipboardContent(outText);
-	mAction->KeyboardPaste();
-
-	return 0;
-}
 
 void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -1108,66 +869,56 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		SYSTEMTIME time;
 		GetLocalTime(&time);
-
-		if (mIntHour == time.wHour && mIntMinute == time.wMinute && mIntSecond == time.wSecond)
+		int seconds = 0;
+		int millionSecond = 0;
+		if (mIntSecond.Trim().GetLength() == 0)
 		{
-			
+			mIntSecond = _T("0.0");
+		}
+
+		int value = atoi(mIntSecond) * 1000;
+		seconds = value / 1000;
+		millionSecond = value - seconds*1000;
+
+		if ((!mIsTimer4Tomorrow && mIntHour == time.wHour && mIntMinute == time.wMinute && seconds == time.wSecond && millionSecond <= time.wMilliseconds)
+			|| (mIsTimer4Tomorrow&& mIntHour == time.wHour && mIntMinute == time.wMinute && seconds == time.wSecond && abs(millionSecond - time.wMilliseconds) <= 25 ))
+		{
+
 			KillTimer(nIDEvent);	
 			GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(TRUE);
-			OnFlashComplete(); 
 
-			if(mEnableChckAutoCloseDepot)
+			if (mEnableChaseTimer)
 			{
-				mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
-
-				//开启自动平仓检测。
-				hStartEvent = 0;
-				hStartEvent = ::CreateEvent(0,FALSE,FALSE,0); //create thread start event
-				if(hStartEvent == 0)
+				for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
 				{
-					TRACE("create start event failed,errno:%d/n",::GetLastError());
-					return ;
+					RetartThread(mLocalPrice[i]);
 				}
-
-				if (mThreadHandle == 0)
+			}
+			else
+			{
+				OnFlashComplete(); 
+				if(mEnableCheckAutoCloseDepot)
 				{
-					mThreadHandle = (HANDLE)_beginthreadex( NULL, 0, &HttpProcess, this, 0, &mThreadID );
-				} 
-						
-				if(mThreadHandle == 0)
-				{
-					TRACE("start thread failed,errno:%d/n",::GetLastError());
-					CloseHandle(hStartEvent);
-					return ;
-				}
-
-				//wait thread start event to avoid PostThreadMessage return errno:1444
-				::WaitForSingleObject(hStartEvent,INFINITE);
-				CloseHandle(hStartEvent);
-
-				int count = 0;
-				while(count++ < 3)
-				{
-
-					if(!PostThreadMessage(mThreadID,WM_DO_HTTP_GET,(WPARAM) (AfxGetMainWnd()),(LPARAM)(mThreadID)))//post thread msg
+					mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
+					for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
 					{
-						TRACE("post message failed,errno:%d/n",::GetLastError());
+						RetartThread(mLocalPrice[i]);
 					}
-					else
-					{
-						break;
-					}
-					::Sleep(500);
 				}
 			}
 		}
 	}
-	else if (TIMER_ID_FOR_UPDATE_DATAK == nIDEvent)
-	{
-		PostMessage(WM_DISPLAY_DATAK);
-	}
 
 	CDialog::OnTimer(nIDEvent);
+}
+
+void CTradeAssistDlg::RetartThread(PEcnomicData data)
+{
+	if (data != NULL)
+	{
+		CloseHttpThread(data);
+		StartHttpThread(data);
+	}
 }
 
 void CTradeAssistDlg::OnBnClickedButtonStartTimer()
@@ -1175,71 +926,123 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 	SYSTEMTIME time;
 	GetLocalTime(&time);
 	UpdateData(TRUE);
-	if (mIntHour * 3600 + mIntMinute * 60 + mIntSecond > time.wHour  * 3600 +  time.wMinute * 60 + time.wSecond)
+	if (mIntSecond.Trim().GetLength() == 0)
 	{
-		KillTimer(TIMER_ID_FOR_UPDATE_DATAK);
-		GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(FALSE);
-		SetTimer(TIMER_ID_FOR_DO_FLASH_TRADE, TIMER_INTERVAL_DO_FLASH_TRADE, NULL); 
-		SetTimer(TIMER_ID_FOR_UPDATE_DATAK, TIMER_INTERVAL_UPDATE_DATAK, NULL);
+		mIntSecond = _T("0.0");
+	}
+
+	if (mServerIp.Trim().GetLength() == 0 || mServerIp.Trim().GetLength() == 0)
+	{
+		CString text;
+		text.LoadString(IDS_STRING_SERVER_INFO_INVALID);
+		MessageBox(text);
+		return ;
+	}
+
+	if (mIntHour * 3600 + mIntMinute * 60 + atof(mIntSecond) > time.wHour  * 3600 +  time.wMinute * 60 + time.wSecond + time.wMilliseconds/1000.0F)
+	{
+
+		mIsTimer4Tomorrow = false;
 	}
 	else
 	{
+		mIsTimer4Tomorrow = true;
+	}
 
+	GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(FALSE);
+	SetTimer(TIMER_ID_FOR_DO_FLASH_TRADE, TIMER_INTERVAL_DO_FLASH_TRADE, NULL); 
+	
+	if (mIsTimer4Tomorrow)
+	{
 		CString text;
 		text.LoadString(IDS_INVALID_TIMER);
 		MessageBox(text);
 	}
 }
 
-LRESULT CTradeAssistDlg::OnDoHttpGetFinish(WPARAM w , LPARAM l)
+LRESULT CTradeAssistDlg::OnHttpGetFinish(WPARAM w , LPARAM l)
 {
-	TRACE("OnDoHttpGetFinish\r\n");
 
-	if (w != NULL)
+	PEcnomicData data = (PEcnomicData)l;
+	if (w != NULL &&& l != NULL)
 	{
 		CDataPacketP packet = (CDataPacketP)w;
 
 		if (packet->mIsGood)
 		{
 
+			UpdateData();
+
+			if (mLuaEngine.GetStartPrice() == 0)
+			{
+				mLuaEngine.SetStartPrice(packet->mPrice);
+				mLuaEngine.GetStartTime() = CTime::GetCurrentTime();
+			}
+
+			CTimeSpan span = CTime::GetCurrentTime() - mLuaEngine.GetStartTime();
+
+			if (!mLuaEngine.GetHasChased() && span.GetTotalSeconds() < mLuaEngine.GetChaseMaxTime())
+			{
+
+				int diff = packet->mPrice - mLuaEngine.GetStartPrice();
+				TRACE("diff=%d, priceThreshold=%d\r\n",diff,  mLuaEngine.GetChasePriceThreshold());
+				if (diff > 0 && diff >= mLuaEngine.GetChasePriceThreshold()
+						&& mLuaEngine.GetChasePriceMax() >= diff)
+				{
+					SendMessage(WM_DO_CHASE, DO_HIGH, NULL);
+					mLuaEngine.SetHasChased(true);
+				} 
+				else if ( diff < 0 && abs(diff) >= mLuaEngine.GetChasePriceThreshold()
+					&& mLuaEngine.GetChasePriceMax() >= abs(diff))
+				{
+					SendMessage(WM_DO_CHASE, DO_LOW, NULL);
+					mLuaEngine.SetHasChased(true);
+				}
+				else if (mLuaEngine.GetChasePriceMax() < abs(diff))
+				{
+					mLuaEngine.SetHasChased(true);
+				}
+			}
+
 			//更新价格
 			mDataK->SetClose(packet->mPrice, packet->mPriceTime);
-			mDataK->SetDayUpDrop(packet->mUpDrop);
-			mDataKStatisticsUpdrop = mDataK->IsPositive();
+			mDataK->SetMillionSecond(packet->mMillionSecond);
+			if (!mConnectOwnServer)
+			{
+				mDataK->SetDayUpDrop(packet->mUpDrop);	
+			}	
 
 			//这里判读是否回调
-			if (mDataK->IsPositive() && mDataK->GetDayUpDrop() > 0 || mOpenDirection == 0)
+			if (mDataK->IsPositive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() > 0 || mConnectOwnServer ))
 			{
+				
 				mDataK->SetDirectionAgree(true);
 				mDataK->SetCurrent2ExtremeDiff(mDataK->GetHigh() - mDataK->GetClose()) ;
+				mOpenDirection = 0;
+				UpdateData(FALSE);
+
 				//做多分支
-				if(mDataK->GetCurrent2ExtremeDiff() >= mUintAutoCloseThreshold)
+				if(mDataK->GetCurrent2ExtremeDiff() >= GetDynamicThreshold(mDataK->GetAmplitude()))
 				{
-					mAction->MouseClick();
-					MessageBox("做多回调立即平仓");
-
-					if(!PostThreadMessage(mThreadID,WM_DO_HTTP_EXIT,(WPARAM) (AfxGetMainWnd()),(LPARAM)(mThreadID)))//post thread msg
-					{
-						TRACE("post message failed,errno:%d/n",::GetLastError());
-					}
-
+					mActionManager->GetAction()->MouseClick();
+					CloseHttpThread(data);
+					PlaySoundResource(IDR_WAVE_DO_HIGH_CLOSE);
 					return 0;
 				}
 				
 			}
-			else if(mDataK->IsNegtive() && mDataK->GetDayUpDrop() < 0 || mOpenDirection == 1)
+			else if(mDataK->IsNegtive() && (!mConnectOwnServer && mDataK->GetDayUpDrop() < 0 || mConnectOwnServer ))
 			{
 				mDataK->SetDirectionAgree(true);
 				mDataK->SetCurrent2ExtremeDiff( mDataK->GetClose() - mDataK->GetLow() );
+				mOpenDirection = 1;
+				UpdateData(FALSE);
 				//做空分支
-				if(mDataK->GetCurrent2ExtremeDiff() >= mUintAutoCloseThreshold)
+				if(mDataK->GetCurrent2ExtremeDiff() >=  GetDynamicThreshold(mDataK->GetAmplitude()))
 				{
-					mAction->MouseClick();
-					if(!PostThreadMessage(mThreadID,WM_DO_HTTP_EXIT,(WPARAM) (AfxGetMainWnd()),(LPARAM)(mThreadID)))//post thread msg
-					{
-						TRACE("post message failed,errno:%d/n",::GetLastError());
-					}
-					MessageBox("做空反弹立即平仓");
+					mActionManager->GetAction()->MouseClick();
+					CloseHttpThread(data);
+					PlaySoundResource(IDR_WAVE_DO_LOW_CLOSE);
 					return 0;
 				}
 			}
@@ -1249,16 +1052,21 @@ LRESULT CTradeAssistDlg::OnDoHttpGetFinish(WPARAM w , LPARAM l)
 			}
 		}
 
-		delete packet;
-	}
-	else
-	{
-		
+		PostMessage(WM_DISPLAY_DATAK);
 	}
 
-	if(!PostThreadMessage(mThreadID,WM_DO_HTTP_GET,(WPARAM) (AfxGetMainWnd()),(LPARAM)(mThreadID)))//post thread msg
+	//发送消息最多尝试三次
+	int i = 0;
+	while (i++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES && data != NULL)
 	{
-		TRACE("post message failed,errno:%d/n",::GetLastError());
+		if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_GET_PRICE,NULL, (LPARAM)data))//post thread msg
+		{
+			TRACE("post message failed,errno:%d\r\n",::GetLastError());
+		}
+		else
+		{
+			break;
+		}
 	}
 
 	return 1;
@@ -1267,14 +1075,13 @@ LRESULT CTradeAssistDlg::OnDoHttpGetFinish(WPARAM w , LPARAM l)
 LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 {
 	UpdateData(TRUE);
-	const int TIME_OFFSET = 8;
+
 	mDataKClose = mDataK->GetClose();
 	mDataKOpen = mDataK->GetOpen();
-	mDataKCloseTime = mDataK->GetCloseTime().Right(TIME_OFFSET);
-	mDataKOpenTime = mDataK->GetOpenTime().Right(TIME_OFFSET);
+	mDataKCloseTime = mDataK->GetCloseTime().Right(8);
+	mDataKOpenTime = mDataK->GetOpenTime().Right(8);
 	mDataKHighPrice = mDataK->GetHigh();
 	mDataKLowPrice = mDataK->GetLow();
-	mDataKDayUpdrop = mDataK->GetDayUpDrop();
 	mDataKCurrent2ExtremeDiff = mDataK->GetCurrent2ExtremeDiff();
 	mDataKStatisticsUpdrop = mDataK->GetAmplitude();
 	mDataKDirectionAgree = mDataK->IsDirectionAgree();
@@ -1282,8 +1089,332 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	{
 		mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
 	}
+	if (!mConnectOwnServer)
+	{
+		mDataKDayUpdrop = mDataK->GetDayUpDrop();
+	}
+	
+	//更新进度条范围
+	int low, up;
+	mProgressAutoCloseDepot.GetRange(low, up);
+	if (up != mUintAutoCloseThreshold)
+	{
+		mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
+	}
 	UpdateData(FALSE);
 
 	return 0;
 }
 
+
+UINT CTradeAssistDlg::GetServerPort(void)
+{
+	return mServerPort;
+}
+
+CString CTradeAssistDlg::GetServerHost(void)
+{
+	return mServerIp;
+}
+
+int CTradeAssistDlg::IsConnectOwnServer(void)
+{
+	return mConnectOwnServer;
+}
+
+int CTradeAssistDlg::CloseHttpThread(PEcnomicData data)
+{
+	if (data != NULL && data->GetThreadId() != NULL)
+	{
+
+		if(!PostThreadMessage(data->GetThreadId(),WM_DO_HTTP_EXIT, NULL, NULL))//post thread msg
+		{
+			TRACE("post message failed,errno:%d\r\n",::GetLastError());
+		}
+		else
+		{
+			data->SetThreadId(NULL);
+		}
+
+		if (data->GetStartEvent() != NULL)
+		{
+			CloseHandle(data->GetStartEvent());
+			data->SetStartEvent(NULL);
+		}
+	}
+
+	return 0;
+}
+
+UINT CTradeAssistDlg::GetDoHttpInterval(void)
+{
+	return mUintDoHttpInterval;
+}
+
+
+int CTradeAssistDlg::GetDynamicThreshold(int back)
+{
+
+	return	mLuaEngine.GetDynamicThreshold(GetCurrentThreadId(), mBoolEnableAutoThreshold,back,mStrLowPriceDiff, mUintAutoCloseThreshold);
+}
+
+int CTradeAssistDlg::PlaySoundResource(int idRes)
+{
+	PlaySound(MAKEINTRESOURCE(idRes ),	AfxGetApp()->m_hInstance ,SND_RESOURCE | SND_ASYNC | SND_LOOP);
+	return 0;
+}
+
+CLuaEngine CTradeAssistDlg::GetLuaEngine(void)
+{
+	return mLuaEngine;
+}
+
+LRESULT CTradeAssistDlg::OnHttpGetEcnomicData(WPARAM w, LPARAM l)
+{
+
+	if (w == NULL)
+	{
+		return  LRESULT();
+	}
+
+	PEcnomicData data = reinterpret_cast<PEcnomicData>(w);
+	
+	if(dynamic_cast<CNonfarmerNumberData*>(data) 
+		&& (mActualNonfarmerNumber == HTML_PARSE_UNKOWN || mActualNonfarmerNumber.IsEmpty()))
+	{
+		mActualNonfarmerNumber = data->GetActualValue();
+		mNonfarmerNumberResult = CUtil::TranslateEcomicResult(data->GetResult());
+		mNonfarmerNumnerWeight.Format(_T("%.4f"),data->GetWeight());
+		mNonfarmerNumberCount.Format(_T("%u"), data->GetHttpCount());
+	}
+	else if (dynamic_cast<CJoblessRateData*>(data)
+		&& (mActualJoblessRate == HTML_PARSE_UNKOWN || mActualJoblessRate.IsEmpty()))
+	{
+		mActualJoblessRate = data->GetActualValue();
+		mJoblessRateResult = CUtil::TranslateEcomicResult(data->GetResult());
+		mJoblessRateWeight.Format(_T("%.4f"),data->GetWeight());
+		mJoblessRateCount.Format(_T("%u"), data->GetHttpCount());
+	}
+
+	UpdateData(FALSE);
+
+	CString msg;
+	msg.Format("threadid=%X,url=%s,type=%d\r\n",data, data->GetUrl(), data->GetResult());
+	TRACE(msg);
+	CLogger::Add(msg);
+
+	if (l == 1)
+	{
+		return LRESULT();
+	}
+
+	if (data->GetResult() == EcnomicResult::TYPE_UNKOWN)
+	{
+		//发送消息最多尝试三次
+		int i = 0;
+		while (i++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES)
+		{
+			if(!PostThreadMessage(data->GetThreadId(),data->GetMsgType(), (WPARAM)data, NULL))//post thread msg
+			{
+				TRACE("post message failed,errno:%d\r\n",::GetLastError());
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return LRESULT();
+	}
+
+	if (!mNonfarmerNumber[0]->GetUrl().IsEmpty() && !mJoblessRate[0]->GetUrl().IsEmpty())
+	{
+	
+		if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH
+			&& mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			mTotalConclution = CUtil::TranslateEcomicResult(data->GetResult());
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, FALSE);
+		}
+		else if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW
+			&& mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			mTotalConclution = CUtil::TranslateEcomicResult(data->GetResult());
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, FALSE);
+		}
+		else if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH
+			&&  mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			if (mNonfarmerNumber[0]->GetWeight() > mJoblessRate[0]->GetWeight())
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+			} 
+			else if (mNonfarmerNumber[0]->GetWeight() < mJoblessRate[0]->GetWeight())
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+			}
+		}
+		else if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW
+			&&  mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			if (mNonfarmerNumber[0]->GetWeight() > mJoblessRate[0]->GetWeight())
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+			} 
+			else if (mNonfarmerNumber[0]->GetWeight() < mJoblessRate[0]->GetWeight())
+			{
+
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+			}
+		}
+		else if (mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_EQUAL)
+		{
+			if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW)
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+			}
+			else if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+			}
+		}
+		else if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_EQUAL)
+		{
+			if (mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_LOW);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+			}
+			else if (mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+			{
+				mTotalConclution = CUtil::TranslateEcomicResult(EcnomicResult::TYPE_HIGH);
+				mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+					mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+			}
+		}
+
+		UpdateData(FALSE);
+		
+	}
+	else if (!mNonfarmerNumber[0]->GetUrl().IsEmpty())
+	{
+		if (mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, FALSE);
+		} 
+		else if(mNonfarmerNumber[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, FALSE);
+		}
+	}
+	else if ( !mJoblessRate[0]->GetUrl().IsEmpty())
+	{
+		if (mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_HIGH)
+		{
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, FALSE);
+		} 
+		else if(mJoblessRate[0]->GetResult() == EcnomicResult::TYPE_LOW)
+		{
+			mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+				mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, FALSE);
+		}
+	}
+
+	return LRESULT();
+}
+
+void CTradeAssistDlg::StartHttpThread(PEcnomicData data)
+{
+	if (data == NULL)
+	{
+		return;
+	}
+
+	//开启自动平仓检测。
+	if(data->GetStartEvent() == NULL)
+	{
+		data->SetStartEvent(::CreateEvent(0,FALSE,FALSE,0));
+	}
+
+	if(data->GetStartEvent() == NULL)
+	{
+		return;
+	}
+
+	if (data->GetThreadHandle() == NULL)
+	{
+		UINT id;
+		data->SetThreadHandle((HANDLE)_beginthreadex( NULL, NULL, &HttpProcess, data, NULL, &id ));
+		data->SetThreadId(id);
+	} 
+
+	if(data->GetThreadHandle() == NULL)
+	{
+		TRACE("start thread failed,errno:%d\r\n",::GetLastError());
+		CloseHandle(data->GetStartEvent());
+		data->SetStartEvent(NULL);
+		return ;
+	}
+
+	::WaitForSingleObject(data->GetStartEvent(),INFINITE);
+	CloseHandle(data->GetStartEvent());
+	data->SetStartEvent(NULL);
+
+	int count = 0;
+	while(count++ < SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES)
+	{
+
+		if(!PostThreadMessage(data->GetThreadId(),data->GetMsgType(),(WPARAM)data, NULL))
+		{
+			TRACE("post message failed,errno:%d\r\n",::GetLastError());
+		}
+		else
+		{
+			break;
+		}
+		::Sleep(500);
+	}
+}
+
+LRESULT CTradeAssistDlg::OnDoChase(WPARAM wp, LPARAM lp)
+{
+
+	bool isDoHigh = 0;
+	if (wp == DO_LOW)
+	{
+		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoLow(),
+			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_LOW),mIntOrderCount, TRUE);
+	}
+	else if (wp == DO_HIGH)
+	{
+		mActionManager->MakeOrder(mLuaEngine.GetOriginal2DoHigh(), 
+			mLuaEngine.GetOrigin2Count(),mLuaEngine.GetCount2OrderButton(DO_HIGH),mIntOrderCount, TRUE);
+	}
+	else
+	{
+		return LRESULT();
+	}
+
+
+
+
+	return LRESULT();
+}

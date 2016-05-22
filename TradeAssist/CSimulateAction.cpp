@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "CSimulateAction.h"
+#include "SimulateAction.h"
 #include "Constant.h"
 
 CSimulateAction::CSimulateAction(void)

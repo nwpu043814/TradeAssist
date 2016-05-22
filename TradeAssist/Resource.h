@@ -7,7 +7,11 @@
 #define IDS_ABOUTBOX                    101
 #define IDD_TRADEASSIST_DIALOG          102
 #define IDS_INVALID_TIMER               102
+#define IDS_STRING_SERVER_INFO_INVALID  103
 #define IDR_MAINFRAME                   128
+#define IDR_WAVE_CLOSE_DEPOT            129
+#define IDR_WAVE_DO_HIGH_CLOSE          129
+#define IDR_WAVE_DO_LOW_CLOSE           131
 #define IDC_EDIT_PRICE_DIFF             1000
 #define IDC_EDIT_HIGH_PRICE_DIFF        1000
 #define IDC_EDIT_COUNT                  1001
@@ -33,6 +37,7 @@
 #define IDC_CHECK_AOTO_SUBMIT2          1019
 #define IDC_CHECK_FLASH_COMPLETE        1019
 #define IDC_EDIT_START_DELETE_ORDER_DX  1019
+#define IDC_CHECK_AOTO_CHASE            1019
 #define IDC_EDIT1                       1020
 #define IDC_EDIT_AUTO_COMPLETE_INTERVAL 1020
 #define IDC_EDIT_START_DELETE_ORDER_DY  1021
@@ -59,15 +64,31 @@
 #define IDC_EDIT_CURRENT_EXTREME_DIFF   1041
 #define IDC_PROGRESS_AUTO_CLOSE_DEPOT   1042
 #define IDC_RADI_HIGH                   1043
+#define IDC_RADIO2                      1044
 #define IDC_RADI_LOW                    1044
+#define IDC_EDIT_SERVER_PORT            1047
+#define IDC_EDIT_SERVER_HOST            1048
+#define IDC_CHECK_OWN_SERVER            1049
+#define IDC_EDIT_DO_HTTP_REQUEST_INTERVAL 1050
+#define IDC_CHECK_ENABLE_AUTO_THRESHOLD 1051
+#define IDC_EDIT_NONFARMER_NUMBER       1052
+#define IDC_EDIT_JOBLESS_RATE           1053
+#define IDC_EDIT_NONFARMER_NUMBER_RESULT 1056
+#define IDC_EDIT_JOBLESS_RATE_RESULT    1057
+#define IDC_EDIT_NONFARMER_NUMBER_WEIGHT 1058
+#define IDC_EDIT_JOBLESS_RATE3          1059
+#define IDC_EDIT_JOBLESS_RATE_WEIGHT    1059
+#define IDC_EDIT_NONFARMER_NUMBER_WEIGHT2 1060
+#define IDC_EDIT_JOBLESS_RATE_WEIGHT2   1061
+#define IDC_EDIT_TOTAL_CONCLUTION       1065
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        129
+#define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1053
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

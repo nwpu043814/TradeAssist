@@ -120,7 +120,7 @@ void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
 
 CString CUtil::GetValue(IN CString text, IN CString key)
 {
-	CString result = "";
+	CString result = _T("");
 	CString keyName = key;
 	int updropPos = text.Find(keyName);
 	if (updropPos != -1)
@@ -135,8 +135,8 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 
  INT	CUtil::GetTimeSpan(IN CString left, IN CString right)
 {
-	CString leftDay =left.Left(left.Find(" ")); 
-	CString rightDay = right.Left(right.Find(" "));
+	CString leftDay =left.Left(left.Find(_T(" "))); 
+	CString rightDay = right.Left(right.Find(_T(" ")));
 
 	int dayDiff = (atoi(leftDay.Left(4)) - atoi(rightDay.Left(4))) * 12 * 30 + (atoi(leftDay.Mid(4,2)) - atoi(rightDay.Mid(4,2))) *30 
 		+ (atoi(leftDay.Right(2)) - atoi(rightDay.Right(2)));
@@ -150,4 +150,78 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 	secondsDiff += dayDiff*24*3600;
 
 	return secondsDiff ;
-}
+ }
+
+ int CUtil::ParseOwnServerString(CString text, CDataPacket& result)
+ {
+	 //5740.72:1365862696259:2013_04_13:22_18_16
+	 if (text.GetLength() != 0)
+	{
+		text = text.MakeLower();
+		result.mIsGood = TRUE;
+		
+
+		int colPos = text.Find(OWN_SERVER_SPLITER);
+		if (colPos != -1)
+		{
+			result.mPrice = atoi(text.Left(colPos));
+			text = text.Right(text.GetLength() - colPos - 1);
+		} 
+		else
+		{
+			result.mIsGood = FALSE;
+		}
+
+		colPos = text.Find(OWN_SERVER_SPLITER);
+		if (colPos != -1)
+		{
+			result.mMillionSecond = atol(text.Left(colPos));
+			result.mPriceTime = text.Right(text.GetLength() - colPos - 1);
+		} 
+		else
+		{
+			result.mIsGood = FALSE;
+		}
+	}
+	else
+	{
+		result.mIsGood = FALSE;
+	}
+	 return 0;
+ }
+
+ CString CUtil::TranslateEcomicResult(EcnomicResult arg)
+ {
+	 switch (arg)
+	 {
+	 case 0:
+			return ECNOMIC_RESULT_TYPE_HIGH;
+	 case 1:
+		 return ECNOMIC_RESULT_TYPE_LOW;
+	 case 2:
+		 return ECNOMIC_RESULT_TYPE_EQUAL;
+	 case 3:
+		return ECNOMIC_RESULT_TYPE_UNKNOWN;	
+	 }
+	 return CString();
+ }
+
+ CString CUtil::extractExpectValue(CString &expect)
+ {
+	 if (expect.IsEmpty())
+	 {
+		return expect;
+	 }
+
+	 expect.Remove(' ');
+	 expect.Remove('\r');
+	 expect.Remove('\n');
+	 expect.Remove('%');
+	 expect.Remove('+');
+	 return expect;
+ }
+
+ ULONGLONG CUtil::CompareSYSTEMTIME(SYSTEMTIME left, SYSTEMTIME right)
+ {
+	 return ULONGLONG();
+ }

@@ -16,6 +16,7 @@ private:
 	UINT mLow;
 	CString mOpenTime;
 	CString mCloseTime;
+	LONG mMillionSecond;
 public:
 	void SetClose(UINT close, CString time);
 	UINT GetHigh(void);
@@ -55,6 +56,8 @@ public:
 	int GetCurrent2ExtremeDiff(void);
 	// 设置回调幅度
 	void SetCurrent2ExtremeDiff(int diff);
+	void SetMillionSecond(long ms);
+	LONG GetMillionSecond(void);
 };
 
 

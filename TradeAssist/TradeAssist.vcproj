@@ -188,6 +188,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\aboutDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ActionManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CHttpWorker.cpp"
 				>
 			</File>
@@ -204,11 +212,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dalyFx.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\DataK.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\EcnomicCompareResult.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EcnomicPair.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EcnomicThreadData.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HttpThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LuaEngine.cpp"
 				>
 			</File>
 			<File
@@ -232,6 +260,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\ThreadProc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TradeAssist.cpp"
 				>
 			</File>
@@ -246,11 +278,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\CHttpWorker.h"
+				RelativePath=".\aboutDlg.h"
 				>
 			</File>
 			<File
-				RelativePath=".\CLogger.h"
+				RelativePath=".\ActionManager.h"
 				>
 			</File>
 			<File
@@ -258,11 +290,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\CSimulateAction.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CTradeAssistDlg.h"
+				RelativePath=".\dalyFx.h"
 				>
 			</File>
 			<File
@@ -274,11 +302,59 @@
 				>
 			</File>
 			<File
+				RelativePath=".\EcnomicCompareResult.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EcnomicPair.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EcnomicResult.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EcnomicThreadData.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HttpThread.h"
 				>
 			</File>
 			<File
+				RelativePath=".\HttpWorker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lauxlib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Logger.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lua.h"
+				>
+			</File>
+			<File
+				RelativePath=".\luaconf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LuaEngine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lualib.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SimulateAction.h"
 				>
 			</File>
 			<File
@@ -294,6 +370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TradeAssistDlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Util.h"
 				>
 			</File>
@@ -304,6 +384,22 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath="C:\Documents and Settings\Administrator\×ÀÃæ\close_depot.wav"
+				>
+			</File>
+			<File
+				RelativePath=".\res\ding.wav"
+				>
+			</File>
+			<File
+				RelativePath="C:\Documents and Settings\Administrator\×ÀÃæ\DONTSNK.WAV"
+				>
+			</File>
+			<File
+				RelativePath=".\res\notify.wav"
+				>
+			</File>
+			<File
 				RelativePath=".\res\TradeAssist.ico"
 				>
 			</File>
@@ -313,6 +409,10 @@
 			</File>
 			<File
 				RelativePath=".\res\TradeAssist.rc2"
+				>
+			</File>
+			<File
+				RelativePath=".\res\wave1.bin"
 				>
 			</File>
 		</Filter>

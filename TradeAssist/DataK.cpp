@@ -162,3 +162,13 @@ void CDataK::SetCurrent2ExtremeDiff(int diff)
 {
 	mIntCurrent2ExtremeDiff = diff;
 }
+
+void CDataK::SetMillionSecond(long ms)
+{
+	mMillionSecond = ms;
+}
+
+LONG CDataK::GetMillionSecond(void)
+{
+	return mMillionSecond;
+}

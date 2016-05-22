@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "TradeAssist.h"
-#include "CTradeAssistDlg.h"
+#include "TradeAssistDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,7 +44,7 @@ BOOL CTradeAssistApp::InitInstance()
 	// 更改用于存储设置的注册表项
 	// TODO: 应适当修改该字符串，
 	// 例如修改为公司或组织名
-	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+	SetRegistryKey(_T("TA"));
 
 	CTradeAssistDlg dlg;
 	m_pMainWnd = &dlg;

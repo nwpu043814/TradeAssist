@@ -7,6 +7,8 @@
 #define KEY_NAME_NICKNAME _T("nickname")
 #define KEY_NAME_NOW _T("now")
 
+#define OWN_SERVER_SPLITER _T(":")
+
 #define KEY_VALUE_DISTANCE 3
 #define VALUE_TAIL _T("\"")
 
@@ -20,6 +22,7 @@ struct CDataPacket
 	INT		mPrice;
 	INT		mUpDrop;
 	BOOL	mIsGood;
+	LONG	mMillionSecond;
 };
 
 typedef CDataPacket * CDataPacketP;
