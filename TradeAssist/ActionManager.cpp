@@ -411,12 +411,19 @@ int CActionManager::DoHFDoubleSide(int lowDiff, int highDiff, int count, int win
 	mAction->MouseDoubleClick();
 	DoHFSingleSide(lowDiff, DO_LOW, count, windowDelay);
 	CPoint pos = GetHFConfirmDialogPos();
-	//CloseHFConfirmDialog(pos.x, pos.y);
-	/*mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
+	if (pos.x + pos.y != 0)
+	{
+		CloseHFConfirmDialog(pos.x, pos.y);
+	}
+	
+	mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
 	mAction->MouseDoubleClick();
 	DoHFSingleSide(highDiff, DO_HIGH, count, windowDelay);
 	pos = GetHFConfirmDialogPos();
-	CloseHFConfirmDialog(pos.x, pos.y);*/
+	if (pos.x + pos.y != 0)
+	{
+		CloseHFConfirmDialog(pos.x, pos.y);
+	}
 
 	return 0;
 }
@@ -459,12 +466,7 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 	{
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED;
 	}
-
-	const int time = 3000;
-	
-	//止损价格到启用止盈按钮距离
-	const int priceUpBtn2DownBtnX = -123;
-	const int priceUpBtn2DownBtnY = 33;
+	const int time = 0;
 
 	CPoint pos = mLuaEngine.GetOrigin2DropListButton();
 
@@ -477,7 +479,6 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 
 	//选择委托单
 	DoHop(mLuaEngine.GetOrderTypeButton().x, mLuaEngine.GetOrderTypeButton().y);
-	//mAction->MouseClick();
 
 	//到手数
 	pos = mLuaEngine.GetTradeCount();
@@ -493,18 +494,19 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 	//点击方向
 	DoHop(mLuaEngine.GetDirectionButton(direct).x -pos.x, mLuaEngine.GetDirectionButton(direct).y -pos.y);
 
-	Sleep(time);
 
 	//点击价格范围值
-	DoHop(mLuaEngine.GetPriceAdjustButton(direct).x, mLuaEngine.GetPriceAdjustButton(direct).y);
+	mAction->MoveCursor(mLuaEngine.GetPriceAdjustButton(direct).x, mLuaEngine.GetPriceAdjustButton(direct).y);
 
-	Sleep(time);
+
 	float newPrice = 0.0f;
 	int i = 0;
 	while (i++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
 	{
 		mAction->MouseDoubleClick();
+		Sleep(50*i);
 		mAction->KeyboardCopy();
+		Sleep(50*i);
 		CString strPrice = GetContentFromClipboard();
 		
 		float price = atof(strPrice);
@@ -533,57 +535,46 @@ int CActionManager::DoHFSingleSideAction(int diff, int direct, int count, int wi
 	//止损checkbox
 	DoHop(mLuaEngine.GetEnableStopButton(direct).x, mLuaEngine.GetEnableStopButton(direct).y);
 	Sleep(time);
+
+	//止损点差
+	int stopThreshold  = mLuaEngine.GetStopGainThreshold();
 	
 	//止损阈值编辑框
-	DoHop(mLuaEngine.GetInitialStopPriceButton(direct).x, mLuaEngine.GetInitialStopPriceButton(direct).y);
+	pos = mLuaEngine.GetInitialStopPriceButton(direct);
 	Sleep(time);
-	float price = 0.0F;
-	i = 0;
-	while (i++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
-	{
-		mAction->MouseDoubleClick();
-		mAction->KeyboardCopy();
-		CString strPrice = GetContentFromClipboard();
 
-		price = atof(strPrice);
-		if (price > VALID_PRICE)
-		{
-
-			//计算止损价格
-			newPrice = direct == DO_LOW?price + diff: price - diff;
-			break;
-		}
-	}
-
-	if (newPrice < VALID_PRICE)
-	{
-		return 1;
-	}
+	//计算止损价格阈值
+	float price = direct == DO_LOW?newPrice + stopThreshold: newPrice - stopThreshold;
+	
+	//计算止损价格
+	price = direct == DO_LOW?price + diff: price - diff;
 
 	//达到止损输入框
-	DoHop(mLuaEngine.GetAdjustStopPriceButton(direct).x, mLuaEngine.GetAdjustStopPriceButton(direct).y);
+	mAction->MoveCursor(mLuaEngine.GetAdjustStopPriceButton(direct).x + pos.x, mLuaEngine.GetAdjustStopPriceButton(direct).y + pos.y);
 	Sleep(time);
-	buffer.Format(_T("%.1f"), newPrice);
+	buffer.Format(_T("%.1f"), price);
 	SetClipboardContent(buffer);
-	mAction->MouseDoubleClick();
+
 
 	//填写止损价格
 	mAction->KeyboardPaste();
 	
-	DoHop(mLuaEngine.GetPrice2StopCheckbox().x,mLuaEngine.GetPrice2StopCheckbox().y);
+	//点击止盈按钮
+	pos = mLuaEngine.GetPrice2StopCheckbox();
+	TRACE("GetPrice2StopCheckbox.x=%d,GetPrice2StopCheckbox.y=%d", pos);
+	DoHop(pos.x, pos.y);
 	Sleep(time);
-	
+
 	//止盈按钮到止盈价格输入框距离
-	mAction->MoveCursor(123,0);
+	mAction->MoveCursor(mLuaEngine.GetGainCheckbox2GainPriceEdit().x,mLuaEngine.GetGainCheckbox2GainPriceEdit().y);
 	
-	const int goodDiff = 60; 
-	const int diff2 = 10;
+	int stopGainDiff = mLuaEngine.getStopGainDiff(direct); 
+	
+	//止盈价格
+	price = direct == DO_LOW?newPrice - stopGainDiff - stopThreshold : newPrice + stopGainDiff +stopThreshold;
 
-	newPrice = direct == DO_LOW?price - goodDiff - diff2: price + goodDiff + diff2;
-
-	buffer.Format(_T("%.1f"), newPrice);
+	buffer.Format(_T("%.1f"), price);
 	SetClipboardContent(buffer);
-	mAction->MouseDoubleClick();
 	mAction->KeyboardPaste();
 	DoHop(mLuaEngine.GetConfirmButton(direct).x, mLuaEngine.GetConfirmButton(direct).y);
 	Sleep(time);
@@ -654,9 +645,8 @@ const CPoint& CActionManager::GetHFConfirmDialogPos(void) const
 
 void CActionManager::CloseHFConfirmDialog(int left, int top) const
 {
-	const int dx = 152;
-	const int dy = 129;
+	CPoint pos = mLuaEngine.GetHFConfirDialogOK();
 
-	mAction->MoveCursor(left+dx, top + dy,true);
+	mAction->MoveCursor(left+pos.x, top + pos.y,true);
 	mAction->MouseClick();
 }

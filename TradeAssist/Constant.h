@@ -229,6 +229,13 @@
 #define		LUA_FUNCTION_GetTradeCount _T("getTradeCount")
 #define		LUA_FUNCTION_GetScaleList _T("getScaleList")
 
+#define		LUA_FUNCTION_GetStopGainDiff _T("getStopGainDiff")
+#define		LUA_FUNCTION_GetGainCheckbox2GainPriceEdit _T("getGainCheckbox2GainPriceEdit")
+#define		LUA_FUNCTION_GetHFConfirDialogOK _T("getHFConfirDialogOK")
+#define		LUA_FUNCTION_GetPriceRange2Price _T("getPriceRange2Price")
+#define		LUA_FUNCTION_GetPrice2StopCheckbox _T("getPrice2StopCheckbox")
+#define		LUA_FUNCTION_GetStopGainThreshold _T("getStopGainThreshold")
+
 
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")
 #define		HTTP_URL_TIANTONG_HOST _T("jry.baidao.com")
@@ -253,3 +260,6 @@
 #define 	NETWORK_KEY_CAPTURE_TIME "CAPTURE_TIME"
 
 #define     VALID_PRICE		4000
+
+#define  APP_NAME _T("TradeAssist")
+#define  STRING_REG_CODE _T("REGCODE")

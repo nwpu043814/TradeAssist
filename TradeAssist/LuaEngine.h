@@ -11,14 +11,6 @@ extern "C"
 } 
 
 
-#define DECLARE_POINT_FUNCTION_WITH_DIRECT(fun_name)  \
-	public:const CPoint & fun_name ## (int direct);\
-	private: CPoint mLow ## fun_name;\
-	private: CPoint mHigh ## fun_name;
-
-#define DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(fun_name)  public:const CPoint & fun_name ## ();\
-	private: CPoint m ## fun_name;
-
 #include "atltypes.h"
 class CLuaEngine
 {
@@ -44,9 +36,7 @@ private:
 	CPoint mLowEntrust2Direction;
 	CPoint mLowDirection2Price;
 public:
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(getPrice2Count)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(getDirection2Price)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(getEntrust2Direction)
+
 
 private:
 	CPoint mHighPrice2Count;
@@ -55,15 +45,6 @@ private:
 	CPoint mCount2Confirm;
 	CPoint mHighEntrust2Direction;
 	CPoint mOrigin2Remove;
-public:
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getOrigin2Entrust)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOriginal2DoLow)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOriginal2DoHigh)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getCount2Confirm)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getOrigin2Remove)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(getRemove2Confirm)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrigin2Count)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetCount2OrderButton)
 private:
 	CPoint mRemove2Confirm;
 	CPoint mOrigin2Count;
@@ -99,16 +80,6 @@ private:
 	int mChasePriceMax;
 public:
 	int GetChasePriceMax(void);
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetTradeCount)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrigin2DropListButton)
-	DECLARE_POINT_FUNCTION_WITHOUT_DIRECT(GetOrderTypeButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetDirectionButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetPriceAdjustButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetEnableStopButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetInitialStopPriceButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetAdjustStopPriceButton)
-	DECLARE_POINT_FUNCTION_WITH_DIRECT(GetConfirmButton)
-public:
 	int GetDoubleSideType(void);
 private:
 	CPoint mHFOrigin2DropListButton;
@@ -131,11 +102,43 @@ private:
 public:
 	const CPoint& GetScaleListItem(void);
 	const CPoint& GetPriceRange2Price(int direct);
-private:
-	CPoint mHFPriceRange2PriceHigh;
-	CPoint mHFPriceRange2PriceLow;
 public:
 	const CPoint& GetPrice2StopCheckbox(void);
 private:
 	CPoint mPrice2StopCheckbox;
+public:
+	int getStopGainDiff(int direct);
+	const CPoint& getGainCheckbox2GainPriceEdit(void);
+private:
+	CPoint mGainCheckbox2GainPriceEdit;
+	CPoint mHFConfirDialogOK;
+public:
+	const CPoint& GetHFConfirDialogOK(void);
+	const CPoint& GetOrigin2DropListButton(void);
+	const CPoint& GetOrderTypeButton(void);
+	const CPoint& GetTradeCount(void);
+	const CPoint& GetDirectionButton(int direct);
+	const CPoint& GetPriceAdjustButton(int direct);
+	const CPoint & GetEnableStopButton(int direct);
+	const CPoint & GetInitialStopPriceButton(int direct);
+	const CPoint & GetAdjustStopPriceButton(int direct);
+	const CPoint& GetConfirmButton(int direct);
+	const CPoint & getOrigin2Entrust(void);
+	const CPoint & getDirection2Price(int direct);
+	const CPoint& getCount2Confirm(void);
+	const CPoint& getPrice2Count(int direct);
+	const CPoint& getOrigin2Remove(void);
+	const CPoint& GetOriginal2DoLow(void);
+	const CPoint& getEntrust2Direction(int direct);
+	const CPoint& getRemove2Confirm(void);
+	const CPoint& GetOrigin2Count(void);
+	const CPoint& GetCount2OrderButton(int direct);
+	const CPoint& GetOriginal2DoHigh(void);
+	const CPoint& GetGainCheckbox2GainPriceEdit(void);
+private:
+	CPoint mPriceRange2PriceLow;
+	CPoint mPriceRange2PriceHigh;
+public:
+	// ÷π”Ø◊Ó–°æ‡¿Î
+	int GetStopGainThreshold(void);
 };

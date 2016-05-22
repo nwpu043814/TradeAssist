@@ -19,6 +19,7 @@
 #include<crtdbg.h>
 #include <mmsystem.h>
 #include "dalyFx.h"
+#include "RegistDlg.h"
 
 
 #ifdef _DEBUG
@@ -222,6 +223,21 @@ END_MESSAGE_MAP()
 BOOL CTradeAssistDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	RegistDlg dlg;
+
+	if (dlg.Explorer(dlg.GetRegCode()))
+	{
+
+		dlg.DoModal();
+
+		if (RegistDlg::mIntResult > 0)
+		{
+			ExitProcess(RegistDlg::mIntResult);
+		} 
+	}
+
+
 
 	// 将“关于...”菜单项添加到系统菜单中。
 

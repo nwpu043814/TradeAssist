@@ -51,9 +51,11 @@ CLuaEngine::CLuaEngine(void)
 , mDoubleSideType(0)
 , mHFTradeCount(0)
 , mHFScaleListItem(0)
-, mHFPriceRange2PriceHigh(32,56)
-, mHFPriceRange2PriceLow(201,56)
-, mPrice2StopCheckbox(-122,33)
+, mGainCheckbox2GainPriceEdit(0)
+, mHFConfirDialogOK(0)
+, mPriceRange2PriceLow(0)
+, mPrice2StopCheckbox(0)
+, mPriceRange2PriceHigh(0)
 {
 	mLua = InitLuaState();
 	GetNonfarmerWorkerUrl(0);
@@ -90,6 +92,11 @@ CLuaEngine::CLuaEngine(void)
 	GetDoubleSideType();
 	GetTradeCount();
 	GetScaleListItem();
+	GetGainCheckbox2GainPriceEdit();
+	GetHFConfirDialogOK();
+	GetPrice2StopCheckbox();
+	GetPriceRange2Price(DO_LOW);
+	GetPriceRange2Price(DO_HIGH);
 	memset(&mStartTime, 0, sizeof(CTime));
 
 }
@@ -951,6 +958,8 @@ const CPoint& CLuaEngine::GetOrderTypeButton(void)
 	return mHFOrderTypeButton;	
 }
 
+
+
 const CPoint& CLuaEngine::GetDirectionButton(int direct)
 {
 	if (direct == DO_LOW)
@@ -1401,20 +1410,217 @@ const CPoint& CLuaEngine::GetScaleListItem(void)
 	return mHFScaleListItem;		
 }
 
+
+
+
 const CPoint& CLuaEngine::GetPriceRange2Price(int direct)
 {
 	if (direct == DO_LOW)
 	{
-		return mHFPriceRange2PriceLow;
+		if (!(mPriceRange2PriceLow.x == 0 || mPriceRange2PriceLow.y == 0))
+		{
+			return mPriceRange2PriceLow;
+		}
+
 	}
 	else
 	{
-		return mHFPriceRange2PriceHigh;
+		if (!(mPriceRange2PriceHigh.x == 0 || mPriceRange2PriceHigh.y == 0))
+		{
+			return mPriceRange2PriceHigh;
+		}
+	}
+
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetPriceRange2Price);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	if (direct == DO_LOW)
+	{
+		mPriceRange2PriceLow.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mPriceRange2PriceLow.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mPriceRange2PriceLow;		
+	} 
+	else
+	{
+		mPriceRange2PriceHigh.y = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		mPriceRange2PriceHigh.x = (int)lua_tonumber(m_plua, -1);   
+		lua_pop(m_plua,1);  
+
+		return mPriceRange2PriceHigh;		
 	}
 }
 
-//止损输入框到止盈checkbox位移
+
 const CPoint& CLuaEngine::GetPrice2StopCheckbox(void)
 {
-	return mPrice2StopCheckbox;
+	
+	if (!(mPrice2StopCheckbox.x == 0 || mPrice2StopCheckbox.y == 0))
+	{
+		return mPrice2StopCheckbox;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetPrice2StopCheckbox);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mPrice2StopCheckbox.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mPrice2StopCheckbox.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mPrice2StopCheckbox;		
+}
+
+int CLuaEngine::getStopGainDiff(int direct)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetStopGainDiff);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 60;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}
+
+const CPoint& CLuaEngine::GetGainCheckbox2GainPriceEdit(void)
+{
+	if (!(mGainCheckbox2GainPriceEdit.x == 0 || mGainCheckbox2GainPriceEdit.y == 0))
+	{
+		return mGainCheckbox2GainPriceEdit;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetGainCheckbox2GainPriceEdit);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mGainCheckbox2GainPriceEdit.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mGainCheckbox2GainPriceEdit.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mGainCheckbox2GainPriceEdit;		
+}
+
+const CPoint& CLuaEngine::GetHFConfirDialogOK(void)
+{
+	if (!(mHFConfirDialogOK.x == 0 || mHFConfirDialogOK.y == 0))
+	{
+		return mHFConfirDialogOK;
+	}
+
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetHFConfirDialogOK);       
+	size_t size;
+	if(lua_pcall(m_plua,0,2,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return CPoint();
+	}
+
+	mHFConfirDialogOK.y = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	mHFConfirDialogOK.x = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return mHFConfirDialogOK;		
+}
+
+// 止盈最小距离
+int CLuaEngine::GetStopGainThreshold(void)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetStopGainThreshold);    
+	size_t size;
+	if(lua_pcall(m_plua,0,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 10;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
 }

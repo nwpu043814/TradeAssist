@@ -240,6 +240,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RegistDlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -347,6 +351,10 @@
 			</File>
 			<File
 				RelativePath=".\lualib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RegistDlg.h"
 				>
 			</File>
 			<File

@@ -178,7 +178,48 @@ function getAdjustStopPriceButton(direct)
 		return -130,0
 end
 
---止盈价格输入框到确定按钮距离
+--挂单范围到挂单输入框
+function getPriceRange2Price(direct)
+	if direct == 1 then
+		return 201,56
+	else
+		return 32,56
+	end
+end
+
+--挂单价格到启用止损按钮距离
+function getPrice2StopCheckbox()
+		return -122,33
+end
+
+--汇丰确定对话框确定按钮位置
+function getHFConfirDialogOK()
+		return 152,129
+end
+
+--止盈按钮到止盈价格输入框距离
+function getGainCheckbox2GainPriceEdit()
+		return 123,0
+end
+
+--获得止盈距离
+function getStopGainDiff(direct)
+	if direct == 1 then
+		--做空止盈
+		return 60
+	else
+		--做多止盈
+		return 100
+	end
+end
+
+--止盈最小距离
+function getStopGainThreshold()
+	return 10
+end
+
+
+--确定
 function getConfirmButton(direct)
 	return -30,72
 end
@@ -190,9 +231,9 @@ function getDoubleSideType()
 end
 
 function getJoblessParam()
-		return "美国6月失业率","7.5%","http://www.fx678.com/indexs/Datadetails.aspx?tid=1552&id=9957&fid=3782";
+		return "","7.4%","http://www.fx678.com/indexs/Datadetails.aspx?tid=1552&id=9959&fid=3782";
 end
 --
 function getNonfarmerWorkerParam()
-		return "美国6月非农就业人数变化" , "16.5", "http://www.fx678.com/indexs/Datadetails.aspx?tid=1547&id=9897&fid=3772"  
+		return "" , "+18", "http://www.fx678.com/indexs/Datadetails.aspx?tid=1547&id=9899&fid=3772"  
 end
