@@ -40,7 +40,6 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTradeAssistDlg::IDD, pParent)
 	, mIsAutoSubmits(FALSE)
 	, mAutoCompleteInterval(_T(""))
-	, mLastClipboardContent(_T(""))
 	, mStrHighPriceDiff(_T(""))
 	, mIntOrderCount(1)
 	, mIntMsgDelayMilliSeconds(1000)
@@ -237,8 +236,6 @@ BOOL CTradeAssistDlg::OnInitDialog()
 			ExitProcess(RegistDlg::mIntResult);
 		} 
 	}
-
-
 
 	// 将“关于...”菜单项添加到系统菜单中。
 
@@ -561,7 +558,7 @@ int CTradeAssistDlg::dispatchCount(void)
 
 LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 {
-	BOOL direction = (UINT) LOWORD(w)== DO_HIGH? TRUE:FALSE;
+	BOOL direction = (UINT) LOWORD(w);
 	BOOL isDelay = (UINT) LOWORD(l)== MSG_DELAY_YES? TRUE:FALSE;
 
 	TRACE("OnDoTradeMsg time=%d, direction=%d, isDelay=%d\r\n", GetMilliseconds() - mLastTime,direction, isDelay);
@@ -575,10 +572,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	}
 	UpdateData(TRUE);
 
-
-	return mActionManager->DoTrade( mActionManager->GetSunAwtDialogPos(),GetDirection2PriceVector(direction), mLuaEngine.getOrigin2Entrust(),
-		GetTab2Direction(direction), GetPrice2CountVector(direction), mLuaEngine.getCount2Confirm(), atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),mLastClipboardContent,
-		direction, mIntOrderCount, mIsAutoSubmits );
+	return mActionManager->DoTrade( mActionManager->GetSunAwtDialogPos(), atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),direction, mIntOrderCount);
 
 }
 
@@ -730,9 +724,10 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 
 LRESULT CTradeAssistDlg::OnAltDMsg(WPARAM w , LPARAM l)
 {
-	mActionManager->GetAction()->MouseDoubleClick();
-	mActionManager->GetAction()->KeyboardCopy();
-	AfxMessageBox(GetContentFromClipboard());
+	//mActionManager->GetAction()->MouseDoubleClick();
+	//mActionManager->GetAction()->KeyboardCopy();
+	//AfxMessageBox(GetContentFromClipboard());
+	OnFlashComplete(); 
 	return LRESULT();
 }
 

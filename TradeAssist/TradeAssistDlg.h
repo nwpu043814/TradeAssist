@@ -70,9 +70,6 @@ public:
 protected:
 	// 自动下单的两个单间隔，单位为秒
 	CString mAutoCompleteInterval;
-protected:
-	// 保存剪贴板上次内容。
-	CString mLastClipboardContent;
 private:
 	WORD mLastTime;
 	CString mStrHighPriceDiff;

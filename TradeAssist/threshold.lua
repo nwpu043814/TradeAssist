@@ -57,30 +57,30 @@ function getOriginal2DoLow()
 end
 
 function getOrigin2Entrust()
-		return 364, 58
+		return 388, 57
 end
 
 function getEntrust2Direction(direct)
 	if direct == 1 then
-		return -257, 90
+		return -275, 85
 	else 
-		return -208, 90
+		return -226, 85
 	end
 end
 
 function getDirection2Price(direct)
 	if direct == 1 then
-		return 30,25
+		return 29,24
 	else 
-		return -19,25
+		return -20,24
 	end
 end
 
 function getPrice2Count(direct)
 	if direct == 1 then
-		return -22,50
+		return -29,54
 	else 
-		return -22,50
+		return -29,54
 	end
 end
 
@@ -231,7 +231,7 @@ end
 -- 返回1代表中鑫龙祥
 -- 返回2代表汇丰
 function getDoubleSideType()
-	return 2;
+	return 1;
 end
 
 function getJoblessParam()
@@ -244,5 +244,5 @@ end
 
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 1000;
+	return 0;
 end

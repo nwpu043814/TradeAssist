@@ -179,7 +179,6 @@
 #define		DEBUG_SLEEP_INTERVAL 3000
 
 #define		DEBUG_SLEEP 0
-
 //给线程发送消息的最大重试数
 #define		SEND_MESSAGE_TO_THREAD_MAX_RETTY_TIMES 3
 

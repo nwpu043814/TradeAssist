@@ -146,8 +146,8 @@ WORD CActionManager::GetMilliseconds(void)
 	return time.wSecond * 1000 + time.wMilliseconds;
 }
 
-int CActionManager::DoTrade(const POINT &dialogPos,const POINT &	direction2Price,const CPoint & start2Tab,const POINT & tab2Direction, const POINT & price2CountVector,const CPoint & count2Confirm, double highDiff, double lowDiff, CString & mLastClipboardContent, BOOL direction,
-							int mIntOrderCount, BOOL mIsAutoSubmits)
+int CActionManager::DoTrade(const POINT &dialogPos, double highDiff, double lowDiff, BOOL isHigh,
+							int mIntOrderCount)
 {
 	if (dialogPos.x == 0 && dialogPos.y == 0)
 	{
@@ -157,53 +157,50 @@ int CActionManager::DoTrade(const POINT &dialogPos,const POINT &	direction2Price
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG;
 	}
 
-
+	int sleepTime = mLuaEngine.GetDebugSleepInterval();
+	TRACE("sleepTime=%d\r\n", sleepTime);
 	mAction->MoveCursor(dialogPos.x,dialogPos.y, true);
 	TRACE("dialogPos.x=%d, dialogPos.y=%d\r\n", dialogPos.x, dialogPos.y);
-#if DEBUG_SLEEP
-	Sleep(DEBUG_SLEEP_INTERVAL);
-#endif
-
+	
 	//从原点移动到指价委托tab。
-	mAction->MoveCursor(start2Tab.x,start2Tab.y);
-	TRACE("start2Tab.x=%d, start2Tab.y=%d\r\n", start2Tab.x, start2Tab.y);
+	CPoint p = mLuaEngine.getOrigin2Entrust();
+	mAction->MoveCursor(p.x,p.y);
+	TRACE("start2Tab.x=%d, start2Tab.y=%d\r\n", p.x, p.y);
 	mAction->MouseClick();
-
+	Sleep(sleepTime);
 	//指价委托到方向
-	mAction->MoveCursor(tab2Direction.x,tab2Direction.y);
+	p = mLuaEngine.getEntrust2Direction(isHigh);
+	mAction->MoveCursor(p.x,p.y);
 	mAction->MouseClick();
-
+	Sleep(sleepTime);
+	
 	//从方向移到价格控件
-	mAction->MoveCursor(direction2Price.x,direction2Price.y);
-	TRACE("direction2Price.x=%d, direction2Price.y=%d\r\n", direction2Price.x, direction2Price.y);
-
+	p = mLuaEngine.getDirection2Price(isHigh);
+	mAction->MoveCursor(p.x,p.y);
+	TRACE("direction2Price.x=%d, direction2Price.y=%d\r\n", p.x, p.y);
+	Sleep(sleepTime);
 	//获得预制的点差
 	CString outText;
 
 	//取得当前价格。
 	CString text = GetEditText();
-	if(text.Find(_T("."))  == -1)
-	{
-		TRACE("text.Find(_T(\".\"))== -1, text=%s, return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE\r\n", text);
-		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
-	}
 
-	double newCount = direction?atof(text) + highDiff : atof(text) - lowDiff ;
+	double newCount = isHigh==DO_HIGH?atof(text) + highDiff : atof(text) - lowDiff ;
 	outText.Format(_T("%.2f"),newCount);
 
 	CString log;
-	log.Format(_T("originalprice=%s, hiDiff=%f, lowDiff=%f newPrice=%s, direction=%d"), text, highDiff, lowDiff ,outText, direction);
+	log.Format(_T("originalprice=%s, hiDiff=%f, lowDiff=%f newPrice=%s, direction=%d"), text, highDiff, lowDiff ,outText, isHigh);
 	CLogger::Add(log);
 	TRACE("%s\r\n",log);
 
 	//保存以备检查
-	mLastClipboardContent = outText;
+	CString mLastClipboardContent = outText;
 
 	//设置剪贴板内容并粘贴到窗口
 	SetClipboardContent(outText);
 	mAction->SelectAll();
 	mAction->KeyboardPaste();
-
+	Sleep(sleepTime);
 	if(!CheckEditPasteResult(mLastClipboardContent))
 	{
 		TRACE("CheckEditPasteResult , return DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED\r\n");
@@ -211,25 +208,47 @@ int CActionManager::DoTrade(const POINT &dialogPos,const POINT &	direction2Price
 	}
 
 	//移动到设置手数的控件
-	mAction->MoveCursor(price2CountVector.x,price2CountVector.y);
-	TRACE("price2CountVector.x=%d, price2CountVector.y=%d\r\n", price2CountVector.x, price2CountVector.y);
-
+	p = mLuaEngine.getPrice2Count(isHigh);
+	mAction->MoveCursor(p.x,p.y);
+	TRACE("price2CountVector.x=%d, price2CountVector.y=%d\r\n", p.x, p.y);
+	Sleep(sleepTime);
 	//更新交易手数
 	mAction->MouseDoubleClick();
 	outText.Format(_T("%d"), mIntOrderCount);
 	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
 
-	//移动到确定按钮上
-	mAction->MoveCursor(count2Confirm.x,count2Confirm.y);
-	TRACE("count2Confirm.x=%d, count2Confirm.y=%d\r\n", count2Confirm.x, count2Confirm.y);
+	//止损checkbox
+	DoHop(-81, 95);
 
-	//自动提交
-	if(mIsAutoSubmits)
+	//止盈checkbox
+	DoHop(0, 25);
+
+	if (isHigh==DO_HIGH)
 	{
-		mAction->MouseClick();
+		//止盈上箭头
+		mAction->MoveCursor(96,-5);
+
+		for (int i = 0;i < 30; i++)
+		{
+			mAction->MouseClick();
+		}
+	} 
+	else
+	{
+		//止盈下箭头
+		mAction->MoveCursor(96,2);
+		for (int i = 0;i < 30; i++)
+		{
+			mAction->MouseClick();
+		}
+		mAction->MoveCursor(0,-7);
 	}
 
+	//确定按钮
+	DoHop(273,78);
+	Sleep(100);
+	mAction->MouseClick();
 
 	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }

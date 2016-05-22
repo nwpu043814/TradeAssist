@@ -16,8 +16,8 @@ public:
 	CString GetEditText(UINT checkLen = PRICE_LENGTH);
 	WORD GetMilliseconds(void);
 	BOOL CheckEditPasteResult(const CString & mLastClipboardContent);
-	int DoTrade(const POINT &dialogPos,const POINT &	direction2Price,const CPoint & start2Tab,const POINT & tab2Direction, const POINT & price2CountVector,const CPoint & count2Confirm, double hightDiff, double lowDiff, CString & mLastClipboardContent, BOOL direction,
-		int mIntOrderCount, BOOL mIsAutoSubmits);
+	int DoTrade(const POINT &dialogPos, double hightDiff, double lowDiff, BOOL direction,
+		int mIntOrderCount);
 	int UpdatePrice(bool isAdd, float diff);
 	CSimulateAction* GetAction();
 private:
