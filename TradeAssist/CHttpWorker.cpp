@@ -23,7 +23,7 @@ CString CHttpWorker::DoGet(CString host, UINT port, CString uri)
 	session.SetOption(INTERNET_OPTION_CONNECT_RETRIES, 2);
 
 	CHttpConnection* pConnection = session.GetHttpConnection(host,  (INTERNET_PORT)port);
-	CHttpFile* pFile = pConnection->OpenRequest( CHttpConnection::HTTP_VERB_GET,uri);
+	CHttpFile* pFile = pConnection->OpenRequest( CHttpConnection::HTTP_VERB_GET,uri,_T("http://jry.baidao.com/jry/hangqing.do"), 1, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_TRANSFER_ASCII);
 
 	CString szHeaders = HTTP_HEADER;
 

@@ -14,15 +14,15 @@ private:
 	UINT mHigh;
 	// lowest price
 	UINT mLow;
-	ULONGLONG mOpenTime;
-	ULONGLONG mCloseTime;
+	CString mOpenTime;
+	CString mCloseTime;
 public:
-	void SetClose(UINT close, ULONGLONG time);
+	void SetClose(UINT close, CString time);
 	UINT GetHigh(void);
 	UINT GetLow(void);
-	ULONGLONG GetOpenTime(void);
-	void SetCloseTime(ULONGLONG closeTime);
-	ULONGLONG GetCloseTime(void);
+	CString GetOpenTime(void);
+	void SetCloseTime(CString closeTime);
+	CString GetCloseTime(void);
 	// maintain  the high price and the low price.
 	void UpdateRange(UINT latestPrice);
 	BOOL IsPositive(void);
@@ -31,6 +31,30 @@ public:
 	void InitialHighLow(UINT price);
 	float GetAmplitudeRate(void);
 	UINT GetClose(void);
+	UINT GetOpen(void);
+private:
+	// 全天涨跌值
+	int mIntDayUpDrop;
+public:
+	// 获得拉取到的全天涨跌值
+	int GetDayUpDrop(void);
+	// 设置全天涨跌值
+	void SetDayUpDrop(int updrop);
+private:
+	// 标记统计涨跌和下发涨跌方向是否匹配。
+	bool mIsDirectionAgree;
+public:
+	// 标记统计涨跌和下发涨跌方向是否匹配。
+	bool IsDirectionAgree(void);
+	// 标记统计涨跌和下发涨跌方向是否匹配。
+	void SetDirectionAgree(bool isAgree);
+private:
+	// 回调幅度
+	int mIntCurrent2ExtremeDiff;
+public:
+	int GetCurrent2ExtremeDiff(void);
+	// 设置回调幅度
+	void SetCurrent2ExtremeDiff(int diff);
 };
 
 

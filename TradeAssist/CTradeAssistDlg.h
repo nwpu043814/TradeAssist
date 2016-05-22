@@ -7,6 +7,7 @@
 #include "chttpworker.h"
 #include "DataK.h"
 #include "HttpThread.h"
+#include "afxcmn.h"
 
 
 // CTradeAssistDlg 对话框
@@ -53,7 +54,7 @@ private:
 
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
 	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
-	LRESULT OnDoHttpGetFinish(WPARAM w , LPARAM l);
+
 
 	BOOL CheckEditPasteResult();
 
@@ -75,6 +76,7 @@ public:
 	// 指价委托到方向
 	POINT GetTab2Direction(BOOL isHigh);
 	int ClearResource(void);
+		LRESULT OnDoHttpGetFinish(WPARAM w , LPARAM l);
 protected:
 	// 是否自动提交。
 	BOOL mIsAutoSubmits;
@@ -96,7 +98,7 @@ public:
 	WORD GetMilliseconds(void);
 private:
 	WORD mLastTime;
-	CString mStrPriceDiff;
+	CString mStrHighPriceDiff;
 	UINT mIntOrderCount;
 	int mIntLowTab2DirectDx;
 	UINT mIntLowTab2DirectDy;
@@ -137,4 +139,25 @@ private:
 	CHttpThreadP mHttpThread;
 	// 是否允许检测自动平仓时机
 	BOOL mEnableChckAutoCloseDepot;
+	CString mStrLowPriceDiff;
+	UINT mDataKClose;
+	UINT mDataKOpen;
+	CString mDataKCloseTime;
+	CString mDataKOpenTime;
+	UINT mDataKHighPrice;
+	UINT mDataKLowPrice;
+	LRESULT OnDisplayDataK(WPARAM w, LPARAM l);
+	HANDLE mThreadHandle;
+	UINT mThreadID;
+	// 自动平仓阈值
+	UINT mUintAutoCloseThreshold;
+	int mDataKStatisticsUpdrop;
+	int mDataKDayUpdrop;
+	// 当前回调幅度
+	int mDataKCurrent2ExtremeDiff;
+	// 统计方向和全天方向匹配。
+	BOOL mDataKDirectionAgree;
+	// 自动平仓预警
+	CProgressCtrl mProgressAutoCloseDepot;
+	int mOpenDirection;
 };

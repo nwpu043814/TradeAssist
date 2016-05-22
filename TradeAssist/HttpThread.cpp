@@ -11,10 +11,13 @@ BEGIN_MESSAGE_MAP(CHttpThread, CWinThread)
 	ON_THREAD_MESSAGE(WM_DO_HTTP_GET,OnDoHttpGet)
 END_MESSAGE_MAP()
 
+IMPLEMENT_DYNCREATE(CHttpThread, CWinThread)
 
 CHttpThread::CHttpThread(void)
 {
 	mHttpWorker = new CHttpWorker();
+	MSG msg;
+	PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 }
 
 CHttpThread::~CHttpThread(void)
@@ -24,7 +27,7 @@ CHttpThread::~CHttpThread(void)
 
 void CHttpThread::OnDoHttpGet(WPARAM wParam,LPARAM lParam)
 {
-
+	AfxMessageBox("OnDoHttpGet");
 	CString result = mHttpWorker->DoGet(TEXT("jry.baidao.com"), 80, TEXT("/api/hq/npdata.do?ids=1&markettype=ttj"));
 	CDataPacketP packet = new CDataPacket();
 	CUtil::ParseDataString(result,*packet);

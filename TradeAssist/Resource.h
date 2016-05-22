@@ -9,6 +9,7 @@
 #define IDS_INVALID_TIMER               102
 #define IDR_MAINFRAME                   128
 #define IDC_EDIT_PRICE_DIFF             1000
+#define IDC_EDIT_HIGH_PRICE_DIFF        1000
 #define IDC_EDIT_COUNT                  1001
 #define IDC_EDIT_LOW_DIRECTION_PRICE_DX 1002
 #define IDC_EDIT_LOW_DIRECTION_PRICE_DY 1003
@@ -44,6 +45,21 @@
 #define IDC_BUTTON_START_TIMER          1028
 #define IDC_CHECK_                      1029
 #define IDC_CHECK_AUTO_CLOSE_DEPOT      1029
+#define IDC_EDIT_LOW_PRICE_DIFF         1030
+#define IDC_EDIT_DATAK_CURRENT_PRICE    1031
+#define IDC_EDIT_DATAK_OPEN_PRICE       1032
+#define IDC_EDIT_CURRENT_TIME           1033
+#define IDC_EDIT_DATAK_OPEN_TIME        1034
+#define IDC_EDIT_HIGH_PRICE             1035
+#define IDC_EDIT_DATAK_LOW_PRICE        1036
+#define IDC_EDIT_AUTO_CLOSE_THRESHOLD   1037
+#define IDC_EDIT_DATAK_STATISTICS_UPDROP 1038
+#define IDC_EDIT_DATAK_DAY_UPDROP       1039
+#define IDC_CHECK_STATISTICS_DAY_UPDROP_AGREE 1040
+#define IDC_EDIT_CURRENT_EXTREME_DIFF   1041
+#define IDC_PROGRESS_AUTO_CLOSE_DEPOT   1042
+#define IDC_RADI_HIGH                   1043
+#define IDC_RADI_LOW                    1044
 
 // Next default values for new objects
 // 
@@ -51,7 +67,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

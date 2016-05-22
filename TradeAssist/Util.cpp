@@ -30,6 +30,9 @@ ULONGLONG CUtil::Time2Seconds(IN CString time)
 
 void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
 {
+	//static int increade = 0;
+	//static bool isUp = true;
+
 	if (text.GetLength() != 0)
 	{
 		text = text.MakeLower();
@@ -38,7 +41,7 @@ void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
 		CString value = GetValue(text, KEY_NAME_UPDROP);
 		if (value.GetLength() != 0)
 		{
-			result.mUpDrop = atoi(value);
+			result.mUpDrop = atoi(value);//atoi(value); revert
 		}
 		else
 		{
@@ -88,6 +91,19 @@ void CUtil::ParseDataString(IN CString text, OUT CDataPacket & result)
 		value = GetValue(text, KEY_NAME_NOW);
 		if (value.GetLength() != 0)
 		{
+			/*if (isUp)
+			{
+				result.mPrice = (atoi(value) + increade++);
+
+				if (increade > 40)
+				{
+					isUp =false;
+				}			
+			} 
+			else
+			{
+				result.mPrice = (atoi(value) + increade--);				
+			}*/
 			result.mPrice = atoi(value);
 		}
 		else
