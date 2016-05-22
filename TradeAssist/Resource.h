@@ -30,6 +30,8 @@
 #define IDC_EDIT_LEFT_TOP_TAB_DX2       1019
 #define IDC_CHECK_AOTO_SUBMIT2          1019
 #define IDC_CHECK_FLASH_COMPLETE        1019
+#define IDC_EDIT1                       1020
+#define IDC_EDIT_AUTO_COMPLETE_INTERVAL 1020
 
 // Next default values for new objects
 // 
@@ -37,7 +39,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

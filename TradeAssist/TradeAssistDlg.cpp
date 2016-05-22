@@ -51,7 +51,7 @@ END_MESSAGE_MAP()
 CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTradeAssistDlg::IDD, pParent)
 	, mIsAutoSubmits(FALSE)
-	, mFlashComplete(FALSE)
+	, mAutoCompleteInterval(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new SimulateAction();
@@ -79,7 +79,8 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DX, mStart2TabDx);
 	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mStart2TabDy);
 	DDX_Check(pDX, IDC_CHECK_AOTO_SUBMIT, mIsAutoSubmits);
-	DDX_Check(pDX, IDC_CHECK_FLASH_COMPLETE, mFlashComplete);
+	DDX_Text(pDX, IDC_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
+	DDV_MaxChars(pDX, mAutoCompleteInterval, 2);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -231,8 +232,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_FLASH_COMPLETE:
 		{
-			MessageBox("查找窗口失败！123");
-			//OnFlashComplete();
+			OnFlashComplete();
 			break;;
 		}
 
@@ -466,7 +466,7 @@ int CTradeAssistDlg::InitialSetting(void)
 	mHighTab2DirectionDy.SetWindowText(outText);
 
 	mIsAutoSubmits = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, FALSE);
-	mFlashComplete = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_FLASH_COMPLETE, FALSE);
+	mAutoCompleteInterval.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, 2));
 	UpdateData(FALSE);
 
 	return 0;
@@ -523,7 +523,7 @@ int CTradeAssistDlg::SaveSetting(void)
 	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY , atoi(contant));
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, mIsAutoSubmits);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_FLASH_COMPLETE, mFlashComplete);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, atoi(mAutoCompleteInterval));
 	return 0;
 }
 
@@ -696,13 +696,17 @@ int CTradeAssistDlg::OnFlashComplete(void)
 {
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
-
+	mAction->MouseDoubleClick();
+	UpdateData(TRUE);
 	mIsAutoSubmits = TRUE;	
+	UpdateData(FALSE);
 	SemicAutoTrade(DO_LOW);
-	//2.TODO 关闭确认对话框
+	//2.延时下单间隔
+	Sleep(atoi(mAutoCompleteInterval)*1000);
 
 	//3.移动鼠标到双击位置。
 	SetCursorPos(lpPoint.x, lpPoint.y);
+	mAction->MouseDoubleClick();
 	SemicAutoTrade(DO_HIGH);
 	return 0;
 }
@@ -712,13 +716,11 @@ void CTradeAssistDlg::SemicAutoTrade(int direct)
 
 	//1.当前位置双击弹出下单对话框。
 	int searchCount = 10;
-	mAction->MouseDoubleClick();
 	while (searchCount-- > 0)
 	{
 		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
-		if (!wnd)
+		if (wnd)
 		{
-
 			SendMessage(WM_DO_TRADE, direct);
 			break;;
 		} 

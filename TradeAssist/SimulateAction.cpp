@@ -70,8 +70,6 @@ int SimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 		SetCursorPos(lpPoint.x + dx, lpPoint.y + dy);
 	}
 
-
-
 	return 0;
 }
 
