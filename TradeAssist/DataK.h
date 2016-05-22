@@ -52,12 +52,17 @@ public:
 private:
 	// 回调幅度
 	int mIntCurrent2ExtremeDiff;
+
+private:
+	UINT	mQueryPriceUseTime;
 public:
 	int GetCurrent2ExtremeDiff(void);
 	// 设置回调幅度
 	void SetCurrent2ExtremeDiff(int diff);
 	void SetMillionSecond(long ms);
 	LONG GetMillionSecond(void);
+	UINT GetQueryPriceUseTime(void);
+	void SetQueryPriceUseTime(UINT time);
 };
 
 

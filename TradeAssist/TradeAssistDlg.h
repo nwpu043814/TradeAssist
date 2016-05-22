@@ -163,4 +163,5 @@ private:
 	unsigned int mPullPriceCount;
 	private:
 	void CheckChaseMoment(CDataPacketP packet);
+	UINT mQueryPriceUseTime;
 };

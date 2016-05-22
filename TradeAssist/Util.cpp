@@ -154,7 +154,7 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 
  int CUtil::ParseOwnServerString(CString text, CDataPacket& result)
  {
-	 //5740.72:1365862696259:2013_04_13:22_18_16
+	 //5740.72:1365862696259:2013_04_13_22_18_16:average
 	 if (text.GetLength() != 0)
 	{
 		text = text.MakeLower();
@@ -175,8 +175,19 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 		colPos = text.Find(OWN_SERVER_SPLITER);
 		if (colPos != -1)
 		{
-			result.mMillionSecond = atol(text.Left(colPos));
-			result.mPriceTime = text.Right(text.GetLength() - colPos - 1);
+			//result.mMillionSecond = atol(text.Left(colPos));
+			text = text.Right(text.GetLength() - colPos - 1);
+		} 
+		else
+		{
+			result.mIsGood = FALSE;
+		}
+
+		colPos = text.Find(OWN_SERVER_SPLITER);
+		if (colPos != -1)
+		{
+			result.mPriceTime = text.Left(colPos);
+			result.mQueryPriceUseTime= atoi(text.Right(text.GetLength() - colPos - 1));
 		} 
 		else
 		{

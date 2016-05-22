@@ -76,6 +76,7 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mEnableChaseTimer(FALSE)
 	, mTotalConclution(_T(""))
 	, mPullPriceCount(0)
+	, mQueryPriceUseTime(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mHttpWorker = new CHttpWorker();
@@ -196,6 +197,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_JOBLESS_RATE_WEIGHT2, mJoblessRateCount);
 	DDX_Check(pDX, IDC_CHECK_AOTO_CHASE, mEnableChaseTimer);
 	DDX_Text(pDX, IDC_EDIT_TOTAL_CONCLUTION, mTotalConclution);
+	DDX_Text(pDX, IDC_EDIT_QURERY_PRICE_USE_TIME, mQueryPriceUseTime);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -948,11 +950,12 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 {
 
 	PEcnomicData data = (PEcnomicData)l;
+	bool	updateUI  = true;
 	if (w != NULL &&& l != NULL)
 	{
 		CDataPacketP packet = (CDataPacketP)w;
 		mPullPriceCount++;
-		bool	updateUI = (mPullPriceCount%150) == 0;
+		updateUI = mPullPriceCount==DO_PULL_PRICE_TIMES_PER_MSG;
 
 		if (packet->mIsGood)
 		{
@@ -970,8 +973,7 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 	}
 
 	//发送消息最多尝试三次
-
-	if (mPullPriceCount == DO_PULL_PRICE_TIMES_PER_MSG)
+	if (updateUI)
 	{
 		mPullPriceCount = 0;
 		int i = 0;
@@ -1004,6 +1006,8 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	mDataKCurrent2ExtremeDiff = mDataK->GetCurrent2ExtremeDiff();
 	mDataKStatisticsUpdrop = mDataK->GetAmplitude();
 	mDataKDirectionAgree = mDataK->IsDirectionAgree();
+	mQueryPriceUseTime = mDataK->GetQueryPriceUseTime();
+
 	if (mDataKDirectionAgree)
 	{
 		mProgressAutoCloseDepot.SetPos(mDataKCurrent2ExtremeDiff);
@@ -1270,8 +1274,8 @@ LRESULT CTradeAssistDlg::CheckAutoCloseDepot( CDataPacketP packet, PEcnomicData 
 
 	//更新价格
 	mDataK->SetClose(packet->mPrice, packet->mPriceTime);
-	mDataK->SetMillionSecond(packet->mMillionSecond);
-
+	//mDataK->SetMillionSecond(packet->mMillionSecond);
+	mDataK->SetQueryPriceUseTime(packet->mQueryPriceUseTime);
 	//这里判读是否回调
 	if (mDataK->IsPositive())
 	{

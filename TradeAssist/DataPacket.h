@@ -23,6 +23,7 @@ struct CDataPacket
 	INT		mUpDrop;
 	BOOL	mIsGood;
 	LONG	mMillionSecond;
+	UINT	mQueryPriceUseTime;
 };
 
 typedef CDataPacket * CDataPacketP;

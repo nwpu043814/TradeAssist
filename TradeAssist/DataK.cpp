@@ -172,3 +172,13 @@ LONG CDataK::GetMillionSecond(void)
 {
 	return mMillionSecond;
 }
+
+UINT CDataK::GetQueryPriceUseTime(void)
+{
+	return mQueryPriceUseTime;
+}
+
+void CDataK::SetQueryPriceUseTime(UINT time)
+{
+	mQueryPriceUseTime = time;
+}
