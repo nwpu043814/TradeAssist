@@ -995,7 +995,7 @@ LRESULT CTradeAssistDlg::OnDisplayDataK(WPARAM w, LPARAM l)
 	UpdateData(TRUE);
 
 	mDataKClose = mDataK->GetClose();
-	mDataKOpen = mDataK->GetOpen();
+	mDataKOpen = mLuaEngine.GetStartPrice();//mDataK->GetOpen();
 	mDataKCloseTime = mDataK->GetCloseTime().Right(8);
 	mDataKOpenTime = mDataK->GetOpenTime().Right(8);
 	mDataKHighPrice = mDataK->GetHigh();

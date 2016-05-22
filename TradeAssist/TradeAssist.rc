@@ -182,8 +182,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,7,0,1
- PRODUCTVERSION 1,7,0,1
+ FILEVERSION 1,8,0,1
+ PRODUCTVERSION 1,8,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -199,13 +199,13 @@ BEGIN
         BLOCK "080403a8"
         BEGIN
             VALUE "CompanyName", "Pioneer Software"
-            VALUE "FileDescription", "交易助手1.7版"
-            VALUE "FileVersion", "1.7.0.1"
+            VALUE "FileDescription", "交易助手1.8版"
+            VALUE "FileVersion", "1.8.0.1"
             VALUE "InternalName", "TradeAssist.exe"
             VALUE "LegalCopyright", "交易助手 (C) 先锋科技。保留所有权利。"
             VALUE "OriginalFilename", "TradeAssist.exe"
             VALUE "ProductName", "交易助手"
-            VALUE "ProductVersion", "1.7.0.1"
+            VALUE "ProductVersion", "1.8.0.1"
         END
     END
     BLOCK "VarFileInfo"
