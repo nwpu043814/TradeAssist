@@ -51,7 +51,28 @@ END_MESSAGE_MAP()
 CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CTradeAssistDlg::IDD, pParent)
 	, mIsAutoSubmits(FALSE)
-	, mAutoCompleteInterval(_T(""))
+	, mAutoCompleteInterval(0)
+	, mLastClipboardContent(_T(""))
+	, mStrPriceDiff(_T(""))
+	, mIntOrderCount(1)
+	, mIntLowTab2DirectDx(0)
+	, mIntLowTab2DirectDy(0)
+	, mIntLowDirect2PriceDx(0)
+	, mIntLowDirect2PriceDy(0)
+	, mIntLowPrice2CountDx(0)
+	, mIntLowPrice2CountDy(0)
+	, mIntHighTab2DirectDx(0)
+	, mIntHighTab2DirectDy(0)
+	, mIntHighDirect2PriceDx(0)
+	, mIntHighDirect2PriceDy(0)
+	, mIntCount2ConfirmDx(0)
+	, mIntCount2ConfirmDy(0)
+	, mIntStart2TabDx(0)
+	, mIntStart2TabDy(0)
+	, mIntHighPrice2CountDx(0)
+	, mIntHighPrice2CountDy(0)
+	, mIntStart2DeleteOrderDx(0)
+	, mIntStart2DeleteOrderDy(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	mAction = new SimulateAction();
@@ -60,27 +81,49 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_EDIT_PRICE_DIFF, mEditPriceDiff);
-	DDX_Control(pDX, IDC_EDIT_COUNT, mCount);
-	DDX_Control(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DX, mHighDirect2PriceDx);
-	DDX_Control(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DY, mHighDirect2PriceDy);
-	DDX_Control(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DX, mHighPrice2CountDx);
-	DDX_Control(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DY, mHighPrice2CountDy);
-	DDX_Control(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DX, mLowDirect2PriceDx);
-	DDX_Control(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DY, mLowDirect2PriceDy);
-	DDX_Control(pDX, IDC_EDIT_LOW_PRICE_COUNT_DX, mLowPrice2CountDx);
-	DDX_Control(pDX, IDC_EDIT_LOW_PRICE_COUNT_DY, mLowPrice2CountDy);
-	DDX_Control(pDX, IDC_EDIT_COUNT_CONFIRM_DX, mCount2ConfirmDx);
-	DDX_Control(pDX, IDC_EDIT_COUNT_CONFIRM_Dy, mCount2ConfirmDy);
-	DDX_Control(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DX, mLowTab2DirectionDx);
-	DDX_Control(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DY, mLowTab2DirectionDy);
-	DDX_Control(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DX, mHighTab2DirectionDx);
-	DDX_Control(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DY, mHighTab2DirectionDy);
-	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DX, mStart2TabDx);
-	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mStart2TabDy);
 	DDX_Check(pDX, IDC_CHECK_AOTO_SUBMIT, mIsAutoSubmits);
 	DDX_Text(pDX, IDC_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
-	DDV_MaxChars(pDX, mAutoCompleteInterval, 3);
+	DDV_MinMaxUInt(pDX, mAutoCompleteInterval, 0, 100);
+	DDX_Text(pDX, IDC_EDIT_PRICE_DIFF, mStrPriceDiff);
+	DDV_MaxChars(pDX, mStrPriceDiff, 4);
+	DDX_Text(pDX, IDC_EDIT_COUNT, mIntOrderCount);
+	DDV_MinMaxUInt(pDX, mIntOrderCount, 0, 100);
+	DDX_Text(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DX, mIntLowTab2DirectDx);
+	DDV_MinMaxInt(pDX, mIntLowTab2DirectDx, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_LOW_TAB_DIRECTION_DY, mIntLowTab2DirectDy);
+	DDV_MinMaxUInt(pDX, mIntLowTab2DirectDy, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DX, mIntLowDirect2PriceDx);
+	DDV_MinMaxUInt(pDX, mIntLowDirect2PriceDx, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_LOW_DIRECTION_PRICE_DY, mIntLowDirect2PriceDy);
+	DDV_MinMaxUInt(pDX, mIntLowDirect2PriceDy, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DX, mIntLowPrice2CountDx);
+	DDV_MinMaxUInt(pDX, mIntLowPrice2CountDx, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_LOW_PRICE_COUNT_DY, mIntLowPrice2CountDy);
+	DDV_MinMaxUInt(pDX, mIntLowPrice2CountDy, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DX, mIntHighTab2DirectDx);
+	DDV_MinMaxInt(pDX, mIntHighTab2DirectDx, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_HIGH_TAB_DIRECTION_DY, mIntHighTab2DirectDy);
+	DDV_MinMaxUInt(pDX, mIntHighTab2DirectDy, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DX, mIntHighDirect2PriceDx);
+	DDV_MinMaxInt(pDX, mIntHighDirect2PriceDx, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_HIGH_DIRECTION_PRICE_DY, mIntHighDirect2PriceDy);
+	DDV_MinMaxInt(pDX, mIntHighDirect2PriceDy, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_COUNT_CONFIRM_DX, mIntCount2ConfirmDx);
+	DDV_MinMaxInt(pDX, mIntCount2ConfirmDx, 0, 500);
+	DDX_Text(pDX, IDC_EDIT_COUNT_CONFIRM_Dy, mIntCount2ConfirmDy);
+	DDV_MinMaxInt(pDX, mIntCount2ConfirmDy, 0, 500);
+	DDX_Text(pDX, IDC_EDIT_LEFT_TOP_TAB_DX, mIntStart2TabDx);
+	DDV_MinMaxUInt(pDX, mIntStart2TabDx, 0, 500);
+	DDX_Text(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mIntStart2TabDy);
+	DDV_MinMaxUInt(pDX, mIntStart2TabDy, 0, 500);
+	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DX, mIntHighPrice2CountDx);
+	DDV_MinMaxInt(pDX, mIntHighPrice2CountDx, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_HIGH_PRICE_COUNT_DY, mIntHighPrice2CountDy);
+	DDV_MinMaxInt(pDX, mIntHighPrice2CountDy, -500, 500);
+	DDX_Text(pDX, IDC_EDIT_START_DELETE_ORDER_DX, mIntStart2DeleteOrderDx);
+	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDx, 0, 1000);
+	DDX_Text(pDX, IDC_EDIT_START_DELETE_ORDER_DY, mIntStart2DeleteOrderDy);
+	DDV_MinMaxUInt(pDX, mIntStart2DeleteOrderDy, 0, 1000);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -89,8 +132,8 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(WM_HOTKEY,OnHotKey) //添加此句
 	//}}AFX_MSG_MAP
-	ON_MESSAGE(WM_DO_TRADE, OnDoLowMsg)
-	ON_MESSAGE(WM_DO_COUNT, OnDoCountMsg)
+	ON_MESSAGE(WM_DO_TRADE, OnDoTradeMsg)
+	ON_MESSAGE(WM_DO_COUNT, OnDeleteOrderMsg)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CTradeAssistDlg::OnBnClickedOk)
 	ON_WM_CLOSE()
@@ -208,6 +251,10 @@ void CTradeAssistDlg::OnBnClickedOk()
 HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 {
 
+#ifdef _DEBUG
+	mLastTime = GetMilliseconds();
+#endif
+
 	UINT Mod = (UINT) LOWORD(lParam); // key-modifier flags 
 	UINT uVirtKey = (UINT) HIWORD(lParam); // virtual-key code 
 
@@ -276,29 +323,37 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 int CTradeAssistDlg::dispatchLowAction(void)
 {
 
-	this->PostMessage(WM_DO_TRADE, DO_LOW, MSG_DELAY_YES);
+	TRACE("dispatchLowAction time=%d\r\n", GetMilliseconds() - mLastTime);
+	PostMessage(WM_DO_TRADE, DO_LOW, MSG_DELAY_YES);
+	//OnDoTradeMsg(DO_LOW, MSG_DELAY_YES);
 
 	return 0;
 }
 
 int CTradeAssistDlg::dispatchHighAction(void)
 {
-	this->PostMessage(WM_DO_TRADE, DO_HIGH, MSG_DELAY_YES);
+	PostMessage(WM_DO_TRADE, DO_HIGH, MSG_DELAY_YES);
+	//OnDoTradeMsg(DO_HIGH, MSG_DELAY_YES);
 	return 0;
 }
 
 int CTradeAssistDlg::dispatchCount(void)
 {
 	this->PostMessage(WM_DO_COUNT);
-	AfxMessageBox("HOT_KEY_CODE_COUNT");
 	return 0;
 }
 
-LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
+LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 {
-	
+
+
 	BOOL direction = (UINT) LOWORD(w)== DO_HIGH? TRUE:FALSE;
 	BOOL isDelay = (UINT) LOWORD(l)== MSG_DELAY_YES? TRUE:FALSE;
+
+	TRACE("OnDoTradeMsg time=%d, direction=%d, isDelay=%d\r\n", GetMilliseconds() - mLastTime,direction, isDelay);
+#ifdef _DEBUG
+	WORD	startTime = GetMilliseconds();
+#endif // _DEBUG
 
 	if (isDelay)
 	{
@@ -316,32 +371,46 @@ LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
 	mAction->MoveCursor(start.x,start.y, true);
 
 	//从原点移动到指价委托tab。
-	POINT start2Tab = GetStart2TabVector(); 
-	mAction->MoveCursor(start2Tab.x,start2Tab.y);
+	mAction->MoveCursor(mIntStart2TabDx,mIntStart2TabDy);
 	mAction->MouseClick();
 
+#ifdef _DEBUG
+	TRACE("OnDoTradeMsg start2tab time=%d\r\n", GetMilliseconds() - startTime);
+#endif
 	//指价委托到方向
 	POINT tab2Direction = GetTab2Direction(direction);
 	mAction->MoveCursor(tab2Direction.x,tab2Direction.y);
 	mAction->MouseClick();
-
+#ifdef _DEBUG
+	TRACE("OnDoTradeMsg tab2Direction time=%d\r\n", GetMilliseconds() - startTime);
+#endif
 	//从方向移到价格控件
 	POINT direction2PriceVector = GetDirection2PriceVector(direction);
 	mAction->MoveCursor(direction2PriceVector.x,direction2PriceVector.y);
 
 	//获得预制的点差
 	CString outText;
-	mEditPriceDiff.GetWindowText(outText);
-	float diff = atof(outText);
+	float diff = atof(mStrPriceDiff);
 
 	//取得当前价格。
 	CString text = GetEditText();
 	float newCount = direction?atof(text) + diff : atof(text) - diff ;
 	outText.Format("%.2f",newCount);
 
+	//保存以备检查
+	mLastClipboardContent = outText;
+
 	//设置剪贴板内容并粘贴到窗口
 	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
+#ifdef _DEBUG
+		TRACE("OnDoTradeMsg pricePasted time=%d\r\n", GetMilliseconds() - startTime);
+#endif // _DEBUG
+	CheckEditPasteResult();
+
+#ifdef _DEBUG
+	TRACE("OnDoTradeMsg priceChecked time=%d\r\n", GetMilliseconds() - startTime);
+#endif // _DEBUG
 
 	//移动到设置手数的控件
 	POINT price2CountVector = GetPrice2CountVector(direction);
@@ -350,12 +419,16 @@ LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
 	//更新交易手数
 	mAction->MouseDoubleClick();
 	EmptyClipboard(); 
-	SetClipboardContent(GetCount());
+	outText.Format("%d", mIntOrderCount);
+	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
 
+#ifdef _DEBUG
+	TRACE("OnDoTradeMsg countUpdated time=%d\r\n", GetMilliseconds() - startTime);
+#endif // _DEBUG
+
 	//移动到确定按钮上
-	POINT count2ConfirmVector = GetCount2ConfirmVector();
-	mAction->MoveCursor(count2ConfirmVector.x,count2ConfirmVector.y);
+	mAction->MoveCursor(mIntCount2ConfirmDx,mIntCount2ConfirmDy);
 
 	//自动提交
 	if(mIsAutoSubmits)
@@ -363,13 +436,16 @@ LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
 		mAction->MouseClick();
 	}
 
+#ifdef _DEBUG
+	TRACE("OnDoTradeMsg submit time=%d\r\n", GetMilliseconds() - startTime);
+#endif
+
 	return LRESULT();
 }
 
 // 获得剪贴板的内容
 CString CTradeAssistDlg::GetContentFromClipboard(void)
 {
-
 	char *buffer = NULL;
 	
 	CString fromClipboard;
@@ -404,69 +480,52 @@ BOOL CTradeAssistDlg::SetClipboardContent(CString source)
 
 CTradeAssistDlg::~CTradeAssistDlg()
 {
-
-
 }
 
 int CTradeAssistDlg::InitialSetting(void)
 {
 	CString outText;
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_PRICE_DIFF, 10));
-	mEditPriceDiff.SetWindowText(outText);
-
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_KEY_COUNT, 6));
-	mCount.SetWindowText(outText);
+	mStrPriceDiff.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_PRICE_DIFF, 10));
+	mIntOrderCount = theApp.GetProfileInt(STRING_SETTING, STRING_KEY_COUNT, 6);
 
 	//做多方向到价格
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX, 0));
-	mHighDirect2PriceDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY, 0));
-	mHighDirect2PriceDy.SetWindowText(outText);
-
+	mIntHighDirect2PriceDx = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX, 0);
+	mIntHighDirect2PriceDy = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY, 0);
+	
 	//做多价格到交易笔数
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX, 0));
-	mHighPrice2CountDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY, 0));
-	mHighPrice2CountDy.SetWindowText(outText);
+	mIntHighPrice2CountDx = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX, 0);
+	mIntHighPrice2CountDy = theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY, 0);
 
 	//做空方向到价格
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX, 0));
-	mLowDirect2PriceDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY, 0));
-	mLowDirect2PriceDy.SetWindowText(outText);
+	mIntLowDirect2PriceDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX, 0);
+	mIntLowDirect2PriceDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY, 0);
 
 	//做空价格到交易笔数
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX, 0));
-	mLowPrice2CountDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY, 0));
-	mLowPrice2CountDy.SetWindowText(outText);
+	mIntLowPrice2CountDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX, 0);
+	mIntLowPrice2CountDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY, 0);	
 
 	//交易笔数到确定按钮
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX, 0));
-	mCount2ConfirmDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY, 0));
-	mCount2ConfirmDy.SetWindowText(outText);
+	mIntCount2ConfirmDx = theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX, 0);
+	mIntCount2ConfirmDy = theApp.GetProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY, 0);
 	
 	//原点到指价委托
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DX, 0));
-	mStart2TabDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DY, 0));
-	mStart2TabDy.SetWindowText(outText);
+	mIntStart2TabDx = theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DX, 0);
+	mIntStart2TabDy = theApp.GetProfileInt(STRING_SETTING, STRING_START_TAB_DY, 0);
 
 	//做空指价委托到方向
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX, 0));
-	mLowTab2DirectionDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY, 0));
-	mLowTab2DirectionDy.SetWindowText(outText);
+	mIntLowTab2DirectDx = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX, 0);
+	mIntLowTab2DirectDy = theApp.GetProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY, 0);
 
 	//做多指价委托到方向
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX, 0));
-	mHighTab2DirectionDx.SetWindowText(outText);
-	outText.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY, 0));
-	mHighTab2DirectionDy.SetWindowText(outText);
+	mIntHighTab2DirectDx =theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX, 0);
+	mIntHighTab2DirectDy =theApp.GetProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY, 0);
+
+	//删除订单原定到删除
+	mIntStart2DeleteOrderDx =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DX, 0);
+	mIntStart2DeleteOrderDy =theApp.GetProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DY, 0);
 
 	mIsAutoSubmits = theApp.GetProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, FALSE);
-	mAutoCompleteInterval.Format("%d", theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, 2));
+	mAutoCompleteInterval = theApp.GetProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, 2);
 	UpdateData(FALSE);
 
 	return 0;
@@ -475,55 +534,38 @@ int CTradeAssistDlg::InitialSetting(void)
 int CTradeAssistDlg::SaveSetting(void)
 {
 	UpdateData(TRUE);
-	CString contant;
-	mEditPriceDiff.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_PRICE_DIFF , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_PRICE_DIFF , atoi(mStrPriceDiff));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_KEY_COUNT , mIntOrderCount);
 
-	mCount.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_KEY_COUNT , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX , mIntHighDirect2PriceDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY , mIntHighDirect2PriceDy);
 
-	mHighDirect2PriceDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DX , atoi(contant));
-	mHighDirect2PriceDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_DIRECTION_PRICE_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX ,mIntHighPrice2CountDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY , mIntHighPrice2CountDy);
 
-	mHighPrice2CountDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DX , atoi(contant));
-	mHighPrice2CountDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_PRICE_COUNT_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX , mIntLowDirect2PriceDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY , mIntLowDirect2PriceDy);
 
-	mLowDirect2PriceDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DX , atoi(contant));
-	mLowDirect2PriceDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_DIRECTION_PRICE_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX , mIntLowPrice2CountDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY , mIntLowPrice2CountDy);
 
-	mLowPrice2CountDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DX , atoi(contant));
-	mLowPrice2CountDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_PRICE_COUNT_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX , mIntCount2ConfirmDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY , mIntCount2ConfirmDy);
 
-	mCount2ConfirmDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DX , atoi(contant));
-	mCount2ConfirmDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_COUNT_CONFIRM_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DX , mIntStart2TabDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DY , mIntStart2TabDy);
 
-	mStart2TabDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DX , atoi(contant));
-	mStart2TabDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_START_TAB_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX , mIntLowTab2DirectDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY , mIntLowTab2DirectDy);
 
-	mLowTab2DirectionDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DX , atoi(contant));
-	mLowTab2DirectionDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_LOW_TAB_DIRECT_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX , mIntHighTab2DirectDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY , mIntHighTab2DirectDy);
 
-	mHighTab2DirectionDx.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DX , atoi(contant));
-	mHighTab2DirectionDy.GetWindowText(contant);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_HIGH_TAB_DIRECT_DY , atoi(contant));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DX , mIntStart2DeleteOrderDx);
+	theApp.WriteProfileInt(STRING_SETTING, STRING_START_DELETE_ORDER_DY , mIntStart2DeleteOrderDy);
 
 	theApp.WriteProfileInt(STRING_SETTING, STRING_CHECK_BOX_AUTO_SUBMIT, mIsAutoSubmits);
-	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, atoi(mAutoCompleteInterval));
+	theApp.WriteProfileInt(STRING_SETTING, STRING_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
 	return 0;
 }
 
@@ -535,19 +577,13 @@ POINT CTradeAssistDlg::GetPrice2CountVector(BOOL isHigh)
 
 	if (isHigh)
 	{
-		mHighPrice2CountDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-
-		mHighPrice2CountDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x = mIntHighPrice2CountDx;
+		point.y = mIntHighPrice2CountDy;
 	}
 	else
 	{
-		mLowPrice2CountDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-
-		mLowPrice2CountDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x = mIntLowPrice2CountDx;
+		point.y = mIntLowPrice2CountDy;
 	}
 
 	return point;
@@ -561,93 +597,65 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 
 	if (isHigh)
 	{
-		mHighDirect2PriceDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-
-		mHighDirect2PriceDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x =mIntHighDirect2PriceDx;
+		point.y =mIntHighDirect2PriceDy;
 	}
 	else
 	{
-		mLowDirect2PriceDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-
-		mLowDirect2PriceDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x = mIntLowDirect2PriceDx;
+		point.y =  mIntLowDirect2PriceDy;
 	}
 
 	return point;
 }
 
-// 获得预制的交易手数
-CString CTradeAssistDlg::GetCount(void)
+LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 {
-	CString buffer;
-	mCount.GetWindowText(buffer);
+	mAction->MouseDoubleClick();
+	UpdateData(TRUE);
 
-	return buffer;
-}
-
-// 返货交易手数到确定按钮的预制位移。
-POINT CTradeAssistDlg::GetCount2ConfirmVector(void)
-{
-	POINT point;
-	CString buffer;
-
-	mCount2ConfirmDx.GetWindowText(buffer);
-	point.x = atoi(buffer);
-
-	mCount2ConfirmDy.GetWindowText(buffer);
-	point.y = atoi(buffer);
-	
-	return point;
-}
-
-
-LRESULT CTradeAssistDlg::OnDoCountMsg(WPARAM w , LPARAM l)
-{
+	//1.当前位置双击弹出下单对话框。
+	int searchCount = 10;
+	while (searchCount-- > 0)
+	{
+		POINT pos =GetSunAwtDialogPos();
+		if (pos.x != 0 && pos.y != 0)
+		{
+			mAction->MoveCursor(pos.x, pos.y, true);
+			mAction->MoveCursor(mIntStart2DeleteOrderDx,mIntStart2DeleteOrderDy);
+			mAction->MouseClick();
+			break;
+		}
+		Sleep(WINDOW_CHECK_INTERVAL);
+	}
 
 	return LRESULT();
 }
 // 获得sun对话框右上角的绝对坐标。
 POINT CTradeAssistDlg::GetSunAwtDialogPos(void)
 {
-	HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
 	POINT pos;
-
-
-	if(wnd)
+	pos.x = 0;
+	pos.y = 0;
+	int searchCount = 0;
+	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
 	{
-		CRect rect;
-		::GetWindowRect(wnd,rect);
-		pos.x = rect.left;
-		pos.y = rect.top;
-		//::SendMessage(wnd,WM_CLOSE,0,0);
-	}
-	else
-	{
-		pos.x = 0;
-		pos.y = 0;
-		MessageBox("查找窗口失败！");
+		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
+		if (wnd)
+		{
+			CRect rect;
+			::GetWindowRect(wnd,rect);
+			pos.x = rect.left;
+			pos.y = rect.top;
+
+			break;;
+		} 
+		Sleep(WINDOW_CHECK_INTERVAL);
 	}
 
 	return pos;
 }
 
-// 原点到指甲委托的位移
-POINT CTradeAssistDlg::GetStart2TabVector(void)
-{
-	POINT point;
-	CString buffer;
-
-	mStart2TabDx.GetWindowText(buffer);
-	point.x = atoi(buffer);
-
-	mStart2TabDy.GetWindowText(buffer);
-	point.y = atoi(buffer);
-
-	return point;
-}
 
 // 指价委托到方向
 POINT CTradeAssistDlg::GetTab2Direction(BOOL isHigh)
@@ -657,28 +665,18 @@ POINT CTradeAssistDlg::GetTab2Direction(BOOL isHigh)
 	
 	if (isHigh)
 	{
-		mHighTab2DirectionDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-		mHighTab2DirectionDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x = mIntHighTab2DirectDx;
+		point.y = mIntHighTab2DirectDy;
 	}
 	else
 	{
-		mLowTab2DirectionDx.GetWindowText(buffer);
-		point.x = atoi(buffer);
-		mLowTab2DirectionDy.GetWindowText(buffer);
-		point.y = atoi(buffer);
+		point.x = mIntLowTab2DirectDx;
+		point.y = mIntLowTab2DirectDy;
 	}
 
 	return point;
 }
 
-void CTradeAssistDlg::OnClose()
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-
-	CDialog::OnClose();
-}
 
 int CTradeAssistDlg::ClearResource(void)
 {
@@ -687,13 +685,21 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_CODE_COUNT);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_FLASH_COMPLETE);
 	SaveSetting();
-	delete mAction;
+	if (mAction != NULL)
+	{
+		delete mAction;
+		mAction = NULL;
+	}
 	return 0;
 }
 
 // 秒杀下单
 int CTradeAssistDlg::OnFlashComplete(void)
 {
+
+#ifdef _DEBUG
+	WORD	start = GetMilliseconds();
+#endif // _DEBUG
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
 	mAction->MouseDoubleClick();
@@ -702,12 +708,25 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	UpdateData(FALSE);
 	SemicAutoTrade(DO_LOW);
 	//2.延时下单间隔
-	Sleep(atoi(mAutoCompleteInterval)*1000);
+
+#ifdef _DEBUG
+	TRACE("OnFlashComplete time1=%d\r\n", GetMilliseconds() - start);
+#endif // _DEBUG
+
+	if (mAutoCompleteInterval > 0)
+	{
+		Sleep(mAutoCompleteInterval*1000);
+	}
 
 	//3.移动鼠标到双击位置。
 	SetCursorPos(lpPoint.x, lpPoint.y);
 	mAction->MouseDoubleClick();
 	SemicAutoTrade(DO_HIGH);
+
+#ifdef _DEBUG
+	TRACE("OnFlashComplete time2=%d\r\n", GetMilliseconds() - start);
+#endif // _DEBUG
+
 	return 0;
 }
 
@@ -715,46 +734,89 @@ void CTradeAssistDlg::SemicAutoTrade(int direct)
 {
 
 	//1.当前位置双击弹出下单对话框。
-	int searchCount = 10;
-	while (searchCount-- > 0)
+	int searchCount = 0;
+	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
 	{
 		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
 		if (wnd)
 		{
-			SendMessage(WM_DO_TRADE, direct, MSG_DELAY_NO);
+			OnDoTradeMsg(direct, MSG_DELAY_NO);
 			break;;
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
 }
+
 // 通过双击复制获得编辑框内容。
 CString CTradeAssistDlg::GetEditText(void)
 {
-	int doubleClickCount = 0;
-	CString currentPrice;
+	CString text;
+	mAction->MouseDoubleClick();
+	
+#ifdef _DEBUG
+	WORD	start = GetMilliseconds();
+#endif // _DEBUG
 
-	while(doubleClickCount++ < 2)
+	int copyCount = 0;
+	while(copyCount++  < GET_EDIT_CONTENT_MAX_TIMES)
 	{
-		mAction->MouseDoubleClick();
-		int copyCount = 0;
-		while(copyCount++  < 2)
+		EmptyClipboard();
+		mAction->KeyboardCopy();
+		Sleep((copyCount-1)*GET_CLIPBOARD_CONTENT_DELAY);
+		text = GetContentFromClipboard();
+		text = text.Trim();
+		if (text.GetLength() < 4)
 		{
-			EmptyClipboard();
-			mAction->KeyboardCopy();
-			Sleep(copyCount*GET_CLIPBOARD_CONTENT_DELAY);
-			currentPrice = GetContentFromClipboard();
-			currentPrice = currentPrice.Trim();
-			if (currentPrice.GetLength() < 4)
-			{
-				continue;			
-			}
-			else
-			{
-					doubleClickCount = 2;
-					break;
-			}
+			continue;			
+		}
+		else
+		{
+			break;
+		}
+	}
+#ifdef _DEBUG
+	TRACE("GetEditText time=%d, copycount=%d\r\n", GetMilliseconds() - start, copyCount);
+#endif
+
+	return text;
+}
+
+void CTradeAssistDlg::CheckEditPasteResult()
+{
+
+#ifdef _DEBUG
+	WORD	start = GetMilliseconds();
+#endif // _DEBUG
+
+	//check是否粘贴成功。
+	int priceCheckCount = 0;
+	while(priceCheckCount++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
+	{
+		//双击全选
+		CString toCheckPrice = GetEditText();
+		if (toCheckPrice.Compare(mLastClipboardContent) == 0)
+		{
+			//通过检查，设置正确。
+			break;
+		}
+		else
+		{
+			//未设置正确，需要重新设置
+			SetClipboardContent(mLastClipboardContent);
+			mAction->KeyboardPaste();
 		}
 	}
 
-	return currentPrice;
+#ifdef _DEBUG
+	TRACE("CheckEditPasteResult time=%d, checkCount=%d\r\n", GetMilliseconds() - start, priceCheckCount);
+#endif
+
+}
+
+WORD CTradeAssistDlg::GetMilliseconds(void)
+{
+
+	SYSTEMTIME time;
+	GetSystemTime(&time);
+	return time.wSecond * 1000 + time.wMilliseconds;
 }
