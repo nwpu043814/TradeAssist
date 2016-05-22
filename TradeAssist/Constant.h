@@ -124,4 +124,8 @@
 //半自动交易重试次数
 #define SEMIC_AUTO_TRADE_RETRY_TIMES 3
 
-#define  TIMER_ID 123
+//双向挂单定时器ID
+#define  TIMER_ID_FOR_DO_FLASH_TRADE 123
+
+//http请求线程结束后发送该消息到主线程
+#define  WM_HTTP_GET_FINISH WM_USER + 100

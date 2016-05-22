@@ -1,10 +1,10 @@
 #pragma once
 
-class Logger
+class CLogger
 {
 public:
-	Logger(void);
-	~Logger(void);
+	CLogger(void);
+	~CLogger(void);
 	static int SaveLog();
 public:
 	static CString sContent;

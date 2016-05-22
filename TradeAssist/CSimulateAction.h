@@ -1,10 +1,10 @@
 #pragma once
 
-class SimulateAction
+class CSimulateAction
 {
 public:
-	SimulateAction(void);
-	virtual ~SimulateAction(void);
+	CSimulateAction(void);
+	virtual ~CSimulateAction(void);
 	// 模拟鼠标双击
 	int MouseDoubleClick(void);
 	// 鼠标单击
@@ -17,3 +17,5 @@ public:
 	// 选中所有内容。
 	int SelectAll(void);
 };
+
+typedef CSimulateAction * CSimulateActionP;

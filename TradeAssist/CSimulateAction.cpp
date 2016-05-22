@@ -1,17 +1,17 @@
 #include "StdAfx.h"
-#include "SimulateAction.h"
+#include "CSimulateAction.h"
 #include "Constant.h"
 
-SimulateAction::SimulateAction(void)
+CSimulateAction::CSimulateAction(void)
 {
 }
 
-SimulateAction::~SimulateAction(void)
+CSimulateAction::~CSimulateAction(void)
 {
 }
 
 // 模拟鼠标双击
-int SimulateAction::MouseDoubleClick(void)
+int CSimulateAction::MouseDoubleClick(void)
 {
 	MouseClick();
 	Sleep(MOUSE_DOUBLE_CLICK_DELAY);
@@ -20,7 +20,7 @@ int SimulateAction::MouseDoubleClick(void)
 }
 
 // 鼠标单击
-int SimulateAction::MouseClick(void)
+int CSimulateAction::MouseClick(void)
 {
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
@@ -34,7 +34,7 @@ int SimulateAction::MouseClick(void)
 }
 
 // 通过模拟Ctrl+C来复制
-int SimulateAction::KeyboardCopy(void)
+int CSimulateAction::KeyboardCopy(void)
 {
 	keybd_event(VK_CONTROL ,0,0,0);
 	keybd_event(VK_C ,0,0,0);
@@ -45,7 +45,7 @@ int SimulateAction::KeyboardCopy(void)
 }
 
 // 通过键盘Ctrl+V模拟粘贴
-int SimulateAction::KeyboardPaste(void)
+int CSimulateAction::KeyboardPaste(void)
 {
 	keybd_event(VK_CONTROL ,0,0,0);
 	keybd_event(VK_V ,0,0,0);
@@ -56,7 +56,7 @@ int SimulateAction::KeyboardPaste(void)
 }
 
 //移动鼠标
-int SimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
+int CSimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 {
 	POINT lpPoint;
 	GetCursorPos(&lpPoint);
@@ -76,7 +76,7 @@ int SimulateAction::MoveCursor(int dx, int dy, bool isAbslute)
 
 
 // 选中所有内容。
-int SimulateAction::SelectAll(void)
+int CSimulateAction::SelectAll(void)
 {
 	MouseClick();
 	keybd_event(VK_CONTROL ,0,0,0);

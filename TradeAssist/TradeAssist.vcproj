@@ -186,11 +186,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Logger.cpp"
+				RelativePath=".\CHttpWorker.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SimulateAction.cpp"
+				RelativePath=".\CLogger.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CSimulateAction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CTradeAssistDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataK.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HttpThread.cpp"
 				>
 			</File>
 			<File
@@ -218,7 +234,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TradeAssistDlg.cpp"
+				RelativePath=".\Util.cpp"
 				>
 			</File>
 		</Filter>
@@ -228,19 +244,39 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\CHttpWorker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CLogger.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Constant.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Logger.h"
+				RelativePath=".\CSimulateAction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CTradeAssistDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DataK.h"
+				>
+			</File>
+			<File
+				RelativePath=".\DataPacket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HttpThread.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\SimulateAction.h"
 				>
 			</File>
 			<File
@@ -256,7 +292,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TradeAssistDlg.h"
+				RelativePath=".\Util.h"
 				>
 			</File>
 		</Filter>

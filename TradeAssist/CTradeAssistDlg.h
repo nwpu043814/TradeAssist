@@ -2,8 +2,10 @@
 //
 
 #pragma once
-#include "simulateaction.h"
+#include "csimulateaction.h"
 #include "afxwin.h"
+#include "chttpworker.h"
+#include "DataK.h"
 
 
 // CTradeAssistDlg 对话框
@@ -46,7 +48,7 @@ private:
 	int dispatchHighAction(void);
 	// 处理交易手数目
 	int dispatchCount(void);
-	SimulateAction * mAction;
+	CSimulateActionP mAction;
 
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
 	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
@@ -125,6 +127,9 @@ private:
 	UINT mIntHour;
 	UINT mIntMinute;
 	UINT mIntSecond;
+	CHttpWorkerP mHttpWorker;
 public:
 	afx_msg void OnBnClickedButtonStartTimer();
+private:
+	CDataKP mDataK;
 };

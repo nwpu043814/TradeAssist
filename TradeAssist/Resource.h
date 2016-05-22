@@ -6,6 +6,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDS_ABOUTBOX                    101
 #define IDD_TRADEASSIST_DIALOG          102
+#define IDS_INVALID_TIMER               102
 #define IDR_MAINFRAME                   128
 #define IDC_EDIT_PRICE_DIFF             1000
 #define IDC_EDIT_COUNT                  1001
@@ -36,8 +37,11 @@
 #define IDC_EDIT_START_DELETE_ORDER_DY  1021
 #define IDC_EDIT_DELETE_CONFIRM_DX      1022
 #define IDC_EDIT_DELETE_CONFIRM_DY      1023
-#define IDC_EDIT_DELETE_CONFIRM_DX2     1024
 #define IDC_EDIT_MSG_DELAY              1024
+#define IDC_EDIT_HOUR                   1025
+#define IDC_EDIT_MINUTE                 1026
+#define IDC_EDIT_SECOND                 1027
+#define IDC_BUTTON_START_TIMER          1028
 
 // Next default values for new objects
 // 
@@ -45,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1021
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

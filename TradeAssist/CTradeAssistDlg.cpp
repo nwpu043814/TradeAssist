@@ -3,10 +3,13 @@
 
 #include "stdafx.h"
 #include "TradeAssist.h"
-#include "TradeAssistDlg.h"
+#include "CTradeAssistDlg.h"
 #include "Constant.h"
-#include "SimulateAction.h"
-#include "Logger.h"
+#include "CSimulateAction.h"
+#include "CLogger.h"
+#include "CHttpWorker.h"
+#include "Util.h"
+#include "DataPacket.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -82,7 +85,9 @@ CTradeAssistDlg::CTradeAssistDlg(CWnd* pParent /*=NULL*/)
 	, mIntSecond(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	mAction = new SimulateAction();
+	mAction = new CSimulateAction();
+	mHttpWorker = new CHttpWorker();
+	mDataK = new CDataK();
 }
 
 void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
@@ -264,7 +269,15 @@ void CTradeAssistDlg::OnBnClickedOk()
 {
 	ClearResource();
 	OnOK();
-	
+}
+
+UINT HttpThread(LPVOID param)
+{
+	CString * p = (CString *) param;
+
+	*p = "lian";
+
+	return 0;
 }
 
 HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
@@ -308,12 +321,26 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_INCREASE_PRICE:
 		{
-			UpdatePrice(true);
+			//UpdatePrice(true);
+			//CString result = mHttpWorker->DoGet(TEXT("jry.baidao.com"), 80, TEXT("/api/hq/npdata.do?ids=1&markettype=ttj"));
+			//MessageBox(result);
+
+			CDataPacket packet;
+			CString text = _T("[{\"percent\":\"-1.65%\",\"updatetime\":\"20130322 23:20:55\",\"nickname\":\"XAGUSD\",\"buy\":\"5794\",\"status\":true,\"updrop\":\"-97\",\"close\":\"5784\",\"id\":1,\"open\":\"5883\",\"sell\":\"5784\",\"now\":\"5784\",\"pricetime\":\"20130322 23:20:54\",\"name\":\"现货白银\",\"high\":\"5888\",\"low\":\"5757\",\"preclose\":\"5881\",\"avg\":\"5836.99\",\"amplitude\":\"2.23%\"}]");
+			CUtil::ParseDataString(text,packet);
+			CString out;
+			out.Format("updrop=%d,status=%d",packet.mUpDrop, packet.mIsGood );
+
+			int diff = CUtil::GetTimeSpan(_T("20130322 22:48:44"), _T("20130322 22:47:43"));
+			out.Format("diff=%d", diff);
+			MessageBox(out);
+
+
+			AfxBeginThread(HttpThread, &out);
+			MessageBox(out);
 			break;
 		}
-
 	}
-
 
 	return 1;
 }
@@ -397,7 +424,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	POINT start = GetSunAwtDialogPos();
 	if (start.x == 0 && start.y == 0)
 	{
-		Logger::Add("not find sunawtdialog");
+		CLogger::Add("not find sunawtdialog");
 		//未能找到sun对话框
 		return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG;
 	}
@@ -433,7 +460,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 
 	CString log;
 	log.Format("originalprice=%s, diff=%f, newPrice=%s, direction=%d", text, diff, outText, direction);
-	Logger::Add(log);
+	CLogger::Add(log);
 
 	//保存以备检查
 	mLastClipboardContent = outText;
@@ -512,6 +539,9 @@ BOOL CTradeAssistDlg::SetClipboardContent(CString source)
 
 CTradeAssistDlg::~CTradeAssistDlg()
 {
+	delete mAction;
+	delete mHttpWorker;
+	delete mDataK;
 }
 
 int CTradeAssistDlg::InitialSetting(void)
@@ -754,14 +784,10 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DECREASE_PRICE);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_INCREASE_PRICE);
 	
+	KillTimer(TIMER_ID_FOR_DO_FLASH_TRADE);
 	SaveSetting();
-	if (mAction != NULL)
-	{
-		delete mAction;
-		mAction = NULL;
-	}
 
-	Logger::SaveLog();
+	CLogger::SaveLog();
 
 	return 0;
 }
@@ -780,21 +806,18 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	mIsAutoSubmits = TRUE;	
 	UpdateData(FALSE);
 
-	if (1)
+	int retryTimes = 0;
+	int result = SemicAutoTrade(DO_LOW);
+	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
 	{
-		int retryTimes = 0;
-		int result = SemicAutoTrade(DO_LOW);
-		while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
-		{
-			SetCursorPos(lpPoint.x, lpPoint.y);
-			mAction->MouseClick();
-			result = SemicAutoTrade(DO_LOW);
-		}
-
-		CString log;
-		log.Format("OnFlashComplete low time1=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
-		Logger::Add(log);
+		SetCursorPos(lpPoint.x, lpPoint.y);
+		mAction->MouseClick();
+		result = SemicAutoTrade(DO_LOW);
 	}
+
+	CString log;
+	log.Format("OnFlashComplete low time1=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+	CLogger::Add(log);
 
 	//2.延时下单间隔
 
@@ -811,22 +834,17 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	SetCursorPos(lpPoint.x, lpPoint.y);
 	mAction->MouseClick();
 
-
-	if (1)
+	retryTimes = 0;
+	result = SemicAutoTrade(DO_HIGH);
+	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
 	{
-		int retryTimes = 0;
-		int result = SemicAutoTrade(DO_HIGH);
-		while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
-		{
-			SetCursorPos(lpPoint.x, lpPoint.y);
-			mAction->MouseClick();
-			result = SemicAutoTrade(DO_HIGH);
-		}
-
-		CString log;
-		log.Format("OnFlashComplete high time2=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
-		Logger::Add(log);
+		SetCursorPos(lpPoint.x, lpPoint.y);
+		mAction->MouseClick();
+		result = SemicAutoTrade(DO_HIGH);
 	}
+
+	log.Format("OnFlashComplete high time2=%d, retryTimes=%d", GetMilliseconds() - start, retryTimes);
+	CLogger::Add(log);
 
 #ifdef _DEBUG
 	TRACE("OnFlashComplete time2=%d\r\n", GetMilliseconds() - start);
@@ -848,7 +866,7 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 
 			CString log;
 			log.Format("SemicAutoTrade direct=%d, dialogSearchCount=%d", direct, searchCount);
-			Logger::Add(log);
+			CLogger::Add(log);
 
 			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
 			{
@@ -925,7 +943,7 @@ BOOL CTradeAssistDlg::CheckEditPasteResult()
 #ifdef _DEBUG
 			CString log;
 			log.Format("CheckEditPasteResult failed Good=%s, Bad=%s",mLastClipboardContent, toCheckPrice);
-			Logger::Add(log);
+			CLogger::Add(log);
 			TRACE(log+"\r\n");
 #endif
 
@@ -991,13 +1009,14 @@ int CTradeAssistDlg::UpdatePrice(bool isAdd)
 	//设置剪贴板内容并粘贴到窗口
 	SetClipboardContent(outText);
 	mAction->KeyboardPaste();
+
 	return 0;
 }
 
 void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 {
 
-	if (nIDEvent == TIMER_ID)
+	if (nIDEvent == TIMER_ID_FOR_DO_FLASH_TRADE)
 	{
 		SYSTEMTIME time;
 		GetLocalTime(&time);
@@ -1022,7 +1041,7 @@ void CTradeAssistDlg::OnBnClickedButtonStartTimer()
 	if (mIntHour * 3600 + mIntMinute * 60 + mIntSecond > time.wHour  * 3600 +  time.wMinute * 60 + time.wSecond)
 	{
 		GetDlgItem(IDC_BUTTON_START_TIMER)->EnableWindow(FALSE);
-		SetTimer(TIMER_ID, 50, NULL);
+		SetTimer(TIMER_ID_FOR_DO_FLASH_TRADE, 50, NULL);
 	}
 	else
 	{

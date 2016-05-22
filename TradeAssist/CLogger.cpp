@@ -1,17 +1,17 @@
 #include "StdAfx.h"
-#include "Logger.h"
+#include "CLogger.h"
 
-Logger::Logger(void)
+CLogger::CLogger(void)
 {
 }
 
-Logger::~Logger(void)
+CLogger::~CLogger(void)
 {
 }
 
-CString Logger::sContent = "";
+CString CLogger::sContent = "";
 
-int Logger::SaveLog()
+int CLogger::SaveLog()
 {
 
 	SYSTEMTIME st;
@@ -24,15 +24,15 @@ int Logger::SaveLog()
 	if (out.Open(fileName, CFile::modeCreate|CFile::modeWrite|CFile::modeNoTruncate))
 	{
 		out.SeekToEnd();
-		out.WriteString(Logger::sContent);
+		out.WriteString(CLogger::sContent);
 		out.Close();
-		Logger::sContent.Empty();
+		CLogger::sContent.Empty();
 	}
 
 	return 0;
 }
 
-int Logger::Add(CString text)
+int CLogger::Add(CString text)
 {
 	
 	CString time;

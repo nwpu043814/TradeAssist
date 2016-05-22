@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "TradeAssist.h"
-#include "TradeAssistDlg.h"
+#include "CTradeAssistDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
