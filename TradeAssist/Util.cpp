@@ -1,5 +1,12 @@
 #include "StdAfx.h"
 #include "Util.h"
+#include "json/json.h"
+
+#ifdef _DEBUG
+	#pragma comment(lib,"json/json_vc71_libmtd.lib")
+#else
+	#pragma comment(lib,"json/json_vc71_libmt.lib")
+#endif
 
 CUtil::CUtil(void)
 {
@@ -157,63 +164,21 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 	 //5740.72:1365862696259:2013_04_13_22_18_16:average
 	 if (text.GetLength() != 0)
 	{
-		text = text.MakeLower();
 		result.mIsGood = TRUE;
-		
+		Json::Reader reader;
+	    Json::Value root;
 
-		int colPos = text.Find(OWN_SERVER_SPLITER);
-		if (colPos != -1)
+	    if(!reader.parse(text.GetBuffer(0),root))
 		{
-			result.mPrice = atof(text.Left(colPos));
-			text = text.Right(text.GetLength() - colPos - 1);
-		} 
-		else
-		{
+			printf("failed to parse!\n");
 			result.mIsGood = FALSE;
-		}
+			return 0;
+		}//result={"TIME":"2013_07_29_15_29_58","PRICE":3996,"QUERY_TIME":"0.00","MILLION_SECOND":1375111798656,"CAPTURE_TIME":"0.0"}
 
-		colPos = text.Find(OWN_SERVER_SPLITER);
-		if (colPos != -1)
-		{
-			//milliseconds
-			text = text.Right(text.GetLength() - colPos - 1);
-		} 
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		colPos = text.Find(OWN_SERVER_SPLITER);
-		if (colPos != -1)
-		{
-			result.mPriceTime = text.Left(colPos);
-			text = text.Right(text.GetLength() - colPos - 1);
-		} 
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		colPos = text.Find(OWN_SERVER_SPLITER);
-		if (colPos != -1)
-		{
-			result.mQueryPriceUseTime= atof(text.Left(colPos));
-			text = text.Right(text.GetLength() - colPos - 1);
-		} 
-		else
-		{
-			result.mIsGood = FALSE;
-		}
-
-		/*colPos = text.Find(OWN_SERVER_SPLITER);
-		if (colPos != -1)
-		{*/
-			result.mCapturePriceUseTime =atof( text);
-		/*} 
-		else
-		{
-			result.mIsGood = FALSE;
-		}*/
+		result.mPrice = root[NETWORK_KEY_PRICE].asDouble();
+		result.mPriceTime = root[NETWORK_KEY_TIME].asString().c_str();
+		result.mQueryPriceUseTime= atof(root[NETWORK_KEY_QUERY_TIME].asString().c_str());
+		result.mCapturePriceUseTime =atof(root[NETWORK_KEY_CAPTURE_TIME].asString().c_str());
 	}
 	else
 	{
