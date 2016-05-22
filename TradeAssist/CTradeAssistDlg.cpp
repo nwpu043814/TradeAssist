@@ -409,7 +409,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		{
 
 			UpdateData(TRUE);
-			mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds);
+			mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds,DO_BOTH);
 			
 			
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
@@ -924,13 +924,13 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 			{
-				if (mLuaEngine.GetDoubleSideType() == 2)
+				if (mLuaEngine.GetDoubleSideType() == ON_TIMER_HUIFENG)
 				{
 					//this->PostMessage(WM_ALT_D);
 					//»ã·á
-					mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds);
+					mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds, DO_BOTH);
 				} 
-				else if (mLuaEngine.GetDoubleSideType() == 1)
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONXIN)
 				{
 					//ÖÐöÎÁúÏé
 					OnFlashComplete(); 
@@ -1028,7 +1028,22 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 
 		if (packet->mIsGood)
 		{
-			CheckChaseMoment(packet); 
+			//ÔÝÊ±¹Ø±ÕÖÐöÎµÄ×·µ¥
+			//CheckChaseMoment(packet); 
+			if(packet->mChaseDirect == DO_LOW && !mLuaEngine.GetHasChased())
+			{
+				//×·¿Õ¹Ò¶à
+				mLuaEngine.SetHasChased(true);
+				mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds, DO_HIGH);
+
+			}
+			else if (packet->mChaseDirect == DO_HIGH && !mLuaEngine.GetHasChased())
+			{
+				//×·¶à¹Ò¿Õ
+				mLuaEngine.SetHasChased(true);
+				mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds, DO_LOW);
+			}
+			
 
 			if (updateUI)
 			{

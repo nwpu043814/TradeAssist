@@ -21,6 +21,7 @@ struct CDataPacket
 	CString mNickName;
 	double	mPrice;
 	INT		mUpDrop;
+	INT		mChaseDirect;
 	BOOL	mIsGood;
 	LONG	mMillionSecond;
 	float	mQueryPriceUseTime;

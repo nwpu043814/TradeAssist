@@ -179,6 +179,7 @@ CString CUtil::GetValue(IN CString text, IN CString key)
 		result.mPriceTime = root[NETWORK_KEY_TIME].asString().c_str();
 		result.mQueryPriceUseTime= atof(root[NETWORK_KEY_QUERY_TIME].asString().c_str());
 		result.mCapturePriceUseTime =atof(root[NETWORK_KEY_CAPTURE_TIME].asString().c_str());
+		result.mChaseDirect = root[NETWORK_KEY_CHASE_DIRECT].asInt();
 	}
 	else
 	{

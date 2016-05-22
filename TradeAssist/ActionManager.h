@@ -27,7 +27,7 @@ public:
 	const CPoint & start2Count,const CPoint & count2Button,
 	UINT count, BOOL isDirectly);
 	POINT GetSunAwtDialogPos(void);
-	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay) const;
+	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay, int direct) const;
 	// 1 for low 2 for high
 	int DoHFSingleSide(int diff,int direct,int count,int windowDelay) const;
 	int DoHFSingleSideAction(int diff,int direct, int count,int windowDelay) const;

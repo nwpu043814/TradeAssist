@@ -148,9 +148,9 @@ end
 --1 is do low 方向按钮 
 function getDirectionButton(direct)
 	if direct == 1 then
-		return -220,134
+		return -220,124
 	else
-		return -282,134
+		return -282,124
 	end
 end
 
@@ -165,12 +165,12 @@ end
 
 --挂单价格到启用止损 
 function getEnableStopButton(direct)
-		return -244,45
+		return -317,83
 end
 
 --启用止损按钮到止损阈值
 function getInitialStopPriceButton(direct)
-		return 253,0
+		return 157,-8
 end
 
 --止损阈值到止损价格
@@ -181,15 +181,15 @@ end
 --挂单范围到挂单输入框
 function getPriceRange2Price(direct)
 	if direct == 1 then
-		return 201,56
+		return 272,41
 	else
-		return 32,56
+		return 103,41
 	end
 end
 
 --挂单价格到启用止损按钮距离
 function getPrice2StopCheckbox()
-		return -122,33
+		return -157,42
 end
 
 --汇丰确定对话框确定按钮位置
@@ -206,26 +206,26 @@ end
 function getStopGainDiff(direct)
 	if direct == 1 then
 		--做空止盈
-		return 60
+		return 80
 	else
 		--做多止盈
-		return 100
+		return 120
 	end
 end
 
 --止盈最小距离
 function getStopGainThreshold()
-	return 10
+	return 12
 end
 
 --止损最小距离
 function getStopLoseThreshold(direct)
-	return 21
+	return 28
 end
 
 --确定
 function getConfirmButton(direct)
-	return -30,72
+	return -66,65
 end
 
 -- 返回1代表中鑫龙祥
