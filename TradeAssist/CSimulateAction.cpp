@@ -147,6 +147,8 @@ void CSimulateAction::InputPrice(CString price)
 		}
 
 		keybd_event(ch ,0,0,0);
-		keybd_event(ch,0,KEYEVENTF_KEYUP,0); 
+		Sleep(KEYBD_DELAY);
+		keybd_event(ch,0,KEYEVENTF_KEYUP,0);
+		Sleep(KEYBD_DELAY);
 	}
 }

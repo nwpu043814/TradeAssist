@@ -167,4 +167,5 @@ private:
 	void EnableWindowMostTop(BOOL isTop);
 public:
 	CHuifengGuadanParamP GetGuaDanParam(int dirct);
+	int StartUpdateFeiNongData(void);
 };

@@ -34,8 +34,8 @@ private:
 	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay, int direct, int softwareType);
 	// 1 for low 2 for high
 	int DoHFSingleSide(int diff,int direct,int count,int windowDelay, int softwareType);
-	int DoTianTongSingleSideAction(int diff,int direct, int count,int windowDelay);
-	const CPoint & GetDialogPosByTitle(CString title) const;
+
+	const CPoint & GetDialogPosByTitle(CString title , UINT retryTime = FIND_SUN_DIALOG_MAX_RETRY_TIMES) const;
 	void DoHop(int x, int y)  const;
 	const CPoint& GetHFConfirmDialogPos(void) const;
 	void CloseHFConfirmDialog(int top, int left);
@@ -56,7 +56,6 @@ public:
 	int DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay);
 	CPoint GetKunJiaoDialogPos(void);
 	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
-	int DoLuoGeSingleSideAction(int diff, int direct, int count, int windowDelay);
 	int DoZhongXinSingleSideAction(int diff, int direct, int count, int windowDelay);
 };
 

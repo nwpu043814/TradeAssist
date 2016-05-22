@@ -1928,3 +1928,29 @@ CPoint CLuaEngine::GetZhongXinPrice2Count(int direct)
 		return CPoint(-22, 50);
 	}
 }
+
+
+int CLuaEngine::GetTianTongRetryTimes(void)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetTianTongRetryTimes);    
+	size_t size;
+	if(lua_pcall(m_plua,0,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 1;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}

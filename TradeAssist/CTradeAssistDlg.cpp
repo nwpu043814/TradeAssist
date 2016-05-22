@@ -377,7 +377,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		}
 		case HOT_KEY_FLASH_COMPLETE:
 		{
-			OnFlashComplete();
+			
 			break;;
 		}
 		case HOT_KEY_DECREASE_PRICE:
@@ -423,22 +423,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		case HOT_KEY_DIRECT_KONG:
 		{
 			UpdateData(TRUE);
-			for (int i =0 ; i < THREAD_NUMBER; i++)
-			{
-				if (mNonfarmerNumber[i]->IsEnable() && mNonfarmerNumber[i]->GetThreadId() == 0)
-				{
-					StartHttpThread(mNonfarmerNumber[i]);
-				}
-			}
-
-			for (int i =0 ; i < THREAD_NUMBER; i++)
-			{
-				if (mJoblessRate[i]->IsEnable() && mJoblessRate[i]->GetThreadId() == 0)
-				{
-					StartHttpThread(mJoblessRate[i]);
-				}
-			}
-
+			StartUpdateFeiNongData();
 			break;
 		}
 		case HOT_KEY_INCREASE_THRESHOLD:
@@ -571,6 +556,10 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	if (isDelay)
 	{
 		Sleep(mIntMsgDelayMilliSeconds);
+	}
+	else
+	{
+		Sleep(500);
 	}
 	UpdateData(TRUE);
 
@@ -726,9 +715,6 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 
 LRESULT CTradeAssistDlg::OnAltDMsg(WPARAM w , LPARAM l)
 {
-	//mActionManager->GetAction()->MouseDoubleClick();
-	//mActionManager->GetAction()->KeyboardCopy();
-	//AfxMessageBox(GetContentFromClipboard());
 	OnFlashComplete(); 
 	return LRESULT();
 }
@@ -818,16 +804,6 @@ int CTradeAssistDlg::OnFlashComplete(void)
 
 	int retryTimes = 0;
 	int result = SemicAutoTrade(DO_LOW);
-	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
-	{
-		SetCursorPos(lpPoint.x, lpPoint.y);
-		mActionManager->GetAction()->MouseClick();
-		result = SemicAutoTrade(DO_LOW);
-	}
-
-	CString log;
-	log.Format(_T("OnFlashComplete low time1=%d, retryTimes=%d"), GetMilliseconds() - start, retryTimes);
-	CLogger::Add(log);
 
 	//2.延时下单间隔
 
@@ -846,15 +822,6 @@ int CTradeAssistDlg::OnFlashComplete(void)
 
 	retryTimes = 0;
 	result = SemicAutoTrade(DO_HIGH);
-	while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
-	{
-		SetCursorPos(lpPoint.x, lpPoint.y);
-		mActionManager->GetAction()->MouseClick();
-		result = SemicAutoTrade(DO_HIGH);
-	}
-
-	log.Format(_T("OnFlashComplete high time2=%d, retryTimes=%d"), GetMilliseconds() - start, retryTimes);
-	CLogger::Add(log);
 
 #ifdef _DEBUG
 	TRACE("OnFlashComplete time2=%d\r\n", GetMilliseconds() - start);
@@ -878,7 +845,7 @@ LRESULT CTradeAssistDlg::SemicAutoTrade(int direct)
 			log.Format(_T("SemicAutoTrade direct=%d, dialogSearchCount=%d"), direct, searchCount);
 			CLogger::Add(log);
 
-			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
+			if (OnDoTradeMsg(direct, direct == DO_LOW ? 0:MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
 			{
 				return SEMIC_AUTO_TRADE_CALL_FAILED;
 			}
@@ -942,18 +909,10 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 					//TOD在接收消失时释放该缓存。
 					mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 				} 
-				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONXIN)
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONGXIN)
 				{
 					//中鑫龙祥
-					OnFlashComplete(); 
-					if(mEnableCheckAutoCloseDepot)
-					{
-						mProgressAutoCloseDepot.SetRange(0, mUintAutoCloseThreshold);
-						for (int i = 0; i < LOCAL_SERVER_REQUEST_THREADED_NUMBER; i++)
-						{
-							RetartThread(mLocalPrice[i]);
-						}
-					}
+					mActionManager->PostThreadMessage(WM_DO_ZHONGXIN_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_TIANTONG)
 				{
@@ -969,6 +928,16 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 				{
 					//TOD在接收消失时释放该缓存。
 					mActionManager->PostThreadMessage(WM_DO_LUOGE_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+				}
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_HAIJIAO)
+				{
+					//TOD在接收消失时释放该缓存。
+					OnFlashComplete(); 
+
+				}
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_FEINONG)
+				{
+					StartUpdateFeiNongData();
 				}
 			}
 		}
@@ -1571,4 +1540,25 @@ CHuifengGuadanParamP CTradeAssistDlg::GetGuaDanParam(int dirct)
 	param->mWindowDelay = mIntMsgDelayMilliSeconds;
 	param->mDirect = dirct;
 	return param;
+}
+
+int CTradeAssistDlg::StartUpdateFeiNongData(void)
+{
+	for (int i =0 ; i < THREAD_NUMBER; i++)
+	{
+		if (mNonfarmerNumber[i]->IsEnable() && mNonfarmerNumber[i]->GetThreadId() == 0)
+		{
+			StartHttpThread(mNonfarmerNumber[i]);
+		}
+	}
+
+	for (int i =0 ; i < THREAD_NUMBER; i++)
+	{
+		if (mJoblessRate[i]->IsEnable() && mJoblessRate[i]->GetThreadId() == 0)
+		{
+			StartHttpThread(mJoblessRate[i]);
+		}
+	}
+
+	return 0;
 }

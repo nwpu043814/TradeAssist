@@ -151,6 +151,8 @@ public:
 	int GetHuiFengStopGainDiff(int direct);
 	int GetHuiFengStopThreshold(void);
 	 int GetHuiFengStopLoseThreshold(int direct);
+	 int GetTianTongRetryTimes();
+	 
 	const CPoint& GetHuiFengConfirmButton(int direct);
 	CPoint GetLuoGeOrigin2Entrust(void);
 	CPoint GetLuoGeEntrust2Direct(int direct);
@@ -163,3 +165,5 @@ public:
 	CPoint GetZhongXinDirection2Price(int direct);
 	CPoint GetZhongXinPrice2Count(int direct);
 };
+
+typedef class CLuaEngine * CLuaEngineP;

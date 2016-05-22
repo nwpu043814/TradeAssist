@@ -198,8 +198,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,9,2,2
- PRODUCTVERSION 2,9,2,2
+ FILEVERSION 2,9,5,2
+ PRODUCTVERSION 2,9,5,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -214,15 +214,15 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "Comments", "配合中鑫追单后自动挂对冲单"
+            VALUE "Comments", "天通挂单容错"
             VALUE "CompanyName", "Pioneer Software"
             VALUE "FileDescription", "交易助手2.9版"
-            VALUE "FileVersion", "2.9.2.2"
+            VALUE "FileVersion", "2.9.5.2"
             VALUE "InternalName", "TradeAssist.exe"
             VALUE "LegalCopyright", "交易助手 (C) 先锋科技。保留所有权利。"
             VALUE "OriginalFilename", "TradeAssist.exe"
             VALUE "ProductName", "交易助手"
-            VALUE "ProductVersion", "2.9.2.2"
+            VALUE "ProductVersion", "2.9.5.2"
             VALUE "SpecialBuild", "001"
         END
     END

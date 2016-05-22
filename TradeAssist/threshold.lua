@@ -254,8 +254,10 @@ end
 -- 返回3代表天通
 -- 返回4代表昆交所
 -- 返回5代表罗格
+-- 返回6代表更新非农
+-- 返回7代表更新中新
 function getDoubleSideType()
-	return 1;
+	return 6;
 end
 
 function getJoblessParam()
@@ -266,9 +268,13 @@ function getNonfarmerWorkerParam()
 		return "" , "+18", "http://www.fx678.com/indexs/Datadetails.aspx?tid=1547&id=9899&fid=3772"  
 end
 
+function getTianTongRetryTimes()
+	return 1
+end
+
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 3000;
+	return 0;
 end
 
 function getLuoGeStopLoseDiff()

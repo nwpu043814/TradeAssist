@@ -196,6 +196,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BaseGuaDan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\CHttpWorker.cpp"
 				>
 			</File>
@@ -240,6 +244,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LuoGeGuaDan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\RegistDlg.cpp"
 				>
 			</File>
@@ -268,6 +276,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TianTongGuaDan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TradeAssist.cpp"
 				>
 			</File>
@@ -287,6 +299,10 @@
 			</File>
 			<File
 				RelativePath=".\ActionManager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BaseGuaDan.h"
 				>
 			</File>
 			<File
@@ -358,6 +374,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\LuoGeGuaDan.h"
+				>
+			</File>
+			<File
 				RelativePath=".\RegistDlg.h"
 				>
 			</File>
@@ -375,6 +395,10 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TianTongGuaDan.h"
 				>
 			</File>
 			<File

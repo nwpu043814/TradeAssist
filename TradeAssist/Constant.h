@@ -148,7 +148,7 @@
 #define		GET_EDIT_CONTENT_MAX_TIMES 4
 
 //寻找sundialog的最大重试次数
-#define		FIND_SUN_DIALOG_MAX_RETRY_TIMES 6
+#define		FIND_SUN_DIALOG_MAX_RETRY_TIMES 12
 
 //有效价格的位数
 #define		PRICE_LENGTH	7
@@ -160,10 +160,10 @@
 #define		DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE 2 
 
 //未通过价格正确检查
-#define		DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED 3
+#define		DO_TRADE_MSG_RESULT_TYPE_NOT_PASSED 4
 
 //正常返回
-#define		DO_TRADE_MSG_RESULT_TYPE_SUCCESS 3
+#define		DO_TRADE_MSG_RESULT_TYPE_SUCCESS 5
 
 #define		SEMIC_AUTO_TRADE_CALL_SUCCESS 1
 #define		SEMIC_AUTO_TRADE_CALL_FAILED 2
@@ -242,6 +242,7 @@
 #define		LUA_FUNCTION_GetStopLoseThreshold _T("getStopLoseThreshold")
 #define		LUA_FUNCTION_GetHuiFengStopLoseThreshold _T("getHuiFengStopLoseThreshold")
 #define		LUA_FUNCTION_GetDebugSleepInterval _T("getDebugSleepInterval")
+#define		LUA_FUNCTION_GetTianTongRetryTimes _T("getTianTongRetryTimes")
 
 #define		LUA_FUNCTION_GetLuoGeStopLoseDiff _T("getLuoGeStopLoseDiff")
 #define		LUA_FUNCTION_GetLuoGeStopGainDiff _T("getLuoGeStopGainDiff")
@@ -271,11 +272,13 @@
 #define 	NETWORK_KEY_CHASE_DIRECT "CHASE_DIRECT"
 
 #define     VALID_PRICE		3000
-#define     ON_TIMER_ZHONXIN 1
+#define     ON_TIMER_HAIJIAO 1
 #define     ON_TIMER_HUIFENG 2
 #define     ON_TIMER_TIANTONG 3
 #define     ON_TIMER_KUNJIAO 4
 #define     ON_TIMER_LUOGE 5
+#define     ON_TIMER_FEINONG 6
+#define     ON_TIMER_ZHONGXIN 7
 
 #define  APP_NAME _T("TradeAssist")
 #define  STRING_REG_CODE _T("REGCODE")
