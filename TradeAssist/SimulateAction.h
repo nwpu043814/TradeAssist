@@ -20,6 +20,9 @@ public:
 	int SelectAll(void);
 	void PressArrowUp(void) const;
 	void PressArrowDown(void) const;
+	// 通过shift+End选中所有text
+	int SelectAll4HF(void);
+	int GetContentFromClipboard(void);
 };
 
 typedef CSimulateAction * CSimulateActionP;

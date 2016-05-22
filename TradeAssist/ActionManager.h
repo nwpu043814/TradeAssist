@@ -7,8 +7,8 @@ class CActionManager
 public:
 	CActionManager(__in HWND hWndNewOwner, CLuaEngine &  lua);
 	~CActionManager(void);
-	CString GetContentFromClipboard(void);
-	BOOL SetClipboardContent(CString source);
+	CString GetContentFromClipboard(void)  const;
+	BOOL SetClipboardContent(CString source)  const;
 	CString GetEditText(UINT checkLen = PRICE_LENGTH);
 	WORD GetMilliseconds(void);
 	BOOL CheckEditPasteResult(const CString & mLastClipboardContent);
@@ -27,10 +27,10 @@ public:
 	const CPoint & start2Count,const CPoint & count2Button,
 	UINT count, BOOL isDirectly);
 	POINT GetSunAwtDialogPos(void);
-	int DoHFDoubleSide(int count,int windowDelay) const;
+	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay) const;
 	// 1 for low 2 for high
-	int DoHFSingleSide(int direct,int count,int windowDelay) const;
-	int DoHFSingleSideAction(int direct, int count,int windowDelay) const;
+	int DoHFSingleSide(int diff,int direct,int count,int windowDelay) const;
+	int DoHFSingleSideAction(int diff,int direct, int count,int windowDelay) const;
 	const CPoint & GetHFDialogPos(void) const;
 	void DoHop(int x, int y)  const;
 	const CPoint& GetHFConfirmDialogPos(void) const;

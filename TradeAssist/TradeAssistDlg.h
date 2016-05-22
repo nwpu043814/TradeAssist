@@ -50,7 +50,7 @@ private:
 	CActionManager* mActionManager;
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
 	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
-
+	LRESULT OnAltDMsg(WPARAM w , LPARAM l);
 	// 获得剪贴板的内容
 	CString GetContentFromClipboard(void);
 	// 设置剪贴板的内容

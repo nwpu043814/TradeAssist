@@ -138,11 +138,11 @@ end
 
 --切到交易手数窗口
 function getTradeCount()
-		return -186,36
+		return -159,31
 end
 
 function getScaleList()
-		return 0, 39
+		return 0, 39 --65
 end
 
 --1 is do low 方向按钮 
@@ -157,38 +157,30 @@ end
 --价格设置按钮
 function getPriceAdjustButton(direct)
 	if direct == 1 then
-		return 236,86
+		return -36,44
 	else
-		return 298,86
+		return 196,44
 	end
 end
 
---启用止损 
+--挂单价格到启用止损 
 function getEnableStopButton(direct)
-		return -314,56
+		return -244,45
 end
 
---初始化止损价格
+--启用止损按钮到止损阈值
 function getInitialStopPriceButton(direct)
-		return 156,-6
+		return 253,0
 end
 
---调整止损价格
+--止损阈值到止损价格
 function getAdjustStopPriceButton(direct)
-	if direct == 1 then
-		return 0,0
-	else
-		return 0,12
-	end
+		return -130,0
 end
 
---确定
+--止盈价格输入框到确定按钮距离
 function getConfirmButton(direct)
-	if direct == 1 then
-		return -65,113
-	else
-		return -65,101
-	end
+	return -30,72
 end
 
 -- 返回1代表中鑫龙祥

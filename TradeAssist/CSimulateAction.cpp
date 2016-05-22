@@ -103,3 +103,15 @@ void CSimulateAction::PressArrowDown(void) const
 	//Sleep(KEYBD_DELAY);
 	keybd_event(VK_DOWN,0,KEYEVENTF_KEYUP,0); 
 }
+
+// 通过shift+End选中所有text
+int CSimulateAction::SelectAll4HF(void)
+{
+	MouseClick(50);
+	keybd_event(VK_SHIFT ,0,0,0);
+	keybd_event(VK_END ,0,0,0);
+	Sleep(KEYBD_DELAY*8);
+	keybd_event(VK_END,0,KEYEVENTF_KEYUP,0); 
+	keybd_event(VK_SHIFT,0,KEYEVENTF_KEYUP,0); 
+	return 0;
+}

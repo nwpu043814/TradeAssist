@@ -130,4 +130,12 @@ private:
 	CPoint mHFScaleListItem;
 public:
 	const CPoint& GetScaleListItem(void);
+	const CPoint& GetPriceRange2Price(int direct);
+private:
+	CPoint mHFPriceRange2PriceHigh;
+	CPoint mHFPriceRange2PriceLow;
+public:
+	const CPoint& GetPrice2StopCheckbox(void);
+private:
+	CPoint mPrice2StopCheckbox;
 };

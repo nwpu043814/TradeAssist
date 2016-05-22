@@ -205,7 +205,7 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_MESSAGE(WM_DISPLAY_DATAK,  &CTradeAssistDlg::OnDisplayDataK)
 	ON_MESSAGE(WM_DO_TRADE,  &CTradeAssistDlg::OnDoTradeMsg) 
 	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetPriceFinish)
-	ON_MESSAGE(WM_DO_CHASE,&CTradeAssistDlg::OnDoChase)
+	ON_MESSAGE(WM_ALT_D,&CTradeAssistDlg::OnAltDMsg)
 	ON_MESSAGE(WM_HTTP_GET_ECNOMIC_DATA_FINISH,&CTradeAssistDlg::OnHttpGetEcnomicData) 
 	ON_MESSAGE(WM_DO_CANCEL_ORDER,  &CTradeAssistDlg::OnDeleteOrderMsg)
 	ON_BN_CLICKED(IDCANCEL, &CTradeAssistDlg::OnBnClickedCancel)
@@ -312,6 +312,7 @@ void CTradeAssistDlg::InstallHotKey()
 	::RegisterHotKey(m_hWnd, HOT_KEY_INCREASE_PRICE, MOD_SHIFT, VK_X);
 	::RegisterHotKey(m_hWnd, HOT_KEY_TEST_SERVER, MOD_SHIFT, VK_T);
 	::RegisterHotKey(m_hWnd, HOT_KEY_DIRECT_DUO, MOD_SHIFT, VK_D);
+	::RegisterHotKey(m_hWnd, HOT_KEY_ALT_D, MOD_ALT, VK_D);
 	::RegisterHotKey(m_hWnd, HOT_KEY_DIRECT_KONG, MOD_SHIFT, VK_K);
 	::RegisterHotKey(m_hWnd, HOT_KEY_INCREASE_THRESHOLD, MOD_SHIFT, VK_S);
 	::RegisterHotKey(m_hWnd, HOT_KEY_DECREASE_THRESHOLD, MOD_SHIFT, VK_A);
@@ -382,12 +383,18 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			}
 			break;
 		}
+		case HOT_KEY_ALT_D:
+		{
+			
+			this->PostMessage(WM_ALT_D);
+			break;
+		}
 		case HOT_KEY_DIRECT_DUO:
 		{
 
 			UpdateData(TRUE);
-			mActionManager->DoHFDoubleSide(mIntOrderCount, mIntMsgDelayMilliSeconds);
-
+			mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds);
+			
 			
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
 			//UpdateData(FALSE);
@@ -498,6 +505,14 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 		{
 			return HOT_KEY_DECREASE_THRESHOLD;
 		}
+	}
+	else if (mode == MOD_ALT)
+	{
+		if (virKey == VK_D)
+		{
+			return HOT_KEY_ALT_D;
+		}
+
 	}
 
 	return VK_INVALID;
@@ -681,6 +696,14 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 	return point;
 }
 
+LRESULT CTradeAssistDlg::OnAltDMsg(WPARAM w , LPARAM l)
+{
+	mActionManager->GetAction()->MouseDoubleClick();
+	mActionManager->GetAction()->KeyboardCopy();
+	AfxMessageBox(GetContentFromClipboard());
+	return LRESULT();
+}
+
 LRESULT CTradeAssistDlg::OnDeleteOrderMsg(WPARAM w , LPARAM l)
 {
 	mActionManager->GetAction()->MouseClick();
@@ -741,6 +764,7 @@ int CTradeAssistDlg::ClearResource(void)
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DIRECT_KONG);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_INCREASE_THRESHOLD);
 	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_DECREASE_THRESHOLD);
+	::UnregisterHotKey(GetSafeHwnd(),HOT_KEY_ALT_D);
 	
 	KillTimer(TIMER_ID_FOR_DO_FLASH_TRADE);
 	SaveSetting();
@@ -886,8 +910,9 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 			{
 				if (mLuaEngine.GetDoubleSideType() == 2)
 				{
+					//this->PostMessage(WM_ALT_D);
 					//»ã·á
-					mActionManager->DoHFDoubleSide(mIntOrderCount, mIntMsgDelayMilliSeconds);
+					mActionManager->DoHFDoubleSide(atoi(mStrLowPriceDiff),atoi(mStrHighPriceDiff), mIntOrderCount, mIntMsgDelayMilliSeconds);
 				} 
 				else if (mLuaEngine.GetDoubleSideType() == 1)
 				{

@@ -4,46 +4,6 @@
 #include <cmath>
 
 #pragma comment(lib,"lua5.1.lib")
-//
-//#define IMPLEMENT_POINT_FUNCTION_WITH_DIRECT(className, fun_name, macro_fun_name) \
-//	const CPoint & className ## :: ## fun_name ##(int direct) \
-//{				\
-//	if (direct == DO_LOW)	\
-//	{\
-//		if (!(m ## Low ## fun_name ## . ## x == 0 || m ## Low ## fun_name ## . ##  y == 0))\
-//		{\
-//			return m ## Low ## fun_name;\
-//		}\
-//	}\
-//	else\
-//	{\
-//		if (!(m ## High ## fun_name ## . ## x == 0 || m ## High ## fun_name ## . ##  y == 0))\
-//		{\
-//			return m ## High ## fun_name;\
-//		}\
-//	}\
-//	lua_State * m_plua = GetLuaState(0);   \
-//	int inCount =1;\
-//	lua_getglobal(m_plua, # fun_name);    \
-//	lua_pushnumber(m_plua,direct);\
-//	size_t size;\
-//	while(direct == 1) \
-//	{\
-//mLow ## fun_name ## .y = (int)lua_tonumber(m_plua, -1);  \ 
-//		lua_pop(m_plua,1);  \
-//mLow ## fun_name ## .x = (int)lua_tonumber(m_plua, -1);   \
-//		lua_pop(m_plua,1);  \
-//		return m ## Low ## fun_name;		\
-//	} \
-//	else\
-//	{\
-//		mHigh ## fun_name ## . ## y = (int)lua_tonumber(m_plua, -1);   \
-//		lua_pop(m_plua,1);  \
-//		mHigh ## fun_name ## . ## x = (int)lua_tonumber(m_plua, -1);   \
-//		lua_pop(m_plua,1);  \
-//		return m ## High ## fun_name;		\
-//	}\
-//}\
 
 
 CLuaEngine::CLuaEngine(void)
@@ -91,7 +51,10 @@ CLuaEngine::CLuaEngine(void)
 , mDoubleSideType(0)
 , mHFTradeCount(0)
 , mHFScaleListItem(0)
-		{
+, mHFPriceRange2PriceHigh(32,56)
+, mHFPriceRange2PriceLow(201,56)
+, mPrice2StopCheckbox(-122,33)
+{
 	mLua = InitLuaState();
 	GetNonfarmerWorkerUrl(0);
 	GetJoblessUrl(0);
@@ -128,6 +91,7 @@ CLuaEngine::CLuaEngine(void)
 	GetTradeCount();
 	GetScaleListItem();
 	memset(&mStartTime, 0, sizeof(CTime));
+
 }
 
 CLuaEngine::~CLuaEngine(void)
@@ -1435,4 +1399,22 @@ const CPoint& CLuaEngine::GetScaleListItem(void)
 	lua_pop(m_plua,1);  
 
 	return mHFScaleListItem;		
+}
+
+const CPoint& CLuaEngine::GetPriceRange2Price(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return mHFPriceRange2PriceLow;
+	}
+	else
+	{
+		return mHFPriceRange2PriceHigh;
+	}
+}
+
+//Ö¹ËðÊäÈë¿òµ½Ö¹Ó¯checkboxÎ»ÒÆ
+const CPoint& CLuaEngine::GetPrice2StopCheckbox(void)
+{
+	return mPrice2StopCheckbox;
 }
