@@ -229,6 +229,7 @@
 #define		LUA_FUNCTION_GetTradeCount _T("getTradeCount")
 #define		LUA_FUNCTION_GetScaleList _T("getScaleList")
 
+#define		LUA_FUNCTION_GetHuiFengStopGainDiff _T("getHuiFengStopGainDiff")
 #define		LUA_FUNCTION_GetStopGainDiff _T("getStopGainDiff")
 #define		LUA_FUNCTION_GetGainCheckbox2GainPriceEdit _T("getGainCheckbox2GainPriceEdit")
 #define		LUA_FUNCTION_GetHFConfirDialogOK _T("getHFConfirDialogOK")
@@ -236,6 +237,7 @@
 #define		LUA_FUNCTION_GetPrice2StopCheckbox _T("getPrice2StopCheckbox")
 #define		LUA_FUNCTION_GetStopGainThreshold _T("getStopGainThreshold")
 #define		LUA_FUNCTION_GetStopLoseThreshold _T("getStopLoseThreshold")
+#define		LUA_FUNCTION_GetHuiFengStopLoseThreshold _T("getHuiFengStopLoseThreshold")
 #define		LUA_FUNCTION_GetDebugSleepInterval _T("getDebugSleepInterval")
 
 
@@ -265,6 +267,7 @@
 #define     VALID_PRICE		4000
 #define     ON_TIMER_ZHONXIN 1
 #define     ON_TIMER_HUIFENG 2
+#define     ON_TIMER_TIANTONG 3
 
 #define  APP_NAME _T("TradeAssist")
 #define  STRING_REG_CODE _T("REGCODE")

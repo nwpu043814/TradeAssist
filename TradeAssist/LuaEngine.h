@@ -143,4 +143,13 @@ public:
 	int GetStopGainThreshold(void);
 	int GetStopLoseDiff(int direct);
 	int GetDebugSleepInterval(void);
+	const CPoint GetHuiFengDirectionButton(int direct);
+	const CPoint& GetHuiFengEnableStopButton(int direct);
+	const CPoint& GetHuiFengInitialStopPriceButton(int direct);
+	const CPoint& GetHuiFengPriceRange2Price(int direct);
+	const CPoint& GetHuiFengPrice2StopCheckbox(void);
+	int GetHuiFengStopGainDiff(int direct);
+	int GetHuiFengStopThreshold(void);
+	 int GetHuiFengStopLoseThreshold(int direct);
+	const CPoint& GetHuiFengConfirmButton(int direct);
 };

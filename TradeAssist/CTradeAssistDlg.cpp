@@ -444,24 +444,38 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		case HOT_KEY_INCREASE_THRESHOLD:
 		{
 			UpdateData(TRUE);
-			if (mUintAutoCloseThreshold + THRESHOLD_STEP <= THRESHOLD_MAX)
-			{
-				mUintAutoCloseThreshold += THRESHOLD_STEP;
-				UpdateData(FALSE);
-			}
-			
+			//if (mUintAutoCloseThreshold + THRESHOLD_STEP <= THRESHOLD_MAX)
+			//{
+			//	mUintAutoCloseThreshold += THRESHOLD_STEP;
+			//	UpdateData(FALSE);
+			//}
+			CHuifengGuadanParamP param = new CHuifengGuadanParam();
+			param->mLowDiff = atoi(mStrLowPriceDiff);
+			param->mHighDiff = atoi(mStrHighPriceDiff);
+			param->mTradeCount = mIntOrderCount;
+			param->mWindowDelay = mIntMsgDelayMilliSeconds;
+			param->mDirect = DO_BOTH;
+
+			mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) param, NULL);
 			break;
 		}
 		case HOT_KEY_DECREASE_THRESHOLD:
 		{
 			UpdateData(TRUE);
-			if (mUintAutoCloseThreshold - THRESHOLD_STEP >= THRESHOLD_MIN)
-			{
+			//if (mUintAutoCloseThreshold - THRESHOLD_STEP >= THRESHOLD_MIN)
+			//{
 
-				mUintAutoCloseThreshold -= THRESHOLD_STEP;
-				UpdateData(FALSE);
-			}
-			
+			//	mUintAutoCloseThreshold -= THRESHOLD_STEP;
+			//	UpdateData(FALSE);
+			//}
+			CHuifengGuadanParamP param = new CHuifengGuadanParam();
+			param->mLowDiff = atoi(mStrLowPriceDiff);
+			param->mHighDiff = atoi(mStrHighPriceDiff);
+			param->mTradeCount = mIntOrderCount;
+			param->mWindowDelay = mIntMsgDelayMilliSeconds;
+			param->mDirect = DO_BOTH;
+
+			mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) param, NULL);
 			break;
 		}
 	}
@@ -959,6 +973,18 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 							RetartThread(mLocalPrice[i]);
 						}
 					}
+				}
+				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_TIANTONG)
+				{
+					//TOD在接收消失时释放该缓存。
+					CHuifengGuadanParamP param = new CHuifengGuadanParam();
+					param->mLowDiff = atoi(mStrLowPriceDiff);
+					param->mHighDiff = atoi(mStrHighPriceDiff);
+					param->mTradeCount = mIntOrderCount;
+					param->mWindowDelay = mIntMsgDelayMilliSeconds;
+					param->mDirect = DO_BOTH;
+
+					mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) param, NULL);
 				}
 			}
 		}

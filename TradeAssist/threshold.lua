@@ -202,14 +202,25 @@ function getGainCheckbox2GainPriceEdit()
 		return 123,0
 end
 
---获得止盈距离
+--获得汇丰止盈距离
+function getHuiFengStopGainDiff(direct)
+	if direct == 1 then
+		--做空止盈
+		return 80
+	else
+		--做多止盈
+		return 80
+	end
+end
+
+--获得天通止盈距离
 function getStopGainDiff(direct)
 	if direct == 1 then
 		--做空止盈
 		return 80
 	else
 		--做多止盈
-		return 120
+		return 100
 	end
 end
 
@@ -218,7 +229,12 @@ function getStopGainThreshold()
 	return 12
 end
 
---止损最小距离
+--止损汇丰最小距离
+function getHuiFengStopLoseThreshold(direct)
+	return 21
+end
+
+--止损天通最小距离
 function getStopLoseThreshold(direct)
 	return 28
 end
@@ -230,8 +246,9 @@ end
 
 -- 返回1代表中鑫龙祥
 -- 返回2代表汇丰
+-- 返回3代表天通
 function getDoubleSideType()
-	return 1;
+	return 2;
 end
 
 function getJoblessParam()

@@ -4,6 +4,9 @@
 
 
 #define  WM_DO_HUIFENG_GUADAN	WM_USER + 250
+#define  WM_DO_TIANTONG_GUADAN	WM_USER + 251
+#define  WM_DO_HAIJIAO_GUADAN	WM_USER + 252
+#define  WM_DO_KUNJIAO_GUADAN	WM_USER + 253
 
 class CActionManager :
 	public CWinThread
@@ -25,10 +28,10 @@ private:
 	HWND mWndNewOwner;
 	CLuaEngine mLuaEngine;
 	
-	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay, int direct);
+	int DoHFDoubleSide(int lowDiff, int highDiff,int count,int windowDelay, int direct, int softwareType);
 	// 1 for low 2 for high
-	int DoHFSingleSide(int diff,int direct,int count,int windowDelay);
-	int DoHFSingleSideAction(int diff,int direct, int count,int windowDelay);
+	int DoHFSingleSide(int diff,int direct,int count,int windowDelay, int softwareType);
+	int DoTianTongSingleSideAction(int diff,int direct, int count,int windowDelay);
 	const CPoint & GetHFDialogPos(void) const;
 	void DoHop(int x, int y)  const;
 	const CPoint& GetHFConfirmDialogPos(void) const;
@@ -36,12 +39,14 @@ private:
 	DECLARE_MESSAGE_MAP()
 	DECLARE_DYNCREATE(CActionManager)
 protected:
-	afx_msg void OnDoHuifengGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoHuiFengGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoTianTongGuadan(WPARAM wParam,LPARAM lParam);
 public:
 	void SetWindowOwner(HWND owner);
 	virtual BOOL InitInstance();
 	BOOL MakeOrder(const CPoint & start2Button,	const CPoint & start2Count,const CPoint & count2Button,	UINT count, BOOL isDirectly);
 	POINT GetSunAwtDialogPos(void);
+	int DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay);
 };
 
 typedef CActionManager * CActionManagerP;

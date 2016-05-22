@@ -1676,3 +1676,105 @@ int CLuaEngine::GetDebugSleepInterval(void)
 
 	return sleepInterval;	
 }
+
+const CPoint CLuaEngine::GetHuiFengDirectionButton(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(-220, 134);
+	} 
+	else
+	{
+		return CPoint(-282, 134);
+	}
+}
+
+const CPoint& CLuaEngine::GetHuiFengEnableStopButton(int direct)
+{
+
+	return CPoint(-244, 45);
+}
+
+const CPoint& CLuaEngine::GetHuiFengInitialStopPriceButton(int direct)
+{
+	return CPoint(253, 0);
+}
+
+const CPoint& CLuaEngine::GetHuiFengPriceRange2Price(int direct)
+{
+	if (direct == DO_LOW)
+	{
+		return CPoint(201, 56);
+	} 
+	else
+	{
+		return CPoint(32, 56);
+	}
+}
+
+const CPoint& CLuaEngine::GetHuiFengPrice2StopCheckbox(void)
+{
+	return CPoint(-122, 33);
+}
+
+int CLuaEngine::GetHuiFengStopGainDiff(int direct)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetHuiFengStopGainDiff);    
+	lua_pushnumber(m_plua,direct);
+	size_t size;
+	if(lua_pcall(m_plua,1,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 60;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}
+
+ int CLuaEngine::GetHuiFengStopThreshold(void)
+{
+	return 10;
+ }
+
+int CLuaEngine::GetHuiFengStopLoseThreshold(int direct)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetHuiFengStopLoseThreshold);    
+	size_t size;
+	lua_pushnumber(m_plua,direct);
+	if(lua_pcall(m_plua,1,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 21;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}
+
+const CPoint& CLuaEngine::GetHuiFengConfirmButton(int direct)
+{
+	return CPoint(-30, 72);
+}
