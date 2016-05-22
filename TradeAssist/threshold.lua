@@ -253,7 +253,7 @@ end
 -- 返回2代表汇丰
 -- 返回3代表天通
 -- 返回4代表昆交所
--- 返回5代表罗格
+-- 返回5代表柯予
 -- 返回6代表更新非农
 -- 返回7代表更新中新
 function getDoubleSideType()
@@ -274,7 +274,7 @@ end
 
 --返回调试sleep间隔 单位毫秒
 function getDebugSleepInterval()
-	return 0;
+	return 20;
 end
 
 function getLuoGeStopLoseDiff()

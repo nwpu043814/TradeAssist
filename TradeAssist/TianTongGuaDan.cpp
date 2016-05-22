@@ -96,6 +96,7 @@ int CTianTongGuaDan::DoSingleSideAction(int diff, int direct, int count, int win
 	int i = 0;
 	while (i++ < CHECK_EDIT_PASTE_RESULT_MAX_TIMES)
 	{
+		SetClipboardContent(_T(""));
 		mAction->MouseDoubleClick();
 		Sleep(50*i);
 		mAction->KeyboardCopy();

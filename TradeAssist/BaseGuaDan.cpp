@@ -58,13 +58,13 @@ int CBaseGuaDan::DoDoubleSide(int lowDiff, int highDiff, int count, int windowDe
 		mAction->MouseDoubleClick();
 
 		CLogger::Add("¶à");
-		int result = DoSingleSideAction(lowDiff, DO_HIGH, count, windowDelay);
+		int result = DoSingleSideAction(highDiff, DO_HIGH, count, windowDelay);
 		for (int retry = 0; result == SEMIC_AUTO_TRADE_CALL_FAILED && retry < mLuaEngine->GetTianTongRetryTimes(); retry++)
 		{
 			Sleep(200);
 			mAction->MoveCursor(lpPoint.x, lpPoint.y, true);
 			mAction->MouseDoubleClick();
-			result = DoSingleSideAction(lowDiff, DO_HIGH, count, windowDelay);
+			result = DoSingleSideAction(highDiff, DO_HIGH, count, windowDelay);
 		}
 	}
 

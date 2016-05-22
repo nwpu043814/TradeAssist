@@ -83,8 +83,8 @@ CAPTION "关于 TradeAssist"
 FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "TradeAssist，2.3 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2013 Rogerhan\r\n\r\nrogerhan@qq.com",IDC_STATIC,41,29,114,29
+    LTEXT           "TradeAssist，2.9 版",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2013-2014 Rogerhan\r\n\r\nrogerhan@qq.com",IDC_STATIC,41,29,114,29
     DEFPUSHBUTTON   "确定",IDOK,116,51,50,14,WS_GROUP
 END
 
@@ -198,8 +198,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,9,5,2
- PRODUCTVERSION 2,9,5,2
+ FILEVERSION 2,9,6,2
+ PRODUCTVERSION 2,9,6,2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -217,12 +217,12 @@ BEGIN
             VALUE "Comments", "天通挂单容错"
             VALUE "CompanyName", "Pioneer Software"
             VALUE "FileDescription", "交易助手2.9版"
-            VALUE "FileVersion", "2.9.5.2"
+            VALUE "FileVersion", "2.9.6.2"
             VALUE "InternalName", "TradeAssist.exe"
             VALUE "LegalCopyright", "交易助手 (C) 先锋科技。保留所有权利。"
             VALUE "OriginalFilename", "TradeAssist.exe"
             VALUE "ProductName", "交易助手"
-            VALUE "ProductVersion", "2.9.5.2"
+            VALUE "ProductVersion", "2.9.6.2"
             VALUE "SpecialBuild", "001"
         END
     END

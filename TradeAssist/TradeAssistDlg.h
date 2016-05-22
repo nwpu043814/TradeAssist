@@ -49,7 +49,6 @@ private:
 	int dispatchCount(void);
 	CActionManager* mActionManager;
 	LRESULT OnDeleteOrderMsg(WPARAM w , LPARAM l);
-	LRESULT OnDoTradeMsg(WPARAM w , LPARAM l);
 	LRESULT OnAltDMsg(WPARAM w , LPARAM l);
 	// 获得剪贴板的内容
 	CString GetContentFromClipboard(void);
@@ -63,10 +62,6 @@ protected:
 	POINT GetDirection2PriceVector(BOOL isHigh);
 	// 是否自动提交。
 	BOOL mIsAutoSubmits;
-public:
-	// 秒杀下单
-	int OnFlashComplete(void);
-	LRESULT SemicAutoTrade(int direct);
 protected:
 	// 自动下单的两个单间隔，单位为秒
 	CString mAutoCompleteInterval;

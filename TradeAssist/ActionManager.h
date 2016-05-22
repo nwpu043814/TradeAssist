@@ -3,13 +3,14 @@
 #include "Constant.h"
 
 
-#define  WM_DO_HUIFENG_GUADAN	WM_USER + 250
+#define  WM_DO_HAIJIAO_GUADAN	WM_USER + 250
 #define  WM_DO_TIANTONG_GUADAN	WM_USER + 251
-#define  WM_DO_HAIJIAO_GUADAN	WM_USER + 252
 #define  WM_DO_KUNJIAO_GUADAN	WM_USER + 253
 #define  WM_DO_LUOGE_GUADAN	WM_USER + 254
 #define  WM_DO_ZHONGXIN_GUADAN	WM_USER + 255
 #define  WM_DO_INPUT_PRICE	WM_USER + 256
+#define  WM_DO_GUADAN	WM_USER + 257
+#define  WM_DO_KEYU_GUADAN	WM_USER + 258
 
 class CActionManager :
 	public CWinThread
@@ -42,11 +43,8 @@ private:
 	DECLARE_MESSAGE_MAP()
 	DECLARE_DYNCREATE(CActionManager)
 protected:
-	afx_msg void OnDoHuiFengGuadan(WPARAM wParam,LPARAM lParam);
-	afx_msg void OnDoTianTongGuadan(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnDoGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoKunJiaoGuadan(WPARAM wParam,LPARAM lParam);
-	afx_msg void OnDoLuoGeGuadan(WPARAM wParam,LPARAM lParam);
-	afx_msg void OnDoZhongXinGuadan(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnDoInputPrice(WPARAM wParam,LPARAM lParam);
 public:
 	void SetWindowOwner(HWND owner);
@@ -56,7 +54,6 @@ public:
 	int DoHuiFengSingleSideAction(int diff, int direct, int count, int windowDelay);
 	CPoint GetKunJiaoDialogPos(void);
 	int DoKunJiaoSingleSideAction(int diff, int direct, int count, int windowDelay);
-	int DoZhongXinSingleSideAction(int diff, int direct, int count, int windowDelay);
 };
 
 typedef CActionManager * CActionManagerP;

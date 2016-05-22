@@ -273,7 +273,6 @@
 
 #define     VALID_PRICE		3000
 #define     ON_TIMER_HAIJIAO 1
-#define     ON_TIMER_HUIFENG 2
 #define     ON_TIMER_TIANTONG 3
 #define     ON_TIMER_KUNJIAO 4
 #define     ON_TIMER_LUOGE 5

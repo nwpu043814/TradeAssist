@@ -236,7 +236,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HaiJiaoGuaDan.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HttpThread.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\KeYuGuaDan.cpp"
 				>
 			</File>
 			<File
@@ -285,6 +293,10 @@
 			</File>
 			<File
 				RelativePath=".\Util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ZhonXinGuaDan.cpp"
 				>
 			</File>
 		</Filter>
@@ -338,6 +350,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HaiJiaoGuaDan.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HttpThread.h"
 				>
 			</File>
@@ -347,6 +363,10 @@
 			</File>
 			<File
 				RelativePath=".\HuifengGuadanParam.h"
+				>
+			</File>
+			<File
+				RelativePath=".\KeYuGuaDan.h"
 				>
 			</File>
 			<File
@@ -411,6 +431,10 @@
 			</File>
 			<File
 				RelativePath=".\Util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ZhonXinGuaDan.h"
 				>
 			</File>
 		</Filter>

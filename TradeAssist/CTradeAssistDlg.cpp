@@ -204,7 +204,6 @@ BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(WM_HOTKEY, &CTradeAssistDlg::OnHotKey) //添加此句
 	ON_MESSAGE(WM_DISPLAY_DATAK,  &CTradeAssistDlg::OnDisplayDataK)
-	ON_MESSAGE(WM_DO_TRADE,  &CTradeAssistDlg::OnDoTradeMsg) 
 	ON_MESSAGE(WM_HTTP_GET_FINISH,&CTradeAssistDlg::OnHttpGetPriceFinish)
 	ON_MESSAGE(WM_ALT_D,&CTradeAssistDlg::OnAltDMsg)
 	ON_MESSAGE(WM_HTTP_GET_ECNOMIC_DATA_FINISH,&CTradeAssistDlg::OnHttpGetEcnomicData) 
@@ -383,7 +382,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		case HOT_KEY_DECREASE_PRICE:
 		{
 			UpdateData();
-			mActionManager->PostThreadMessage(WM_DO_ZHONGXIN_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+			mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_ZHONGXIN_GUADAN);
 			//mActionManager->UpdatePrice(false, 10);
 			break;
 		}
@@ -391,7 +390,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		{
 			UpdateData();
 			//mActionManager->UpdatePrice(true, 10);
-			mActionManager->PostThreadMessage(WM_DO_LUOGE_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+			mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_LUOGE_GUADAN);
 			break;
 		}
 		case HOT_KEY_TEST_SERVER:
@@ -414,7 +413,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 
 			UpdateData(TRUE);
 
-			mActionManager->PostThreadMessage(WM_DO_KUNJIAO_GUADAN, (WPARAM)GetGuaDanParam(DO_BOTH), NULL);
+			mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM)GetGuaDanParam(DO_BOTH), WM_DO_KUNJIAO_GUADAN);
 			
 			//mBoolEnableAutoThreshold = !mBoolEnableAutoThreshold;
 			//UpdateData(FALSE);
@@ -429,13 +428,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 		case HOT_KEY_INCREASE_THRESHOLD:
 		{
 			UpdateData(TRUE);
-			//if (mUintAutoCloseThreshold + THRESHOLD_STEP <= THRESHOLD_MAX)
-			//{
-			//	mUintAutoCloseThreshold += THRESHOLD_STEP;
-			//	UpdateData(FALSE);
-			//}
 
-			mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
 			break;
 		}
 		case HOT_KEY_DECREASE_THRESHOLD:
@@ -448,7 +441,7 @@ HRESULT  CTradeAssistDlg::OnHotKey(WPARAM w, LPARAM lParam)
 			//	UpdateData(FALSE);
 			//}
 
-			mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+			mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_TIANTONG_GUADAN);
 			break;
 		}
 	}
@@ -541,30 +534,6 @@ int CTradeAssistDlg::dispatchCount(void)
 {
 	this->PostMessage(WM_DO_CANCEL_ORDER);
 	return 0;
-}
-
-LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
-{
-	BOOL direction = (UINT) LOWORD(w);
-	BOOL isDelay = (UINT) LOWORD(l)== MSG_DELAY_YES? TRUE:FALSE;
-
-	TRACE("OnDoTradeMsg time=%d, direction=%d, isDelay=%d\r\n", GetMilliseconds() - mLastTime,direction, isDelay);
-#ifdef _DEBUG
-	WORD	startTime = GetMilliseconds();
-#endif // _DEBUG
-
-	if (isDelay)
-	{
-		Sleep(mIntMsgDelayMilliSeconds);
-	}
-	else
-	{
-		Sleep(500);
-	}
-	UpdateData(TRUE);
-
-	return mActionManager->DoTrade(atof(mStrHighPriceDiff), atof(mStrLowPriceDiff),direction, mIntOrderCount);
-
 }
 
 // 获得剪贴板的内容
@@ -715,7 +684,8 @@ POINT CTradeAssistDlg::GetDirection2PriceVector(BOOL isHigh)
 
 LRESULT CTradeAssistDlg::OnAltDMsg(WPARAM w , LPARAM l)
 {
-	OnFlashComplete(); 
+	UpdateData();
+	mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_HAIJIAO_GUADAN);
 	return LRESULT();
 }
 
@@ -790,76 +760,6 @@ int CTradeAssistDlg::ClearResource(void)
 	return 0;
 }
 
-// 秒杀下单
-int CTradeAssistDlg::OnFlashComplete(void)
-{
-	UpdateData(TRUE);
-	mIsAutoSubmits = TRUE;	
-	UpdateData(FALSE);
-
-	WORD	start = GetMilliseconds();
-	POINT lpPoint;
-	GetCursorPos(&lpPoint);
-	mActionManager->GetAction()->MouseClick();
-
-	int retryTimes = 0;
-	int result = SemicAutoTrade(DO_LOW);
-
-	//2.延时下单间隔
-
-#ifdef _DEBUG
-	TRACE("OnFlashComplete time1=%d\r\n", GetMilliseconds() - start);
-#endif // _DEBUG
-
-	if (mAutoCompleteInterval.Trim().GetLength() > 0)
-	{	
-		Sleep(static_cast<DWORD>(atof(mAutoCompleteInterval.Trim())*1000));
-	}
-
-	//3.移动鼠标到双击位置。
-	SetCursorPos(lpPoint.x, lpPoint.y);
-	mActionManager->GetAction()->MouseClick();
-
-	retryTimes = 0;
-	result = SemicAutoTrade(DO_HIGH);
-
-#ifdef _DEBUG
-	TRACE("OnFlashComplete time2=%d\r\n", GetMilliseconds() - start);
-#endif // _DEBUG
-
-	return 0;
-}
-
-LRESULT CTradeAssistDlg::SemicAutoTrade(int direct) 
-{
-
-	//1.当前位置双击弹出下单对话框。
-	int searchCount = 0;
-	while (searchCount++ < FIND_SUN_DIALOG_MAX_RETRY_TIMES)
-	{
-		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
-		if (wnd)
-		{
-
-			CString log;
-			log.Format(_T("SemicAutoTrade direct=%d, dialogSearchCount=%d"), direct, searchCount);
-			CLogger::Add(log);
-
-			if (OnDoTradeMsg(direct, direct == DO_LOW ? 0:MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
-			{
-				return SEMIC_AUTO_TRADE_CALL_FAILED;
-			}
-			else
-			{
-				return SEMIC_AUTO_TRADE_CALL_SUCCESS;
-			}
-		} 
-		Sleep(WINDOW_CHECK_INTERVAL);
-	}
-
-	return SEMIC_AUTO_TRADE_CALL_FAILED;
-}
-
 
 WORD CTradeAssistDlg::GetMilliseconds(void)
 {
@@ -904,36 +804,30 @@ void CTradeAssistDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 			{
-				if (mLuaEngine.GetDoubleSideType() == ON_TIMER_HUIFENG)
-				{
-					//TOD在接收消失时释放该缓存。
-					mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
-				} 
-				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONGXIN)
+				if (mLuaEngine.GetDoubleSideType() == ON_TIMER_ZHONGXIN)
 				{
 					//中鑫龙祥
-					mActionManager->PostThreadMessage(WM_DO_ZHONGXIN_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+					mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_ZHONGXIN_GUADAN);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_TIANTONG)
 				{
 					//TOD在接收消失时释放该缓存。
-					mActionManager->PostThreadMessage(WM_DO_TIANTONG_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+					mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_TIANTONG_GUADAN);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_KUNJIAO)
 				{
 					//TOD在接收消失时释放该缓存。
-					mActionManager->PostThreadMessage(WM_DO_KUNJIAO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+					mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_KUNJIAO_GUADAN);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_LUOGE)
 				{
 					//TOD在接收消失时释放该缓存。
-					mActionManager->PostThreadMessage(WM_DO_LUOGE_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), NULL);
+					mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_LUOGE_GUADAN);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_HAIJIAO)
 				{
 					//TOD在接收消失时释放该缓存。
-					OnFlashComplete(); 
-
+					mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_BOTH), WM_DO_HAIJIAO_GUADAN);
 				}
 				else if (mLuaEngine.GetDoubleSideType() == ON_TIMER_FEINONG)
 				{
@@ -1030,13 +924,13 @@ LRESULT CTradeAssistDlg::OnHttpGetPriceFinish(WPARAM w , LPARAM l)
 			{
 				//追空挂多
 				mLuaEngine.SetHasChased(true);
-				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_HIGH), NULL);
+				mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_HIGH), WM_DO_HAIJIAO_GUADAN);
 			}
 			else if (packet->mChaseDirect == DO_HIGH && !mLuaEngine.GetHasChased())
 			{
 				//追多挂空
 				mLuaEngine.SetHasChased(true);
-				mActionManager->PostThreadMessage(WM_DO_HUIFENG_GUADAN, (WPARAM) GetGuaDanParam(DO_LOW), NULL);
+				mActionManager->PostThreadMessage(WM_DO_GUADAN, (WPARAM) GetGuaDanParam(DO_LOW), WM_DO_HAIJIAO_GUADAN);
 			}
 			
 
