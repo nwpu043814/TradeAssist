@@ -218,6 +218,10 @@ function getStopGainThreshold()
 	return 10
 end
 
+--止损最小距离
+function getStopLoseThreshold(direct)
+	return 21
+end
 
 --确定
 function getConfirmButton(direct)

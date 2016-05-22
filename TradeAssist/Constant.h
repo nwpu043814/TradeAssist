@@ -235,6 +235,7 @@
 #define		LUA_FUNCTION_GetPriceRange2Price _T("getPriceRange2Price")
 #define		LUA_FUNCTION_GetPrice2StopCheckbox _T("getPrice2StopCheckbox")
 #define		LUA_FUNCTION_GetStopGainThreshold _T("getStopGainThreshold")
+#define		LUA_FUNCTION_GetStopLoseThreshold _T("getStopLoseThreshold")
 
 
 #define		HTTP_URL_LOCAL_DATA _T("/?req_price=?")

@@ -156,7 +156,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_COUNT, mIntOrderCount);
 	DDV_MinMaxUInt(pDX, mIntOrderCount, 0, 100);
 	DDX_Text(pDX, IDC_EDIT_MSG_DELAY, mIntMsgDelayMilliSeconds);
-	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 0, 2000);
+	DDV_MinMaxUInt(pDX, mIntMsgDelayMilliSeconds, 0, 8000);
 	DDX_Text(pDX, IDC_EDIT_HOUR, mIntHour);
 	DDX_Text(pDX, IDC_EDIT_MINUTE, mIntMinute);
 	DDX_Text(pDX, IDC_EDIT_SECOND, mIntSecond);

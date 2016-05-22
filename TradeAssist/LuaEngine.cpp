@@ -1624,3 +1624,29 @@ int CLuaEngine::GetStopGainThreshold(void)
 
 	return diff;		
 }
+
+int CLuaEngine::GetStopLoseDiff(int direct)
+{
+	lua_State * m_plua = GetLuaState(0);   
+	lua_getglobal(m_plua,LUA_FUNCTION_GetStopLoseThreshold);    
+	size_t size;
+	lua_pushnumber(m_plua,direct);
+	if(lua_pcall(m_plua,1,1,0)!= 0)        
+	{
+		const char * str = lua_tolstring(m_plua, -1, &size);     
+		lua_pop(m_plua,1);
+
+#ifdef _DEBUG
+		CString msg; 
+		msg.Format(_T("%s"), str);
+		AfxMessageBox(_T("调用lua脚本函数失败:"+msg));     
+#endif // _DEBUG      
+
+		return 21;
+	}
+
+	int  diff = (int)lua_tonumber(m_plua, -1);   
+	lua_pop(m_plua,1);  
+
+	return diff;		
+}

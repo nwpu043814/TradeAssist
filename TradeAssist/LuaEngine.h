@@ -141,4 +141,5 @@ private:
 public:
 	// Ö¹Ó¯×îĞ¡¾àÀë
 	int GetStopGainThreshold(void);
+	int GetStopLoseDiff(int direct);
 };
