@@ -78,7 +78,7 @@ public:
 	// 秒杀下单
 	int OnFlashComplete(void);
 
-	void SemicAutoTrade(int direct);
+	LRESULT SemicAutoTrade(int direct);
 protected:
 	// 自动下单的两个单间隔，单位为秒
 	UINT mAutoCompleteInterval;

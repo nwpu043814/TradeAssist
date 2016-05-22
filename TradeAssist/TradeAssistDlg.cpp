@@ -6,6 +6,7 @@
 #include "TradeAssistDlg.h"
 #include "Constant.h"
 #include "SimulateAction.h"
+#include "Logger.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -354,8 +355,6 @@ int CTradeAssistDlg::dispatchCount(void)
 
 LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 {
-
-
 	BOOL direction = (UINT) LOWORD(w)== DO_HIGH? TRUE:FALSE;
 	BOOL isDelay = (UINT) LOWORD(l)== MSG_DELAY_YES? TRUE:FALSE;
 
@@ -372,10 +371,11 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 
 	//点击委托tab。
 	POINT start = GetSunAwtDialogPos();
-	if (start.x == 0)
+	if (start.x == 0 && start.y == 0)
 	{
+		Logger::Add("not find sunawtdialog");
 		//未能找到sun对话框
-		return LRESULT();
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_FIND_DIALOG;
 	}
 	mAction->MoveCursor(start.x,start.y, true);
 
@@ -403,8 +403,17 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 
 	//取得当前价格。
 	CString text = GetEditText();
+	if(text.Find(_T("."))  == -1)
+	{
+		return DO_TRADE_MSG_RESULT_TYPE_NOT_GOT_ORIGINAL_PRICE;
+	}
+
 	float newCount = direction?atof(text) + diff : atof(text) - diff ;
 	outText.Format("%.2f",newCount);
+
+	CString log;
+	log.Format("originalprice=%s, diff=%f, newPrice=%s, direction=%d", text, diff, outText, direction);
+	Logger::Add(log);
 
 	//保存以备检查
 	mLastClipboardContent = outText;
@@ -449,7 +458,7 @@ LRESULT CTradeAssistDlg::OnDoTradeMsg(WPARAM w , LPARAM l)
 	TRACE("OnDoTradeMsg submit time=%d\r\n", GetMilliseconds() - startTime);
 #endif
 
-	return LRESULT();
+	return DO_TRADE_MSG_RESULT_TYPE_SUCCESS;
 }
 
 // 获得剪贴板的内容
@@ -725,6 +734,9 @@ int CTradeAssistDlg::ClearResource(void)
 		delete mAction;
 		mAction = NULL;
 	}
+
+	Logger::SaveLog();
+
 	return 0;
 }
 
@@ -741,7 +753,19 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	UpdateData(TRUE);
 	mIsAutoSubmits = TRUE;	
 	UpdateData(FALSE);
-	SemicAutoTrade(DO_LOW);
+
+	if (1)
+	{
+		int retryTimes = 0;
+		int result = SemicAutoTrade(DO_LOW);
+		while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
+		{
+			SetCursorPos(lpPoint.x, lpPoint.y);
+			mAction->MouseClick();
+			result = SemicAutoTrade(DO_LOW);
+		}
+	}
+
 	//2.延时下单间隔
 
 #ifdef _DEBUG
@@ -756,7 +780,19 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	//3.移动鼠标到双击位置。
 	SetCursorPos(lpPoint.x, lpPoint.y);
 	mAction->MouseClick();
-	SemicAutoTrade(DO_HIGH);
+
+
+	if (1)
+	{
+		int retryTimes = 0;
+		int result = SemicAutoTrade(DO_HIGH);
+		while (result != SEMIC_AUTO_TRADE_CALL_SUCCESS && retryTimes++ < SEMIC_AUTO_TRADE_RETRY_TIMES)
+		{
+			SetCursorPos(lpPoint.x, lpPoint.y);
+			mAction->MouseClick();
+			result = SemicAutoTrade(DO_HIGH);
+		}
+	}
 
 #ifdef _DEBUG
 	TRACE("OnFlashComplete time2=%d\r\n", GetMilliseconds() - start);
@@ -765,7 +801,7 @@ int CTradeAssistDlg::OnFlashComplete(void)
 	return 0;
 }
 
-void CTradeAssistDlg::SemicAutoTrade(int direct) 
+LRESULT CTradeAssistDlg::SemicAutoTrade(int direct) 
 {
 
 	//1.当前位置双击弹出下单对话框。
@@ -775,11 +811,24 @@ void CTradeAssistDlg::SemicAutoTrade(int direct)
 		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
 		if (wnd)
 		{
-			OnDoTradeMsg(direct, MSG_DELAY_YES);
-			break;;
+
+			CString log;
+			log.Format("SemicAutoTrade direct=%d, count=%d", direct, searchCount);
+			Logger::Add(log);
+
+			if (OnDoTradeMsg(direct, MSG_DELAY_YES) != DO_TRADE_MSG_RESULT_TYPE_SUCCESS)
+			{
+				return SEMIC_AUTO_TRADE_CALL_FAILED;
+			}
+			else
+			{
+				return SEMIC_AUTO_TRADE_CALL_SUCCESS;
+			}
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
+
+	return SEMIC_AUTO_TRADE_CALL_FAILED;
 }
 
 // 通过双击复制获得编辑框内容。
@@ -800,7 +849,7 @@ CString CTradeAssistDlg::GetEditText(void)
 		Sleep((copyCount-1)*GET_CLIPBOARD_CONTENT_DELAY);
 		text = GetContentFromClipboard();
 		text = text.Trim();
-		if (text.GetLength() < 4)
+		if (text.GetLength() < PRICE_LENGTH)
 		{
 			continue;			
 		}
