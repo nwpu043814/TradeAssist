@@ -109,4 +109,7 @@ public:
 protected:
 	// 自动下单的两个单间隔，单位为秒
 	CString mAutoCompleteInterval;
+public:
+	// 通过双击复制获得编辑框内容。
+	CString GetEditText(void);
 };

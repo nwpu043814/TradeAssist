@@ -80,7 +80,7 @@ void CTradeAssistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_LEFT_TOP_TAB_DY, mStart2TabDy);
 	DDX_Check(pDX, IDC_CHECK_AOTO_SUBMIT, mIsAutoSubmits);
 	DDX_Text(pDX, IDC_EDIT_AUTO_COMPLETE_INTERVAL, mAutoCompleteInterval);
-	DDV_MaxChars(pDX, mAutoCompleteInterval, 2);
+	DDV_MaxChars(pDX, mAutoCompleteInterval, 3);
 }
 
 BEGIN_MESSAGE_MAP(CTradeAssistDlg, CDialog)
@@ -276,14 +276,14 @@ int CTradeAssistDlg::ParseHotKey(UINT mode, UINT virKey)
 int CTradeAssistDlg::dispatchLowAction(void)
 {
 
-	this->PostMessage(WM_DO_TRADE, DO_LOW);
+	this->PostMessage(WM_DO_TRADE, DO_LOW, MSG_DELAY_YES);
 
 	return 0;
 }
 
 int CTradeAssistDlg::dispatchHighAction(void)
 {
-	this->PostMessage(WM_DO_TRADE, DO_HIGH);
+	this->PostMessage(WM_DO_TRADE, DO_HIGH, MSG_DELAY_YES);
 	return 0;
 }
 
@@ -296,10 +296,15 @@ int CTradeAssistDlg::dispatchCount(void)
 
 LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
 {
-	Sleep(MSG_DELAY);
-	UpdateData(TRUE);
 	
 	BOOL direction = (UINT) LOWORD(w)== DO_HIGH? TRUE:FALSE;
+	BOOL isDelay = (UINT) LOWORD(l)== MSG_DELAY_YES? TRUE:FALSE;
+
+	if (isDelay)
+	{
+		Sleep(MSG_DELAY);
+	}
+	UpdateData(TRUE);
 
 	//点击委托tab。
 	POINT start = GetSunAwtDialogPos();
@@ -324,18 +329,13 @@ LRESULT CTradeAssistDlg::OnDoLowMsg(WPARAM w , LPARAM l)
 	POINT direction2PriceVector = GetDirection2PriceVector(direction);
 	mAction->MoveCursor(direction2PriceVector.x,direction2PriceVector.y);
 
-	//双击并复制当前控件的内容
-	mAction->MouseDoubleClick();
-	EmptyClipboard(); 
-	mAction->KeyboardCopy();
-
 	//获得预制的点差
 	CString outText;
 	mEditPriceDiff.GetWindowText(outText);
-	int diff = atoi(outText);
+	float diff = atof(outText);
 
-	//取得剪贴板内容。
-	CString text = GetContentFromClipboard();
+	//取得当前价格。
+	CString text = GetEditText();
 	float newCount = direction?atof(text) + diff : atof(text) - diff ;
 	outText.Format("%.2f",newCount);
 
@@ -721,9 +721,40 @@ void CTradeAssistDlg::SemicAutoTrade(int direct)
 		HWND wnd=::FindWindow(SUN_DIALOG_NAME,NULL);
 		if (wnd)
 		{
-			SendMessage(WM_DO_TRADE, direct);
+			SendMessage(WM_DO_TRADE, direct, MSG_DELAY_NO);
 			break;;
 		} 
 		Sleep(WINDOW_CHECK_INTERVAL);
 	}
+}
+// 通过双击复制获得编辑框内容。
+CString CTradeAssistDlg::GetEditText(void)
+{
+	int doubleClickCount = 0;
+	CString currentPrice;
+
+	while(doubleClickCount++ < 2)
+	{
+		mAction->MouseDoubleClick();
+		int copyCount = 0;
+		while(copyCount++  < 2)
+		{
+			EmptyClipboard();
+			mAction->KeyboardCopy();
+			Sleep(copyCount*GET_CLIPBOARD_CONTENT_DELAY);
+			currentPrice = GetContentFromClipboard();
+			currentPrice = currentPrice.Trim();
+			if (currentPrice.GetLength() < 4)
+			{
+				continue;			
+			}
+			else
+			{
+					doubleClickCount = 2;
+					break;
+			}
+		}
+	}
+
+	return currentPrice;
 }

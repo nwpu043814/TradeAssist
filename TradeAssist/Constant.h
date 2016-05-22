@@ -23,6 +23,7 @@
 #define	KEYBD_DELAY 50
 #define	MOUSE_DOUBLE_CLICK_DELAY 50
 #define	MOUSE_CLICK_DELAY 50
+#define GET_CLIPBOARD_CONTENT_DELAY 10
 
 #define		STRING_KEY_COUNT _T("COUNT")
 #define		STRING_SETTING _T("SETTING")
@@ -70,5 +71,8 @@
 #define		DO_LOW	1
 #define		DO_HIGH	2
 #define		DO_COUNT 3
+
+#define		MSG_DELAY_YES	1
+#define		MSG_DELAY_NO	2
 
 #define		SUN_DIALOG_NAME _T("SunAwtDialog")
